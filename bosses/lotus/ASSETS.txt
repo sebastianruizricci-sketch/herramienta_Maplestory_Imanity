@@ -1,0 +1,5 @@
+Assets requeridos — lotus
+============================================
+background.png    1920 x 1080 px  —  Fondo del escenario
+sprite.png         900 x 1000 px  —  Boss solo, fondo transparente
+accessories.png   1400 x 1000 px  —  Efectos/accesorios, fondo transparente

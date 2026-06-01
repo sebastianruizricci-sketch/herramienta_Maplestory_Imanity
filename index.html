@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MapleStory Bosses</title>
+    <link rel="stylesheet" href="styles/boss-showcase.css" />
+  </head>
+  <body>
+
+    <div class="showcase" id="showcase">
+
+      <!-- Fondo dinámico -->
+      <div class="bg-layer" id="bgLayer"></div>
+      <div class="bg-overlay"></div>
+
+      <!-- Sidebar izquierda -->
+      <aside class="site-sidebar">
+
+        <div class="sidebar-brand">
+          <span class="sidebar-brand-icon">✦</span>
+          <span class="sidebar-brand-text">MapleTools</span>
+        </div>
+
+        <!-- Mini-card personaje activo -->
+        <button class="sidebar-char" id="sidebarChar" type="button">
+          <div class="sidebar-char-avatar" id="sidebarCharAvatar">?</div>
+          <div class="sidebar-char-info">
+            <span class="sidebar-char-name" id="sidebarCharName">Sin personaje</span>
+            <span class="sidebar-char-sub">Crear perfil →</span>
+          </div>
+        </button>
+
+        <nav class="sidebar-nav">
+
+          <span class="sidebar-group">Principal</span>
+          <a class="sidebar-item" href="#">
+            <span class="sidebar-icon">⬡</span>
+            <span>Dashboard</span>
+          </a>
+          <a class="sidebar-item" href="#" id="characterNav">
+            <span class="sidebar-icon">◈</span>
+            <span>Mi Personaje</span>
+          </a>
+
+          <span class="sidebar-group">Progreso</span>
+          <a class="sidebar-item active" href="#" id="bossNav">
+            <span class="sidebar-icon">⚔</span>
+            <span>Bosses</span>
+          </a>
+          <a class="sidebar-item" href="#">
+            <span class="sidebar-icon">◎</span>
+            <span>Mesos</span>
+          </a>
+          <a class="sidebar-item" href="#" id="fragmentsNav">
+            <span class="sidebar-icon">◇</span>
+            <span>Fragmentos</span>
+          </a>
+          <a class="sidebar-item" href="#">
+            <span class="sidebar-icon">↗</span>
+            <span>Exportar</span>
+            <span class="sidebar-badge">Excel</span>
+          </a>
+
+          <span class="sidebar-group">Próximamente</span>
+          <a class="sidebar-item soon" href="#">
+            <span class="sidebar-icon">⊞</span>
+            <span>Farmeo</span>
+            <span class="sidebar-badge soon-badge">v2</span>
+          </a>
+          <a class="sidebar-item soon" href="#">
+            <span class="sidebar-icon">◈</span>
+            <span>Estadísticas</span>
+            <span class="sidebar-badge soon-badge">v2</span>
+          </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+          <span class="sidebar-version">v1.0 MVP</span>
+        </div>
+
+      </aside>
+
+      <!-- Info del boss -->
+      <aside class="info-panel" id="infoPanel">
+        <p class="region" id="infoRegion"></p>
+        <h1 class="boss-name" id="infoName"></h1>
+        <div class="divider"></div>
+        <div class="tags" id="infoTags"></div>
+        <dl class="stats" id="infoStats"></dl>
+        <div class="actions">
+          <a href="#" id="linkDrops">Ver drops ↗</a>
+          <a href="#" id="linkStrat">Estrategia ↗</a>
+        </div>
+      </aside>
+
+      <!-- Centro: boss flotando -->
+      <div class="boss-stage">
+        <div class="boss-wrap">
+          <img class="boss-accessories" id="bossAccessories" src="" alt="" />
+          <img class="boss-sprite" id="bossSprite" src="" alt="" />
+        </div>
+      </div>
+
+      <!-- Derecha: selector de bosses -->
+      <nav class="boss-selector" id="bossSelector" aria-label="Selección de boss"></nav>
+
+      <!-- Pagina: mi personaje -->
+      <section class="character-page hidden" id="characterPanel" aria-label="Mi personaje">
+        <div class="character-page-head">
+          <div>
+            <p class="character-kicker">Roster MapleStory</p>
+            <h2>Mi Personaje</h2>
+          </div>
+          <div class="character-count" id="characterCount">0 personajes</div>
+        </div>
+
+        <div class="character-dashboard">
+          <form class="character-search character-add-panel" id="characterSearchForm">
+            <div class="form-title-row">
+              <div>
+                <p class="character-kicker">Agregar personaje</p>
+                <h3>Buscar en MapleHub</h3>
+              </div>
+            </div>
+            <label for="characterIgn">IGN</label>
+            <div class="character-search-row">
+              <input id="characterIgn" name="characterIgn" type="text" autocomplete="off" placeholder="puropoder" />
+              <select id="characterRegion" name="characterRegion" aria-label="Region">
+                <option value="na">NA</option>
+                <option value="eu">EU</option>
+                <option value="kr">KR</option>
+              </select>
+              <button id="fetchCharacterBtn" type="submit">Agregar</button>
+            </div>
+            <p class="character-status" id="characterStatus"></p>
+          </form>
+
+          <div class="character-active-card" id="characterCard">
+            <div class="character-portrait-wrap">
+              <img class="character-portrait hidden" id="characterPortrait" src="" alt="" />
+              <div class="character-portrait-empty" id="characterPortraitEmpty">?</div>
+            </div>
+            <div class="character-main">
+              <p class="character-world" id="characterWorld">Sin datos</p>
+              <h3 id="characterName">Sin personaje activo</h3>
+              <p class="character-job" id="characterJob">Agrega un personaje para empezar</p>
+            </div>
+            <dl class="character-stats">
+              <div><dt>Nivel</dt><dd id="characterLevel">-</dd></div>
+              <div><dt>Rank</dt><dd id="characterRank">-</dd></div>
+              <div><dt>Job Rank</dt><dd id="characterJobRank">-</dd></div>
+              <div><dt>Global</dt><dd id="characterGlobalRank">-</dd></div>
+            </dl>
+          </div>
+        </div>
+
+        <div class="roster-section">
+          <div class="roster-section-head">
+            <div>
+              <p class="character-kicker">Personajes guardados</p>
+              <h3>Roster</h3>
+            </div>
+          </div>
+          <div class="character-roster" id="characterRoster"></div>
+        </div>
+      </section>
+
+      <!-- Pagina: fragmentos -->
+      <section class="fragments-page hidden" id="fragmentsPage" aria-label="Tracker de fragmentos">
+        <div class="fragments-page-head">
+          <div>
+            <p class="character-kicker">Hexa Matrix</p>
+            <h2>Fragmentos</h2>
+          </div>
+        </div>
+
+        <div class="fragments-layout">
+          <aside class="fragments-side">
+            <div class="fragments-panel fragments-character-panel">
+              <p class="character-kicker">Personaje</p>
+              <div class="fragments-character">
+                <div class="sidebar-char-avatar" id="fragmentsCharacterAvatar">?</div>
+                <div>
+                  <p id="fragmentsCharacterClass">Sin clase</p>
+                  <h3 id="fragmentsCharacterName">Sin personaje activo</h3>
+                </div>
+              </div>
+              <select id="fragmentsCharacterSelect" aria-label="Cambiar personaje"></select>
+            </div>
+
+            <div class="fragments-panel">
+              <p class="character-kicker">HEXA Progress</p>
+              <div class="fragments-summary">
+                <div><span>Gastados</span><strong id="fragsSpentTotal">0</strong></div>
+                <div><span>Al objetivo</span><strong id="fragsDesiredTotal">0</strong></div>
+                <div><span>Para max</span><strong id="fragsRemainingTotal">0</strong></div>
+              </div>
+            </div>
+
+            <div class="fragments-panel">
+              <p class="character-kicker">Acciones</p>
+              <div class="fragments-actions">
+                <button type="button" id="fragmentsResetBtn">Resetear niveles</button>
+                <button type="button" id="fragmentsMaxDesiredBtn">Objetivo max</button>
+              </div>
+              <div class="fragments-status" id="fragmentsStatus"></div>
+            </div>
+          </aside>
+
+          <section class="fragments-config">
+            <div class="fragments-config-head">
+              <div>
+                <p class="character-kicker">Skills Configuration</p>
+                <h3>Nodes</h3>
+              </div>
+            </div>
+            <div class="skills-grid" id="skillsGrid"></div>
+          </section>
+        </div>
+      </section>
+
+    </div>
+
+    <script src="scripts/boss-showcase.js"></script>
+  </body>
+</html>

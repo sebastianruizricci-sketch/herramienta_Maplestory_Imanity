@@ -1,0 +1,25 @@
+Assets requeridos para la tarjeta de Gloom
+============================================
+
+background.webp   1920 x 1080 px  —  Fondo del escenario, sin el boss encima.
+                                       Formato WEBP preferido, PNG también funciona.
+
+sprite.png        900 x 1000 px   —  Solo el boss, fondo 100% transparente (PNG).
+                                       El boss debe estar centrado con padding alrededor
+                                       para que el float animation no corte los bordes.
+
+chains.png        1100 x 700 px   —  Cadenas sueltas, fondo transparente (PNG).
+                                       Se reutiliza como capa de atrás y de adelante
+                                       con máscaras CSS.
+
+rocks.png         500 x 500 px    —  Una roca, fondo transparente (PNG).
+                                       Se reutiliza 3 veces en distintas posiciones
+                                       y tamaños.
+
+Estructura final esperada:
+  bosses/
+  └── gloom/
+      ├── background.webp
+      ├── sprite.png
+      ├── chains.png
+      └── rocks.png
