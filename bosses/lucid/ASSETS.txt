@@ -1,0 +1,6 @@
+Assets requeridos para la tarjeta de Lucid
+============================================
+
+background.png    1920 x 1080 px  —  Fondo del escenario, sin el boss encima.
+sprite.png         900 x 1000 px  —  Solo el boss, fondo transparente (PNG).
+accessories.png   1400 x 1000 px  —  Accesorios (mariposas, efectos de sueño, etc.), fondo transparente.

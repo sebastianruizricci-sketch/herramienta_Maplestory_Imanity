@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MapleStory Bosses</title>
+    <link rel="stylesheet" href="styles/boss-showcase.css" />
+  </head>
+  <body>
+
+    <div class="showcase" id="showcase">
+
+      <!-- Fondo dinámico -->
+      <div class="bg-layer" id="bgLayer"></div>
+      <div class="bg-overlay"></div>
+
+      <!-- Sidebar izquierda -->
+      <aside class="site-sidebar">
+
+        <div class="sidebar-brand">
+          <span class="sidebar-brand-icon">✦</span>
+          <span class="sidebar-brand-text">MapleTools</span>
+        </div>
+
+        <!-- Mini-card personaje activo -->
+        <div class="sidebar-char">
+          <div class="sidebar-char-avatar">?</div>
+          <div class="sidebar-char-info">
+            <span class="sidebar-char-name">Sin personaje</span>
+            <span class="sidebar-char-sub">Crear perfil →</span>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+          <span class="sidebar-group">Principal</span>
+          <a class="sidebar-item" href="#">
+            <span class="sidebar-icon">⬡</span>
+            <span>Dashboard</span>
+          </a>
+          <a class="sidebar-item" href="#">
+            <span class="sidebar-icon">◈</span>
+            <span>Mi Personaje</span>
+          </a>
+
+          <span class="sidebar-group">Progreso</span>
+          <a class="sidebar-item active" href="#">
+            <span class="sidebar-icon">⚔</span>
+            <span>Bosses</span>
+          </a>
+          <a class="sidebar-item" href="#">
+            <span class="sidebar-icon">◎</span>
+            <span>Mesos</span>
+          </a>
+          <a class="sidebar-item" href="#">
+            <span class="sidebar-icon">◇</span>
+            <span>Fragmentos</span>
+          </a>
+          <a class="sidebar-item" href="#">
+            <span class="sidebar-icon">↗</span>
+            <span>Exportar</span>
+            <span class="sidebar-badge">Excel</span>
+          </a>
+
+          <span class="sidebar-group">Próximamente</span>
+          <a class="sidebar-item soon" href="#">
+            <span class="sidebar-icon">⊞</span>
+            <span>Farmeo</span>
+            <span class="sidebar-badge soon-badge">v2</span>
+          </a>
+          <a class="sidebar-item soon" href="#">
+            <span class="sidebar-icon">◈</span>
+            <span>Estadísticas</span>
+            <span class="sidebar-badge soon-badge">v2</span>
+          </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+          <span class="sidebar-version">v1.0 MVP</span>
+        </div>
+
+      </aside>
+
+      <!-- Info del boss -->
+      <aside class="info-panel" id="infoPanel">
+        <p class="region" id="infoRegion"></p>
+        <h1 class="boss-name" id="infoName"></h1>
+        <div class="divider"></div>
+        <div class="tags" id="infoTags"></div>
+        <dl class="stats" id="infoStats"></dl>
+        <div class="actions">
+          <a href="#" id="linkDrops">Ver drops ↗</a>
+          <a href="#" id="linkStrat">Estrategia ↗</a>
+        </div>
+      </aside>
+
+      <!-- Centro: boss flotando -->
+      <div class="boss-stage">
+        <div class="boss-wrap">
+          <img class="boss-accessories" id="bossAccessories" src="" alt="" />
+          <img class="boss-sprite" id="bossSprite" src="" alt="" />
+        </div>
+      </div>
+
+      <!-- Derecha: selector de bosses -->
+      <nav class="boss-selector" id="bossSelector" aria-label="Selección de boss"></nav>
+
+    </div>
+
+    <script src="scripts/boss-showcase.js"></script>
+  </body>
+</html>
