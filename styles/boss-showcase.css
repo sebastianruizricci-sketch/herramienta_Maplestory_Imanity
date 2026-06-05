@@ -809,12 +809,16 @@ html, body {
 .showcase.character-view .boss-selector,
 .showcase.fragments-view .info-panel,
 .showcase.fragments-view .boss-stage,
-.showcase.fragments-view .boss-selector {
+.showcase.fragments-view .boss-selector,
+.showcase.chatbot-view .info-panel,
+.showcase.chatbot-view .boss-stage,
+.showcase.chatbot-view .boss-selector {
   display: none;
 }
 
 .showcase.character-view .bg-overlay,
-.showcase.fragments-view .bg-overlay {
+.showcase.fragments-view .bg-overlay,
+.showcase.chatbot-view .bg-overlay {
   background:
     linear-gradient(90deg,
       rgba(5, 4, 11, 1.00) 0%,
@@ -836,6 +840,8 @@ html, body {
 
 .character-page.hidden { display: none; }
 
+.hidden { display: none !important; }
+
 .fragments-page {
   grid-column: 2 / 5;
   position: relative;
@@ -846,6 +852,57 @@ html, body {
 }
 
 .fragments-page.hidden { display: none; }
+
+.chatbot-iframe-wrapper {
+  position: relative;
+  background: linear-gradient(180deg, rgba(13, 7, 26, .96) 0%, rgba(8, 3, 18, .95) 100%);
+  border: 1px solid rgba(163, 120, 255, .18);
+  border-radius: 32px;
+  overflow: hidden;
+  min-height: 70vh;
+  max-height: calc(100vh - 180px);
+  box-shadow: 0 26px 90px rgba(0, 0, 0, .22);
+}
+
+.chatbot-iframe-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top right, rgba(139, 92, 246, .16), transparent 35%);
+}
+
+.chatbot-iframe-wrapper iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 620px;
+  border: none;
+  background: #06040a;
+}
+
+.chatbot-iframe-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  text-align: center;
+  color: rgba(248, 244, 255, .88);
+  font-size: 15px;
+  backdrop-filter: blur(4px);
+  background: rgba(4, 3, 12, .35);
+}
+
+.chatbot-iframe-fallback code {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .08);
+  font-size: 13px;
+  color: rgba(248, 244, 255, .92);
+}
 
 .character-page-head {
   display: flex;

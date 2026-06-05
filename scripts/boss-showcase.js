@@ -130,8 +130,10 @@ const sidebarCharAvatar = document.getElementById("sidebarCharAvatar");
 const characterNav    = document.getElementById("characterNav");
 const bossNav         = document.getElementById("bossNav");
 const fragmentsNav    = document.getElementById("fragmentsNav");
+const chatbotNav      = document.getElementById("chatbotNav");
 const characterPanel  = document.getElementById("characterPanel");
 const fragmentsPage   = document.getElementById("fragmentsPage");
+const chatbotPage     = document.getElementById("chatbotPage");
 const closeCharacterPanel = document.getElementById("closeCharacterPanel");
 const characterSearchForm = document.getElementById("characterSearchForm");
 const characterIgn    = document.getElementById("characterIgn");
@@ -160,6 +162,8 @@ const fragsRemainingTotal = document.getElementById("fragsRemainingTotal");
 const fragmentsCharacterSelect = document.getElementById("fragmentsCharacterSelect");
 const fragmentsResetBtn = document.getElementById("fragmentsResetBtn");
 const fragmentsMaxDesiredBtn = document.getElementById("fragmentsMaxDesiredBtn");
+const chatbotIframe = document.getElementById("chatbotIframe");
+const chatbotFallback = document.getElementById("chatbotFallback");
 
 let activeId = null;
 const CHARACTER_STORAGE_KEY = "mapletools_active_character";
@@ -287,8 +291,10 @@ function selectBoss(id) {
 function showCharacterPage() {
   showcase?.classList.add("character-view");
   showcase?.classList.remove("fragments-view");
+  showcase?.classList.remove("chatbot-view");
   characterPanel?.classList.remove("hidden");
   fragmentsPage?.classList.add("hidden");
+  chatbotPage?.classList.add("hidden");
   document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
   characterNav?.classList.add("active");
   characterIgn?.focus();
@@ -297,8 +303,10 @@ function showCharacterPage() {
 function showBossPage() {
   showcase?.classList.remove("character-view");
   showcase?.classList.remove("fragments-view");
+  showcase?.classList.remove("chatbot-view");
   characterPanel?.classList.add("hidden");
   fragmentsPage?.classList.add("hidden");
+  chatbotPage?.classList.add("hidden");
   document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
   bossNav?.classList.add("active");
 }
@@ -306,11 +314,24 @@ function showBossPage() {
 async function showFragmentsPage() {
   showcase?.classList.remove("character-view");
   showcase?.classList.add("fragments-view");
+  showcase?.classList.remove("chatbot-view");
   characterPanel?.classList.add("hidden");
   fragmentsPage?.classList.remove("hidden");
+  chatbotPage?.classList.add("hidden");
   document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
   fragmentsNav?.classList.add("active");
   await renderFragmentsPage();
+}
+
+function showChatBotPage() {
+  showcase?.classList.remove("character-view");
+  showcase?.classList.remove("fragments-view");
+  showcase?.classList.add("chatbot-view");
+  characterPanel?.classList.add("hidden");
+  fragmentsPage?.classList.add("hidden");
+  chatbotPage?.classList.remove("hidden");
+  document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
+  chatbotNav?.classList.add("active");
 }
 
 function setCharacterStatus(message, state = "neutral") {
@@ -832,6 +853,15 @@ fragmentsNav?.addEventListener("click", (event) => {
   event.preventDefault();
   showFragmentsPage();
 });
+chatbotNav?.addEventListener("click", (event) => {
+  event.preventDefault();
+  showChatBotPage();
+});
+
+chatbotIframe?.addEventListener("load", () => {
+  chatbotFallback?.classList.add("hidden");
+});
+
 closeCharacterPanel?.addEventListener("click", showBossPage);
 
 fragmentsCharacterSelect?.addEventListener("change", async () => {

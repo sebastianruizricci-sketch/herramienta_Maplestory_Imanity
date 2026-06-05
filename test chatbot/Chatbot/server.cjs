@@ -1,20 +1,17 @@
-const fs = require("fs");
 const http = require("http");
-const https = require("https");
+const fs = require("fs");
 const path = require("path");
 const dotenv = require("dotenv");
+const guideSources = require("./docs.config.cjs");
 
 const ROOT = __dirname;
-const CHATBOT_ROOT = path.join(ROOT, "test chatbot", "Chatbot");
+const PROJECT_ROOT = path.join(ROOT, "..", "..");
+const SKILL_DATA = require(path.join(PROJECT_ROOT, "data", "skills.json"));
 
 dotenv.config({ path: path.join(ROOT, ".env") });
-dotenv.config({ path: path.join(CHATBOT_ROOT, ".env") });
+dotenv.config({ path: path.join(PROJECT_ROOT, ".env") });
 
-const PORT = Number(process.env.PORT) || 4173;
-const HOST = process.env.HOST || "127.0.0.1";
-const CHATBOT_CONFIG = require(path.join(CHATBOT_ROOT, "docs.config.cjs"));
-const SKILL_DATA = require(path.join(ROOT, "data", "skills.json"));
-
+const PORT = Number(process.env.PORT || 3000);
 const isPlaceholderKey = (key) =>
   !key || /^your[_-]?gemini/i.test(String(key).trim());
 
@@ -36,19 +33,6 @@ const buildGeminiUrl = (endpoint, apiKey) => {
 };
 const GEMINI_URL = buildGeminiUrl(GEMINI_ENDPOINT, GEMINI_API_KEY);
 const CACHE_TTL_MS = 1000 * 60 * 30;
-
-const MIME_TYPES = {
-  ".html": "text/html; charset=utf-8",
-  ".js": "text/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".webp": "image/webp",
-  ".svg": "image/svg+xml",
-  ".json": "application/json; charset=utf-8",
-  ".ico": "image/x-icon",
-};
 
 const classNames = [
   "Hero",
@@ -89,6 +73,7 @@ const classNames = [
   "Angelic Buster",
   "Cadena",
   "Kain",
+  "Hayato",
   "Kanna",
   "Adele",
   "Ark",
@@ -103,9 +88,9 @@ const classNames = [
 
 const docCache = new Map();
 
-const send = (res, status, body, headers = {}) => {
-  res.writeHead(status, headers);
-  res.end(body);
+const sendJson = (res, statusCode, payload) => {
+  res.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8" });
+  res.end(JSON.stringify(payload));
 };
 
 const readJsonBody = (req) =>
@@ -247,7 +232,7 @@ const buildGuideContext = async (className) => {
     sections.push(localContext);
   }
 
-  for (const source of CHATBOT_CONFIG) {
+  for (const source of guideSources) {
     const text = await fetchGuideText(source);
     const section = extractClassSection(text, className);
 
@@ -312,160 +297,83 @@ const cleanBotText = (text) =>
     .replace(/^\s*[-*]\s+/gm, "- ")
     .trim();
 
-function proxyMapleHub(req, res) {
-  const incomingUrl = new URL(req.url, `http://${req.headers.host}`);
-  const targetUrl = new URL(`https://maplehub.app${incomingUrl.pathname}${incomingUrl.search}`);
+const contentTypeByExtension = {
+  ".html": "text/html",
+  ".js": "text/javascript",
+  ".css": "text/css",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+};
 
-  const proxyReq = https.request(targetUrl, {
-    method: "GET",
-    headers: {
-      "Accept": "application/json",
-      "Origin": "https://maplehub.app",
-      "Referer": "https://maplehub.app/",
-      "User-Agent": req.headers["user-agent"] || "Mozilla/5.0",
-      "X-MapleHub-Request": "true",
-    },
-  }, (proxyRes) => {
-    let body = "";
-    proxyRes.setEncoding("utf8");
-    proxyRes.on("data", (chunk) => { body += chunk; });
-    proxyRes.on("end", () => {
-      send(res, proxyRes.statusCode || 502, body, {
-        "Content-Type": proxyRes.headers["content-type"] || "application/json; charset=utf-8",
-      });
-    });
-  });
+const serveStatic = (req, res) => {
+  const distDir = path.join(__dirname, "dist");
+  const requestedPath = req.url === "/" ? "/index.html" : req.url.split("?")[0];
+  const filePath = path.normalize(path.join(distDir, requestedPath));
 
-  proxyReq.on("error", (error) => {
-    send(res, 502, JSON.stringify({ error: error.message }), {
-      "Content-Type": "application/json; charset=utf-8",
-    });
-  });
-
-  proxyReq.end();
-}
-
-function serveStatic(req, res) {
-  const requestUrl = new URL(req.url, `http://${req.headers.host}`);
-  const pathname = requestUrl.pathname === "/" ? "/index.html" : requestUrl.pathname;
-  const filePath = path.normalize(path.join(ROOT, decodeURIComponent(pathname)));
-
-  if (!filePath.startsWith(ROOT)) {
-    send(res, 403, "Forbidden");
+  if (!filePath.startsWith(distDir)) {
+    res.writeHead(403);
+    res.end("Forbidden");
     return;
   }
 
-  fs.readFile(filePath, (error, data) => {
+  fs.readFile(filePath, (error, content) => {
     if (error) {
-      send(res, 404, "Not found");
+      fs.readFile(path.join(distDir, "index.html"), (fallbackError, fallback) => {
+        if (fallbackError) {
+          res.writeHead(404);
+          res.end("Not found. Run npm run build first.");
+          return;
+        }
+
+        res.writeHead(200, { "Content-Type": "text/html" });
+        res.end(fallback);
+      });
       return;
     }
 
-    send(res, 200, data, {
-      "Content-Type": MIME_TYPES[path.extname(filePath)] || "application/octet-stream",
+    const extension = path.extname(filePath);
+    res.writeHead(200, {
+      "Content-Type": contentTypeByExtension[extension] || "text/plain",
     });
+    res.end(content);
   });
-}
+};
 
-function serveChatBotStatic(req, res) {
-  const requestUrl = new URL(req.url, `http://${req.headers.host}`);
-  let pathname = requestUrl.pathname;
-
-  if (pathname === "/chatbot" || pathname === "/chatbot/") {
-    pathname = "/index.html";
-  } else {
-    pathname = pathname.replace(/^\/chatbot/, "") || "/index.html";
-  }
-
-  const filePath = path.normalize(path.join(CHATBOT_ROOT, decodeURIComponent(pathname)));
-
-  if (!filePath.startsWith(CHATBOT_ROOT)) {
-    send(res, 403, "Forbidden");
+const server = http.createServer(async (req, res) => {
+  if (req.method === "GET" && req.url === "/api/health") {
+    sendJson(res, 200, { ok: true, sources: guideSources.length });
     return;
   }
 
-  fs.readFile(filePath, (error, data) => {
-    if (error) {
-      if (pathname !== "/index.html") {
-        fs.readFile(path.join(CHATBOT_ROOT, "index.html"), (fallbackError, fallback) => {
-          if (fallbackError) {
-            send(res, 404, "ChatBot resource not found");
-            return;
-          }
+  if (req.method === "POST" && req.url === "/api/ask") {
+    try {
+      if (!GEMINI_API_KEY) {
+        throw new Error("Missing GEMINI_API_KEY or VITE_API_KEY in .env.");
+      }
 
-          send(res, 200, fallback, { "Content-Type": "text/html; charset=utf-8" });
-        });
+      const body = await readJsonBody(req);
+      const message = String(body.message || "").trim();
+      const className = toTitleCase(body.className || "MapleStory");
+
+      if (!message) {
+        sendJson(res, 400, { error: "Message is required." });
         return;
       }
 
-      send(res, 404, "ChatBot resource not found");
-      return;
+      const context = await buildGuideContext(className);
+
+      const text = await askGemini({ message, className, context });
+      sendJson(res, 200, { text: cleanBotText(text), hasContext: Boolean(context) });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
     }
-
-    send(res, 200, data, {
-      "Content-Type": MIME_TYPES[path.extname(filePath)] || "application/octet-stream",
-    });
-  });
-}
-
-async function handleChatBotAsk(req, res) {
-  try {
-    if (!GEMINI_API_KEY) {
-      throw new Error("Missing GEMINI_API_KEY or VITE_API_KEY in .env.");
-    }
-
-    const body = await readJsonBody(req);
-    const message = String(body.message || "").trim();
-    const className = toTitleCase(body.className || "MapleStory");
-
-    if (!message) {
-      send(res, 400, JSON.stringify({ error: "Message is required." }), {
-        "Content-Type": "application/json; charset=utf-8",
-      });
-      return;
-    }
-
-    const context = await buildGuideContext(className);
-    const text = await askGemini({ message, className, context });
-
-    send(res, 200, JSON.stringify({ text: cleanBotText(text), hasContext: Boolean(context) }), {
-      "Content-Type": "application/json; charset=utf-8",
-    });
-  } catch (error) {
-    send(res, 500, JSON.stringify({ error: error.message }), {
-      "Content-Type": "application/json; charset=utf-8",
-    });
-  }
-}
-
-function handleChatBotHealth(req, res) {
-  send(res, 200, JSON.stringify({ ok: true, sources: CHATBOT_CONFIG.length }), {
-    "Content-Type": "application/json; charset=utf-8",
-  });
-}
-
-http.createServer((req, res) => {
-  if (req.method === "POST" && req.url === "/api/ask") {
-    handleChatBotAsk(req, res);
-    return;
-  }
-
-  if (req.method === "GET" && req.url === "/api/health") {
-    handleChatBotHealth(req, res);
-    return;
-  }
-
-  if (req.url.startsWith("/chatbot")) {
-    serveChatBotStatic(req, res);
-    return;
-  }
-
-  if (req.url.startsWith("/api/character/") || req.url.startsWith("/api/character-fallback/")) {
-    proxyMapleHub(req, res);
     return;
   }
 
   serveStatic(req, res);
-}).listen(PORT, HOST, () => {
-  console.log(`MapleTools running at http://${HOST}:${PORT}`);
+});
+
+server.listen(PORT, () => {
+  console.log(`Imanity backend running at http://127.0.0.1:${PORT}`);
 });

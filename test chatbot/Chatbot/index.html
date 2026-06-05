@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Imanity Maple Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <div class="chat-container">
+      <header class="chat-header">
+        <div class="brand-panel">
+          <div>
+            <p class="eyebrow">MapleStory </p>
+            <h1>Imanity Chatbot</h1>
+          </div>
+          <span class="status-pill">Imanity</span>
+        </div>
+
+        <div class="class-picker">
+          <label for="jobRoleInput">Clase</label>
+          <input
+            list="jobRoleSuggestions"
+            id="jobRoleInput"
+            placeholder="Elige tu clase"
+          />
+
+          <datalist id="jobRoleSuggestions">
+            <option value="Hero"></option>
+            <option value="Paladin"></option>
+            <option value="Dark Knight"></option>
+            <option value="Bishop"></option>
+            <option value="Arch Mage (Ice/Lightning)"></option>
+            <option value="Arch Mage (Fire/Poison)"></option>
+            <option value="Bowmaster"></option>
+            <option value="Marksman"></option>
+            <option value="Pathfinder"></option>
+            <option value="Night Lord"></option>
+            <option value="Shadower"></option>
+            <option value="Dual Blade"></option>
+            <option value="Buccaneer"></option>
+            <option value="Corsair"></option>
+            <option value="Cannoneer"></option>
+            <option value="Dawn Warrior"></option>
+            <option value="Mihile"></option>
+            <option value="Blaze Wizard"></option>
+            <option value="Wind Archer"></option>
+            <option value="Night Walker"></option>
+            <option value="Thunder Breaker"></option>
+            <option value="Aran"></option>
+            <option value="Evan"></option>
+            <option value="Mercedes"></option>
+            <option value="Phantom"></option>
+            <option value="Luminous"></option>
+            <option value="Shade"></option>
+            <option value="Demon Slayer"></option>
+            <option value="Demon Avenger"></option>
+            <option value="Battle Mage"></option>
+            <option value="Wild Hunter"></option>
+            <option value="Mechanic"></option>
+            <option value="Blaster"></option>
+            <option value="Xenon"></option>
+            <option value="Kaiser"></option>
+            <option value="Angelic Buster"></option>
+            <option value="Cadena"></option>
+            <option value="Kain"></option>
+            <option value="Hayato"></option>
+            <option value="Kanna"></option>
+            <option value="Adele"></option>
+            <option value="Ark"></option>
+            <option value="Illium"></option>
+            <option value="Khali"></option>
+            <option value="Hoyoung"></option>
+            <option value="Lara"></option>
+            <option value="Zero"></option>
+            <option value="Kinesis"></option>
+            <option value="Beast Tamer (Lynn)"></option>
+          </datalist>
+
+          <button id="setRoleBtn">Seleccionar</button>
+        </div>
+      </header>
+
+      <main class="chat-history" id="chatHistory">
+        <!-- Chat messages will be appended here -->
+      </main>
+
+      <footer class="input-area">
+        <div class="input-group">
+          <input
+            type="text"
+            id="userInput"
+            placeholder="Pregunta lo que deseas saber referente a tu clase"
+          />
+          <button id="sendBtn">Send</button>
+        </div>
+      </footer>
+    </div>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

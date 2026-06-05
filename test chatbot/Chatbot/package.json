@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "vite": "^7.1.5"
+  },
+  "scripts": {
+    "dev": "vite",
+    "backend": "node server.cjs",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "npm run build && node server.cjs"
+  }
+}
