@@ -56,6 +56,10 @@
             <span class="sidebar-icon">◇</span>
             <span>Fragmentos</span>
           </a>
+          <a class="sidebar-item" href="#" id="chatbotNav">
+            <span class="sidebar-icon">💬</span>
+            <span>ChatBot</span>
+          </a>
           <a class="sidebar-item" href="#">
             <span class="sidebar-icon">↗</span>
             <span>Exportar</span>
@@ -218,6 +222,26 @@
             </div>
             <div class="skills-grid" id="skillsGrid"></div>
           </section>
+        </div>
+      </section>
+
+      <section class="fragments-page hidden chatbot-page" id="chatbotPage" aria-label="ChatBot">
+        <div class="fragments-page-head">
+          <div>
+            <p class="character-kicker">Asistente</p>
+            <h2>ChatBot</h2>
+          </div>
+        </div>
+        <div class="chatbot-iframe-wrapper">
+          <iframe
+            src="/chatbot/"
+            title="ChatBot"
+            sandbox="allow-scripts allow-same-origin allow-forms"
+            id="chatbotIframe"
+          ></iframe>
+          <div class="chatbot-iframe-fallback hidden" id="chatbotFallback">
+            <p>Si no ves el ChatBot, arranca el servidor con <code>npm start</code> y recarga la página.</p>
+          </div>
         </div>
       </section>
 
