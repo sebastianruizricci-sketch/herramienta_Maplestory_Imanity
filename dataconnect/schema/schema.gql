@@ -1,0 +1,43 @@
+type AppUser @table(name: "app_user", key: "id") {
+  id: String! @default(expr: "auth.uid")
+  username: String! @unique @col(dataType: "varchar(40)")
+  displayName: String @col(dataType: "varchar(80)")
+  email: String @col(dataType: "varchar(160)")
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type MapleCharacter @table(name: "maple_character", key: ["owner", "region", "name"]) {
+  owner: AppUser!
+  region: String! @col(dataType: "varchar(12)")
+  name: String! @col(dataType: "varchar(32)")
+  jobName: String @col(dataType: "varchar(80)")
+  level: Int
+  worldName: String @col(dataType: "varchar(80)")
+  characterImgURL: String
+  source: String @col(dataType: "varchar(40)")
+  fetchedAt: Timestamp
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type LegacyUser @table(name: "user", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  createdAt: Timestamp! @col(name: "created_at")
+  displayName: String @col(name: "display_name")
+  email: String! @col(name: "email")
+  lastLoginAt: Timestamp @col(name: "last_login_at")
+  username: String! @col(name: "username")
+}
+
+type LegacyCharacter @table(name: "character", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  user: LegacyUser
+  characterName: String! @col(name: "character_name")
+  createdAt: Timestamp! @col(name: "created_at")
+  gameClass: String! @col(name: "game_class")
+  gearScore: Int @col(name: "gear_score")
+  level: Int!
+  notes: String
+  race: String
+  specialization: String
+}

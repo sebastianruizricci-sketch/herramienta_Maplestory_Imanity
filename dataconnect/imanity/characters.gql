@@ -1,0 +1,37 @@
+mutation UpsertMapleCharacter(
+  $region: String!
+  $name: String!
+  $jobName: String
+  $level: Int
+  $worldName: String
+  $characterImgURL: String
+  $source: String
+  $fetchedAt: Timestamp
+) @auth(level: USER) {
+  mapleCharacter_upsert(data: {
+    ownerId_expr: "auth.uid"
+    region: $region
+    name: $name
+    jobName: $jobName
+    level: $level
+    worldName: $worldName
+    characterImgURL: $characterImgURL
+    source: $source
+    fetchedAt: $fetchedAt
+    updatedAt_expr: "request.time"
+  })
+}
+
+query ListMyMapleCharacters @auth(level: USER) {
+  mapleCharacters(where: { ownerId: { eq_expr: "auth.uid" } }, orderBy: [{ level: DESC }, { name: ASC }]) {
+    region
+    name
+    jobName
+    level
+    worldName
+    characterImgURL
+    source
+    fetchedAt
+    updatedAt
+  }
+}

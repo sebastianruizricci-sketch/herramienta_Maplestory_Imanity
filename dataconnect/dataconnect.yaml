@@ -1,0 +1,13 @@
+specVersion: "v1beta"
+serviceId: "herramienta-maplestory-imanity-service"
+location: "us-east4"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "herramienta-maplestory-imanity-database"
+      cloudSql:
+        instanceId: "herramienta-maplestory-imanity-instance"
+        schemaValidation: "COMPATIBLE"
+connectorDirs:
+  - "./imanity"
