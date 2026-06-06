@@ -175,6 +175,7 @@ const clearLoginBtn = document.getElementById("clearLoginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
 let activeId = null;
+let appShellInitialized = false;
 const AUTH_USERS_STORAGE_KEY = "mapletools_auth_users";
 const AUTH_SESSION_STORAGE_KEY = "mapletools_auth_session";
 const CHARACTER_STORAGE_KEY = "mapletools_active_character";
@@ -252,6 +253,17 @@ function showLoginSession(message = "") {
   loginScreen?.classList.remove("hidden");
   setLoginStatus(message);
   loginUsername?.focus();
+}
+
+function initializeAuthenticatedApp() {
+  if (appShellInitialized) return;
+  appShellInitialized = true;
+
+  selectBoss("gloom");
+  const savedCharacters = loadCharacters();
+  const activeCharacter = getActiveCharacter(savedCharacters);
+  renderCharacter(activeCharacter);
+  renderRoster(savedCharacters, activeCharacter?.id);
 }
 
 function getSavedSession() {
@@ -1180,16 +1192,11 @@ if (auth) {
     if (user) {
       const username = user.displayName || user.email?.split("@")[0] || "usuario";
       showAppSession(username);
+      initializeAuthenticatedApp();
     } else {
-      showLoginSession();
+      showLoginSession("Inicia sesion para entrar.");
     }
   });
 } else {
   showLoginSession("Firebase Auth no cargo. Revisa la configuracion.");
 }
-
-selectBoss("gloom");
-const savedCharacters = loadCharacters();
-const activeCharacter = getActiveCharacter(savedCharacters);
-renderCharacter(activeCharacter);
-renderRoster(savedCharacters, activeCharacter?.id);
