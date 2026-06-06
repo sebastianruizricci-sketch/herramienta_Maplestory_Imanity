@@ -38,6 +38,7 @@ const GEMINI_URL = buildGeminiUrl(GEMINI_ENDPOINT, GEMINI_API_KEY);
 const CACHE_TTL_MS = 1000 * 60 * 30;
 const FIREBASE_WEB_API_KEY = process.env.FIREBASE_WEB_API_KEY || "AIzaSyCylI-FadSqtTED7fQH6-Z4LWMIkbOfbAI";
 const REGISTER_TOKEN = String(process.env.REGISTER_TOKEN || "").trim();
+const APP_VERSION = process.env.RENDER_GIT_COMMIT || process.env.APP_VERSION || "local";
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -447,7 +448,7 @@ async function handleChatBotAsk(req, res) {
 }
 
 function handleChatBotHealth(req, res) {
-  send(res, 200, JSON.stringify({ ok: true, sources: CHATBOT_CONFIG.length }), {
+  send(res, 200, JSON.stringify({ ok: true, sources: CHATBOT_CONFIG.length, version: APP_VERSION, registerEnabled: Boolean(REGISTER_TOKEN) }), {
     "Content-Type": "application/json; charset=utf-8",
   });
 }
