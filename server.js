@@ -3,6 +3,14 @@ const http = require("http");
 const https = require("https");
 const path = require("path");
 const dotenv = require("dotenv");
+const { cert, getApps, initializeApp } = require("firebase-admin/app");
+const { getAuth } = require("firebase-admin/auth");
+const {
+  getCurrentUser,
+  listMyMapleCharacters,
+  upsertCurrentUser,
+  upsertMapleCharacter,
+} = require("@dataconnect/admin-generated");
 
 const ROOT = __dirname;
 const CHATBOT_ROOT = path.join(ROOT, "test chatbot", "Chatbot");
@@ -39,6 +47,20 @@ const CACHE_TTL_MS = 1000 * 60 * 30;
 const FIREBASE_WEB_API_KEY = process.env.FIREBASE_WEB_API_KEY || "AIzaSyCylI-FadSqtTED7fQH6-Z4LWMIkbOfbAI";
 const REGISTER_TOKEN = String(process.env.REGISTER_TOKEN || "").trim();
 const APP_VERSION = process.env.RENDER_GIT_COMMIT || process.env.APP_VERSION || "local";
+
+function initializeFirebaseAdmin() {
+  if (getApps().length) return;
+
+  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  if (serviceAccountJson) {
+    initializeApp({ credential: cert(JSON.parse(serviceAccountJson)) });
+    return;
+  }
+
+  initializeApp();
+}
+
+initializeFirebaseAdmin();
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -114,7 +136,7 @@ const send = (res, status, body, headers = {}) => {
 function setApiCorsHeaders(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Accept, Content-Type, X-MapleHub-Request");
+  res.setHeader("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-MapleHub-Request");
 }
 
 const readJsonBody = (req) =>
@@ -491,6 +513,36 @@ function getRegisterErrorMessage(error) {
   return "No se pudo crear la cuenta.";
 }
 
+async function getAuthClaimsFromRequest(req) {
+  const token = req.headers.authorization?.replace(/^bearer\s+/i, "");
+  if (!token) return null;
+  return getAuth().verifyIdToken(token);
+}
+
+function getImpersonationOptions(authClaims) {
+  return { impersonate: { authClaims } };
+}
+
+function sendJson(res, status, body) {
+  send(res, status, JSON.stringify(body), {
+    "Content-Type": "application/json; charset=utf-8",
+  });
+}
+
+async function requireAuth(req, res) {
+  try {
+    const authClaims = await getAuthClaimsFromRequest(req);
+    if (!authClaims) {
+      sendJson(res, 401, { error: "Unauthorized" });
+      return null;
+    }
+    return authClaims;
+  } catch {
+    sendJson(res, 401, { error: "Unauthorized" });
+    return null;
+  }
+}
+
 async function handleRegister(req, res) {
   try {
     const body = await readJsonBody(req);
@@ -540,14 +592,109 @@ async function handleRegister(req, res) {
       returnSecureToken: false,
     });
 
-    send(res, 201, JSON.stringify({ ok: true, email: authEmail, username }), {
-      "Content-Type": "application/json; charset=utf-8",
-    });
+    let appUserSynced = false;
+    try {
+      const authClaims = await getAuth().verifyIdToken(created.idToken);
+      await upsertCurrentUser(
+        { username, displayName: username, email: authEmail },
+        getImpersonationOptions(authClaims)
+      );
+      appUserSynced = true;
+    } catch (error) {
+      console.warn("Data Connect user sync error:", error);
+    }
+
+    sendJson(res, 201, { ok: true, email: authEmail, username, appUserSynced });
   } catch (error) {
     const status = error.status === 400 ? 400 : 500;
-    send(res, status, JSON.stringify({ error: getRegisterErrorMessage(error) }), {
-      "Content-Type": "application/json; charset=utf-8",
-    });
+    sendJson(res, status, { error: getRegisterErrorMessage(error) });
+  }
+}
+
+async function handleUpsertMe(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const body = await readJsonBody(req);
+    const username = normalizeUsername(body.username || authClaims.name || authClaims.email?.split("@")[0]);
+    const displayName = String(body.displayName || username || "").trim() || null;
+    const email = normalizeEmail(body.email || authClaims.email);
+
+    if (!username) {
+      sendJson(res, 400, { error: "Username is required." });
+      return;
+    }
+
+    await upsertCurrentUser(
+      { username, displayName, email: email || null },
+      getImpersonationOptions(authClaims)
+    );
+    const result = await getCurrentUser(getImpersonationOptions(authClaims));
+    sendJson(res, 200, { user: result.data.appUser || null });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo sincronizar el usuario." });
+  }
+}
+
+async function handleGetMe(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const result = await getCurrentUser(getImpersonationOptions(authClaims));
+    sendJson(res, 200, { user: result.data.appUser || null });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo obtener el usuario." });
+  }
+}
+
+function normalizeCharacterInput(body) {
+  const region = normalizeUsername(body.region || "na");
+  const name = String(body.name || "").trim();
+  if (!name) return null;
+
+  return {
+    region,
+    name,
+    jobName: body.jobName || null,
+    level: Number.isFinite(Number(body.level)) ? Number(body.level) : null,
+    worldName: body.worldName || null,
+    characterImgURL: body.characterImgURL || null,
+    source: body.source || "maplehub",
+    fetchedAt: body.fetchedAt || new Date().toISOString(),
+  };
+}
+
+async function handleListCharacters(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const result = await listMyMapleCharacters(getImpersonationOptions(authClaims));
+    sendJson(res, 200, { characters: result.data.mapleCharacters || [] });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo obtener personajes." });
+  }
+}
+
+async function handleSaveCharacter(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const body = await readJsonBody(req);
+    const character = normalizeCharacterInput(body);
+    if (!character) {
+      sendJson(res, 400, { error: "Character name is required." });
+      return;
+    }
+
+    await upsertMapleCharacter(character, getImpersonationOptions(authClaims));
+    const result = await listMyMapleCharacters(getImpersonationOptions(authClaims));
+    sendJson(res, 200, { character, characters: result.data.mapleCharacters || [] });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo guardar el personaje." });
   }
 }
 
@@ -568,6 +715,26 @@ http.createServer((req, res) => {
 
   if (req.method === "POST" && req.url === "/api/register") {
     handleRegister(req, res);
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/api/me") {
+    handleGetMe(req, res);
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/me") {
+    handleUpsertMe(req, res);
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/api/characters") {
+    handleListCharacters(req, res);
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/characters") {
+    handleSaveCharacter(req, res);
     return;
   }
 

@@ -1,1 +1,6 @@
 connectorId: "imanity"
+generate:
+  adminNodeSdk:
+    outputDir: "../../dataconnect-generated/admin-generated"
+    package: "@dataconnect/admin-generated"
+    packageJsonDir: "../.."

@@ -14,3 +14,5 @@ services:
         value: "AIzaSyCylI-FadSqtTED7fQH6-Z4LWMIkbOfbAI"
       - key: REGISTER_TOKEN
         sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false

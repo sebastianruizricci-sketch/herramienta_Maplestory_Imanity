@@ -16,7 +16,9 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@dataconnect/admin-generated": "file:dataconnect-generated/admin-generated",
     "dotenv": "^17.2.2",
+    "firebase-admin": "^13.10.0",
     "playwright": "^1.60.0"
   }
 }

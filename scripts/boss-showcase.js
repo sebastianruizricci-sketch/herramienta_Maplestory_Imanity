@@ -184,29 +184,38 @@ const logoutBtn = document.getElementById("logoutBtn");
 
 let activeId = null;
 let appShellInitialized = false;
-const AUTH_USERS_STORAGE_KEY = "mapletools_auth_users";
-const AUTH_SESSION_STORAGE_KEY = "mapletools_auth_session";
-const CHARACTER_STORAGE_KEY = "mapletools_active_character";
-const CHARACTER_LIST_STORAGE_KEY = "mapletools_characters";
+let charactersCache = [];
 const ACTIVE_CHARACTER_ID_KEY = "mapletools_active_character_id";
 const API_BASE_URL = String(window.MAPLETOOLS_API_BASE || "").replace(/\/$/, "");
 let skillsData = null;
 let costsData = null;
 
-function encodeCredential(value) {
-  return btoa(unescape(encodeURIComponent(value)));
+async function getAuthToken() {
+  const user = getFirebaseAuth()?.currentUser;
+  if (!user) return null;
+  return user.getIdToken();
 }
 
-function loadAuthUsers() {
-  try {
-    return JSON.parse(localStorage.getItem(AUTH_USERS_STORAGE_KEY)) || {};
-  } catch {
-    return {};
+async function fetchAuthedJson(path, options = {}) {
+  const token = await getAuthToken();
+  if (!token) throw new Error("No hay sesion activa.");
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+      "Authorization": `Bearer ${token}`,
+    },
+  });
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || `API respondio HTTP ${response.status}`);
   }
-}
 
-function saveAuthUsers(users) {
-  localStorage.setItem(AUTH_USERS_STORAGE_KEY, JSON.stringify(users));
+  return result;
 }
 
 function setLoginStatus(message, state = "neutral") {
@@ -283,16 +292,11 @@ function showLoginPanel(message = "") {
 }
 
 function showAppSession(username) {
-  localStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify({
-    username,
-    loggedAt: new Date().toISOString(),
-  }));
   document.body.classList.remove("auth-locked");
   loginScreen?.classList.add("hidden");
 }
 
 function showLoginSession(message = "") {
-  localStorage.removeItem(AUTH_SESSION_STORAGE_KEY);
   document.body.classList.add("auth-locked");
   loginScreen?.classList.remove("hidden");
   setLoginStatus(message);
@@ -304,17 +308,72 @@ function initializeAuthenticatedApp() {
   appShellInitialized = true;
 
   selectBoss("gloom");
-  const savedCharacters = loadCharacters();
-  const activeCharacter = getActiveCharacter(savedCharacters);
-  renderCharacter(activeCharacter);
-  renderRoster(savedCharacters, activeCharacter?.id);
+  renderCharacter(null);
+  renderRoster([]);
 }
 
-function getSavedSession() {
+function normalizeRemoteCharacter(character) {
+  const id = `${(character.region || "na").toLowerCase()}:${(character.name || "").toLowerCase()}`;
+  return {
+    id,
+    name: character.name || "",
+    region: character.region || "na",
+    jobName: character.jobName || "",
+    level: character.level ?? "-",
+    worldName: character.worldName || "",
+    characterImgURL: character.characterImgURL || "",
+    source: character.source || "dataconnect",
+    fetchedAt: character.fetchedAt || character.updatedAt || null,
+    ranking: {},
+  };
+}
+
+async function syncCurrentUserProfile(firebaseUser) {
+  const username = normalizeUsername(firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "usuario");
+  return fetchAuthedJson("/api/me", {
+    method: "POST",
+    body: JSON.stringify({
+      username,
+      displayName: firebaseUser.displayName || username,
+      email: firebaseUser.email || "",
+    }),
+  });
+}
+
+async function loadRemoteCharacters() {
+  const result = await fetchAuthedJson("/api/characters");
+  charactersCache = (result.characters || []).map(normalizeRemoteCharacter);
+  const activeCharacter = getActiveCharacter(charactersCache);
+  renderCharacter(activeCharacter);
+  renderRoster(charactersCache, activeCharacter?.id);
+  return charactersCache;
+}
+
+async function saveRemoteCharacter(character) {
+  const result = await fetchAuthedJson("/api/characters", {
+    method: "POST",
+    body: JSON.stringify({
+      region: character.region || "na",
+      name: character.name,
+      jobName: character.jobName || null,
+      level: Number.isFinite(Number(character.level)) ? Number(character.level) : null,
+      worldName: character.worldName || null,
+      characterImgURL: character.characterImgURL || null,
+      source: character.source || "maplehub",
+      fetchedAt: character.fetchedAt || new Date().toISOString(),
+    }),
+  });
+  charactersCache = (result.characters || []).map(normalizeRemoteCharacter);
+  return charactersCache;
+}
+
+async function hydrateAuthenticatedData(firebaseUser) {
   try {
-    return JSON.parse(localStorage.getItem(AUTH_SESSION_STORAGE_KEY));
-  } catch {
-    return null;
+    await syncCurrentUserProfile(firebaseUser);
+    await loadRemoteCharacters();
+  } catch (error) {
+    console.error("Data Connect sync error:", error);
+    setLoginStatus(error.message || "No se pudo cargar la base de datos.", "error");
   }
 }
 
@@ -655,58 +714,48 @@ async function fetchMapleHubCharacter(ign, region = "na") {
 
 function saveActiveCharacter(character) {
   const characters = upsertCharacter(character);
-  localStorage.setItem(ACTIVE_CHARACTER_ID_KEY, character.id);
-  localStorage.setItem(CHARACTER_STORAGE_KEY, JSON.stringify(character));
+  setActiveCharacterId(character.id);
   renderRoster(characters, character.id);
 }
 
 function loadCharacters() {
-  try {
-    const savedList = localStorage.getItem(CHARACTER_LIST_STORAGE_KEY);
-    if (savedList) return JSON.parse(savedList);
-
-    const legacy = localStorage.getItem(CHARACTER_STORAGE_KEY);
-    if (!legacy) return [];
-
-    const character = JSON.parse(legacy);
-    if (!character?.id && character?.name) {
-      character.id = `${(character.region || "na").toLowerCase()}:${character.name.toLowerCase()}`;
-    }
-    localStorage.setItem(CHARACTER_LIST_STORAGE_KEY, JSON.stringify([character]));
-    localStorage.setItem(ACTIVE_CHARACTER_ID_KEY, character.id);
-    return [character];
-  } catch {
-    return [];
-  }
+  return charactersCache;
 }
 
 function saveCharacters(characters) {
-  localStorage.setItem(CHARACTER_LIST_STORAGE_KEY, JSON.stringify(characters));
+  charactersCache = characters;
 }
 
 function upsertCharacter(character) {
+  const characterWithId = {
+    ...character,
+    id: character.id || `${(character.region || "na").toLowerCase()}:${(character.name || "").toLowerCase()}`,
+  };
   const characters = loadCharacters();
-  const index = characters.findIndex((item) => item.id === character.id);
+  const index = characters.findIndex((item) => item.id === characterWithId.id);
   if (index >= 0) {
-    characters[index] = { ...characters[index], ...character };
+    characters[index] = { ...characters[index], ...characterWithId };
   } else {
-    characters.push(character);
+    characters.push(characterWithId);
   }
   saveCharacters(characters);
   return characters;
 }
 
 function getActiveCharacter(characters = loadCharacters()) {
-  const activeId = localStorage.getItem(ACTIVE_CHARACTER_ID_KEY);
+  const activeId = sessionStorage.getItem(ACTIVE_CHARACTER_ID_KEY);
   return characters.find((character) => character.id === activeId) || characters[0] || null;
+}
+
+function setActiveCharacterId(characterId) {
+  sessionStorage.setItem(ACTIVE_CHARACTER_ID_KEY, characterId);
 }
 
 function setActiveCharacter(characterId) {
   const characters = loadCharacters();
   const character = characters.find((item) => item.id === characterId);
   if (!character) return;
-  localStorage.setItem(ACTIVE_CHARACTER_ID_KEY, character.id);
-  localStorage.setItem(CHARACTER_STORAGE_KEY, JSON.stringify(character));
+  setActiveCharacterId(character.id);
   renderCharacter(character);
   renderRoster(characters, character.id);
 }
@@ -715,15 +764,13 @@ function removeCharacter(characterId) {
   const characters = loadCharacters().filter((character) => character.id !== characterId);
   saveCharacters(characters);
 
-  const activeId = localStorage.getItem(ACTIVE_CHARACTER_ID_KEY);
+  const activeId = sessionStorage.getItem(ACTIVE_CHARACTER_ID_KEY);
   if (activeId === characterId) {
     const next = characters[0] || null;
     if (next) {
-      localStorage.setItem(ACTIVE_CHARACTER_ID_KEY, next.id);
-      localStorage.setItem(CHARACTER_STORAGE_KEY, JSON.stringify(next));
+      setActiveCharacterId(next.id);
     } else {
-      localStorage.removeItem(ACTIVE_CHARACTER_ID_KEY);
-      localStorage.removeItem(CHARACTER_STORAGE_KEY);
+      sessionStorage.removeItem(ACTIVE_CHARACTER_ID_KEY);
     }
   }
 
@@ -992,9 +1039,6 @@ function persistHexaValue(characterId, kind, skillName, value) {
   }
 
   saveCharacters(characters);
-  if (character.id === localStorage.getItem(ACTIVE_CHARACTER_ID_KEY)) {
-    localStorage.setItem(CHARACTER_STORAGE_KEY, JSON.stringify(character));
-  }
 }
 
 async function renderFragmentsPage() {
@@ -1122,6 +1166,7 @@ characterSearchForm?.addEventListener("submit", async (event) => {
 
   try {
     const character = await fetchMapleHubCharacter(ign, region);
+    await saveRemoteCharacter(character);
     saveActiveCharacter(character);
     renderCharacter(character);
     setCharacterStatus(`${character.name} agregado al roster.`, "success");
@@ -1162,6 +1207,7 @@ characterRoster?.addEventListener("click", async (event) => {
     setCharacterStatus(`Actualizando ${character.name}...`, "loading");
     try {
       const updated = await fetchMapleHubCharacter(character.name, character.region || "na");
+      await saveRemoteCharacter(updated);
       saveActiveCharacter(updated);
       renderCharacter(updated);
       setCharacterStatus(`${updated.name} actualizado desde MapleHub.`, "success");
@@ -1201,7 +1247,6 @@ fragmentsResetBtn?.addEventListener("click", async () => {
   if (!character) return;
   character.hexa = { skills: {}, desired: {} };
   saveCharacters(characters);
-  localStorage.setItem(CHARACTER_STORAGE_KEY, JSON.stringify(character));
   await renderFragmentsPage();
   setFragmentsStatus(`Niveles de ${character.name} reseteados.`, "success");
 });
@@ -1223,7 +1268,6 @@ fragmentsMaxDesiredBtn?.addEventListener("click", async () => {
     });
 
   saveCharacters(characters);
-  localStorage.setItem(CHARACTER_STORAGE_KEY, JSON.stringify(character));
   await renderFragmentsPage();
   setFragmentsStatus(`Objetivo max aplicado a ${character.name}.`, "success");
 });
@@ -1269,7 +1313,9 @@ if (auth) {
       const username = user.displayName || user.email?.split("@")[0] || "usuario";
       showAppSession(username);
       initializeAuthenticatedApp();
+      hydrateAuthenticatedData(user);
     } else {
+      charactersCache = [];
       showLoginSession("Inicia sesion para entrar.");
     }
   });
