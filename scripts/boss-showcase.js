@@ -170,7 +170,15 @@ const loginForm = document.getElementById("loginForm");
 const loginUsername = document.getElementById("loginUsername");
 const loginPassword = document.getElementById("loginPassword");
 const loginStatus = document.getElementById("loginStatus");
+const registerForm = document.getElementById("registerForm");
+const registerUsername = document.getElementById("registerUsername");
+const registerEmail = document.getElementById("registerEmail");
+const registerPassword = document.getElementById("registerPassword");
+const registerConfirmPassword = document.getElementById("registerConfirmPassword");
+const registerToken = document.getElementById("registerToken");
+const registerStatus = document.getElementById("registerStatus");
 const registerUserBtn = document.getElementById("registerUserBtn");
+const backToLoginBtn = document.getElementById("backToLoginBtn");
 const clearLoginBtn = document.getElementById("clearLoginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
@@ -207,7 +215,17 @@ function setLoginStatus(message, state = "neutral") {
   loginStatus.dataset.state = state;
 }
 
+function setRegisterStatus(message, state = "neutral") {
+  if (!registerStatus) return;
+  registerStatus.textContent = message;
+  registerStatus.dataset.state = state;
+}
+
 function normalizeUsername(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
 }
 
@@ -218,6 +236,10 @@ function getFirebaseAuth() {
 
 function usernameToAuthEmail(username) {
   return username.includes("@") ? username : `${username}@imanity.local`;
+}
+
+function getRegisterAuthEmail(username, email) {
+  return email || usernameToAuthEmail(username);
 }
 
 function getAuthErrorMessage(error) {
@@ -234,8 +256,30 @@ function getAuthErrorMessage(error) {
 
 function setAuthButtonsDisabled(disabled) {
   const submitButton = loginForm?.querySelector('button[type="submit"]');
+  const registerSubmitButton = registerForm?.querySelector('button[type="submit"]');
   if (submitButton) submitButton.disabled = disabled;
   if (registerUserBtn) registerUserBtn.disabled = disabled;
+  if (registerSubmitButton) registerSubmitButton.disabled = disabled;
+  if (backToLoginBtn) backToLoginBtn.disabled = disabled;
+}
+
+function showRegisterPanel() {
+  loginScreen?.classList.add("register-mode");
+  registerForm?.classList.remove("hidden");
+  setLoginStatus("");
+  setRegisterStatus("");
+  if (registerUsername && loginUsername?.value) {
+    registerUsername.value = loginUsername.value;
+  }
+  registerUsername?.focus();
+}
+
+function showLoginPanel(message = "") {
+  loginScreen?.classList.remove("register-mode");
+  registerForm?.classList.add("hidden");
+  setRegisterStatus("");
+  setLoginStatus(message);
+  loginUsername?.focus();
 }
 
 function showAppSession(username) {
@@ -274,36 +318,56 @@ function getSavedSession() {
   }
 }
 
-async function registerFirebaseUser() {
-  const username = normalizeUsername(loginUsername?.value);
-  const password = loginPassword?.value || "";
+async function registerFirebaseUser(event) {
+  event?.preventDefault();
+  const username = normalizeUsername(registerUsername?.value);
+  const email = normalizeEmail(registerEmail?.value);
+  const password = registerPassword?.value || "";
+  const confirmPassword = registerConfirmPassword?.value || "";
+  const inviteToken = registerToken?.value || "";
 
-  if (!username || !password) {
-    setLoginStatus("Completa usuario y password para registrar.", "error");
+  if (!username || !password || !inviteToken) {
+    setRegisterStatus("Completa usuario, password y token.", "error");
     return;
   }
 
   if (password.length < 6) {
-    setLoginStatus("El password debe tener al menos 6 caracteres.", "error");
+    setRegisterStatus("El password debe tener al menos 6 caracteres.", "error");
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    setRegisterStatus("Los passwords no coinciden.", "error");
     return;
   }
 
   const auth = getFirebaseAuth();
   if (!auth) {
-    setLoginStatus("Firebase Auth no cargo. Recarga la pagina.", "error");
+    setRegisterStatus("Firebase Auth no cargo. Recarga la pagina.", "error");
     return;
   }
 
   setAuthButtonsDisabled(true);
-  setLoginStatus("Registrando en Firebase...", "loading");
+  setRegisterStatus("Validando token...", "loading");
 
   try {
-    const credential = await auth.createUserWithEmailAndPassword(usernameToAuthEmail(username), password);
-    await credential.user.updateProfile({ displayName: username });
-    showAppSession(username);
-    setLoginStatus("");
+    const response = await fetch(`${API_BASE_URL}/api/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, email, password, inviteToken }),
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "No se pudo crear la cuenta.");
+    }
+
+    setRegisterStatus("Cuenta creada. Entrando...", "loading");
+    const credential = await auth.signInWithEmailAndPassword(getRegisterAuthEmail(username, email), password);
+    showAppSession(credential.user.displayName || username);
+    setRegisterStatus("");
   } catch (error) {
-    setLoginStatus(getAuthErrorMessage(error), "error");
+    setRegisterStatus(error.message || getAuthErrorMessage(error), "error");
   } finally {
     setAuthButtonsDisabled(false);
   }
@@ -1166,11 +1230,23 @@ fragmentsMaxDesiredBtn?.addEventListener("click", async () => {
 
 loginForm?.addEventListener("submit", loginFirebaseUser);
 
-registerUserBtn?.addEventListener("click", registerFirebaseUser);
+registerUserBtn?.addEventListener("click", showRegisterPanel);
+
+registerForm?.addEventListener("submit", registerFirebaseUser);
+
+backToLoginBtn?.addEventListener("click", () => {
+  showLoginPanel();
+});
 
 clearLoginBtn?.addEventListener("click", () => {
   if (loginUsername) loginUsername.value = "";
   if (loginPassword) loginPassword.value = "";
+  if (registerUsername) registerUsername.value = "";
+  if (registerEmail) registerEmail.value = "";
+  if (registerPassword) registerPassword.value = "";
+  if (registerConfirmPassword) registerConfirmPassword.value = "";
+  if (registerToken) registerToken.value = "";
+  showLoginPanel();
   setLoginStatus("");
   loginUsername?.focus();
 });

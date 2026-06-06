@@ -10,3 +10,7 @@ services:
         value: production
       - key: HOST
         value: 0.0.0.0
+      - key: FIREBASE_WEB_API_KEY
+        value: "AIzaSyCylI-FadSqtTED7fQH6-Z4LWMIkbOfbAI"
+      - key: REGISTER_TOKEN
+        sync: false

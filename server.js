@@ -36,6 +36,8 @@ const buildGeminiUrl = (endpoint, apiKey) => {
 };
 const GEMINI_URL = buildGeminiUrl(GEMINI_ENDPOINT, GEMINI_API_KEY);
 const CACHE_TTL_MS = 1000 * 60 * 30;
+const FIREBASE_WEB_API_KEY = process.env.FIREBASE_WEB_API_KEY || "AIzaSyCylI-FadSqtTED7fQH6-Z4LWMIkbOfbAI";
+const REGISTER_TOKEN = String(process.env.REGISTER_TOKEN || "").trim();
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -450,6 +452,104 @@ function handleChatBotHealth(req, res) {
   });
 }
 
+function normalizeUsername(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function usernameToAuthEmail(username) {
+  return username.includes("@") ? username : `${username}@imanity.local`;
+}
+
+async function firebaseAuthRequest(action, body) {
+  const response = await fetch(`https://identitytoolkit.googleapis.com/v1/${action}?key=${FIREBASE_WEB_API_KEY}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const result = await response.json();
+
+  if (!response.ok) {
+    const error = new Error(result.error?.message || "Firebase Auth request failed.");
+    error.status = response.status;
+    throw error;
+  }
+
+  return result;
+}
+
+function getRegisterErrorMessage(error) {
+  const message = error?.message || "";
+  if (message.includes("EMAIL_EXISTS")) return "Ese usuario ya existe. Usa Login para entrar.";
+  if (message.includes("WEAK_PASSWORD")) return "El password debe tener al menos 6 caracteres.";
+  if (message.includes("CONFIGURATION_NOT_FOUND")) return "Inicializa Firebase Authentication y activa Email/Password.";
+  if (message.includes("OPERATION_NOT_ALLOWED")) return "Activa Email/Password en Firebase Authentication.";
+  return "No se pudo crear la cuenta.";
+}
+
+async function handleRegister(req, res) {
+  try {
+    const body = await readJsonBody(req);
+    const username = normalizeUsername(body.username);
+    const email = normalizeEmail(body.email);
+    const password = String(body.password || "");
+    const inviteToken = String(body.inviteToken || "").trim();
+
+    if (!REGISTER_TOKEN) {
+      send(res, 500, JSON.stringify({ error: "REGISTER_TOKEN no esta configurado en Render." }), {
+        "Content-Type": "application/json; charset=utf-8",
+      });
+      return;
+    }
+
+    if (inviteToken !== REGISTER_TOKEN) {
+      send(res, 403, JSON.stringify({ error: "Token de invitacion invalido." }), {
+        "Content-Type": "application/json; charset=utf-8",
+      });
+      return;
+    }
+
+    if (!username || !password) {
+      send(res, 400, JSON.stringify({ error: "Usuario y password son obligatorios." }), {
+        "Content-Type": "application/json; charset=utf-8",
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      send(res, 400, JSON.stringify({ error: "El password debe tener al menos 6 caracteres." }), {
+        "Content-Type": "application/json; charset=utf-8",
+      });
+      return;
+    }
+
+    const authEmail = email || usernameToAuthEmail(username);
+    const created = await firebaseAuthRequest("accounts:signUp", {
+      email: authEmail,
+      password,
+      returnSecureToken: true,
+    });
+
+    await firebaseAuthRequest("accounts:update", {
+      idToken: created.idToken,
+      displayName: username,
+      returnSecureToken: false,
+    });
+
+    send(res, 201, JSON.stringify({ ok: true, email: authEmail, username }), {
+      "Content-Type": "application/json; charset=utf-8",
+    });
+  } catch (error) {
+    const status = error.status === 400 ? 400 : 500;
+    send(res, status, JSON.stringify({ error: getRegisterErrorMessage(error) }), {
+      "Content-Type": "application/json; charset=utf-8",
+    });
+  }
+}
+
 http.createServer((req, res) => {
   if (req.url.startsWith("/api/")) {
     setApiCorsHeaders(res);
@@ -462,6 +562,11 @@ http.createServer((req, res) => {
 
   if (req.method === "POST" && req.url === "/api/ask") {
     handleChatBotAsk(req, res);
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/register") {
+    handleRegister(req, res);
     return;
   }
 

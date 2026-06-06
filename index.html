@@ -34,6 +34,37 @@
           </div>
         </div>
       </form>
+
+      <form class="register-panel hidden" id="registerForm" autocomplete="on" aria-label="Registro de usuario">
+        <div class="register-head">
+          <p>Nuevo miembro</p>
+          <h2>Crear cuenta</h2>
+        </div>
+
+        <div class="register-fields">
+          <label for="registerUsername">Usuario</label>
+          <input id="registerUsername" name="username" type="text" autocomplete="username" placeholder="jhon-devu" required />
+
+          <label for="registerEmail">Email opcional</label>
+          <input id="registerEmail" name="email" type="email" autocomplete="email" placeholder="tu@email.com" />
+
+          <label for="registerPassword">Password</label>
+          <input id="registerPassword" name="password" type="password" autocomplete="new-password" placeholder="Minimo 6 caracteres" required />
+
+          <label for="registerConfirmPassword">Confirmar password</label>
+          <input id="registerConfirmPassword" name="confirmPassword" type="password" autocomplete="new-password" placeholder="Repite tu password" required />
+
+          <label for="registerToken">Token de invitacion</label>
+          <input id="registerToken" name="inviteToken" type="password" autocomplete="off" placeholder="Token entregado por Imanity" required />
+        </div>
+
+        <p class="register-status" id="registerStatus"></p>
+
+        <div class="register-actions">
+          <button class="register-primary" type="submit">Crear cuenta</button>
+          <button type="button" id="backToLoginBtn">Volver al login</button>
+        </div>
+      </form>
     </section>
 
     <div class="showcase" id="showcase">
