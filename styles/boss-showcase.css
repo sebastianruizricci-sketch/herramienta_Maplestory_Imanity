@@ -21,6 +21,203 @@ html, body {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
+body.auth-locked .showcase {
+  visibility: hidden;
+}
+
+.login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: block;
+  min-height: 100vh;
+  padding: 0;
+  background:
+    linear-gradient(90deg, rgba(3, 18, 12, .08), transparent 30%, transparent 70%, rgba(28, 9, 7, .06)),
+    url("../assets/login-background.png") center / cover no-repeat;
+}
+
+.login-screen.hidden {
+  display: none;
+}
+
+.login-ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(5, 4, 11, .1) 0%, transparent 45%, rgba(5, 4, 11, .18) 100%);
+}
+
+.login-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100vw, 177.7778vh);
+  height: max(100vh, 56.25vw);
+  margin: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.login-brand {
+  display: none;
+}
+
+.login-brand-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(38px, 5vw, 54px);
+  font-weight: 900;
+  line-height: .9;
+  letter-spacing: .02em;
+}
+
+.login-brand-subtitle {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.login-fields {
+  display: contents;
+}
+
+.login-fields label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.login-fields input {
+  position: absolute;
+  left: 37.85%;
+  width: 23.55%;
+  height: 5.15%;
+  padding: 0 1.05vw;
+  border-radius: 7px;
+  border: 0;
+  background: rgba(0, 0, 0, .08);
+  box-shadow: none;
+  color: #fff8ea;
+  font: inherit;
+  font-size: clamp(13px, 1vw, 18px);
+  pointer-events: auto;
+}
+
+#loginUsername { top: 48.05%; }
+#loginPassword { top: 58.2%; }
+
+.login-fields input::placeholder {
+  color: rgba(245, 224, 194, .58);
+}
+
+.login-fields input:focus {
+  outline: 2px solid rgba(255, 184, 79, .78);
+  outline-offset: -2px;
+}
+
+.login-status {
+  position: absolute;
+  left: 37.85%;
+  top: 63.65%;
+  width: 23.55%;
+  min-height: 18px;
+  margin: 0;
+  color: #fff2ce;
+  font-size: clamp(11px, .82vw, 14px);
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(25, 10, 3, .8);
+  pointer-events: none;
+}
+
+.login-status[data-state="error"] { color: #ffd0c4; }
+.login-status[data-state="success"] { color: #d9ffd2; }
+
+.login-actions {
+  display: contents;
+}
+
+.login-actions button {
+  position: absolute;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  color: #fff7df;
+  cursor: pointer;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(18px, 1.55vw, 32px);
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-shadow:
+    0 2px 0 rgba(31, 12, 4, .95),
+    0 0 10px rgba(255, 230, 180, .45);
+  transition: color .16s, filter .16s, transform .16s;
+  pointer-events: auto;
+}
+
+.login-actions button:hover {
+  color: #fff0b8;
+  filter: drop-shadow(0 0 10px rgba(255, 181, 61, .55));
+}
+
+.login-actions button:active {
+  transform: translateY(2px);
+}
+
+.login-secondary-row {
+  display: contents;
+}
+
+#loginSubmit {
+  left: 37.65%;
+  top: 66.7%;
+  width: 24.1%;
+  height: 5.7%;
+}
+
+#registerUserBtn {
+  left: 37.65%;
+  top: 73.9%;
+  width: 11.95%;
+  height: 5.5%;
+  font-size: clamp(14px, 1.1vw, 24px);
+}
+
+#clearLoginBtn {
+  left: 49.75%;
+  top: 73.9%;
+  width: 11.95%;
+  height: 5.5%;
+  font-size: clamp(14px, 1.1vw, 24px);
+}
+
+.sidebar-logout {
+  width: 100%;
+  min-height: 34px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(192, 132, 252, .18);
+  background: rgba(139, 92, 246, .1);
+  color: rgba(248, 244, 255, .62);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.sidebar-logout:hover {
+  border-color: rgba(192, 132, 252, .4);
+  color: #fff;
+}
+
 /* ── Grid principal — 4 columnas ────────────────────────────────────────── */
 
 .showcase {
@@ -296,6 +493,7 @@ html, body {
 
 .sidebar-footer {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding-top: 14px;
@@ -1550,9 +1748,97 @@ html, body {
   .skills-grid {
     column-count: 3;
   }
+  .sidebar-logout {
+    min-width: 38px;
+    padding: 0;
+    font-size: 0;
+  }
+  .sidebar-logout::before {
+    content: "Salir";
+    font-size: 10px;
+  }
 }
 
 @media (max-width: 760px) {
+  .login-screen {
+    display: grid;
+    align-items: end;
+    padding: 18px;
+    background-position: center top;
+  }
+  .login-panel {
+    position: relative;
+    inset: auto;
+    width: min(440px, 100%);
+    margin: 0;
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid rgba(63, 35, 16, .92);
+    background: linear-gradient(180deg, rgba(113, 66, 30, .98), rgba(61, 34, 17, .98));
+    box-shadow: 0 18px 54px rgba(18, 8, 3, .46);
+    pointer-events: auto;
+  }
+  .login-fields {
+    display: grid;
+    gap: 8px;
+  }
+  .login-fields label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    color: #ffe5b8;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    text-shadow: 0 2px 0 rgba(36, 17, 7, .84);
+  }
+  .login-fields input {
+    position: static;
+    width: 100%;
+    height: 52px;
+    margin-bottom: 8px;
+    padding: 0 16px;
+    border: 2px solid rgba(29, 13, 6, .94);
+    background: rgba(14, 9, 7, .86);
+    font-size: 16px;
+  }
+  .login-status {
+    position: static;
+    width: 100%;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+  .login-brand-title {
+    font-size: 36px;
+  }
+  .login-brand-subtitle {
+    font-size: 11px;
+  }
+  .login-actions {
+    display: grid;
+    gap: 10px;
+  }
+  .login-actions button {
+    position: static;
+    width: 100%;
+    min-height: 48px;
+    background: linear-gradient(180deg, #b96722 0%, #8f4213 54%, #5b260b 100%);
+    border: 2px solid rgba(50, 21, 6, .92);
+    font-size: 20px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 227, 159, .38),
+      inset 0 -5px 0 rgba(56, 20, 5, .26),
+      0 5px 0 rgba(38, 16, 5, .78);
+  }
+  .login-secondary-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
   .character-panel {
     left: calc(var(--sidebar-w) + 10px);
     right: 10px;

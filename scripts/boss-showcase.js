@@ -165,13 +165,127 @@ const fragmentsResetBtn = document.getElementById("fragmentsResetBtn");
 const fragmentsMaxDesiredBtn = document.getElementById("fragmentsMaxDesiredBtn");
 const chatbotIframe = document.getElementById("chatbotIframe");
 const chatbotFallback = document.getElementById("chatbotFallback");
+const loginScreen = document.getElementById("loginScreen");
+const loginForm = document.getElementById("loginForm");
+const loginUsername = document.getElementById("loginUsername");
+const loginPassword = document.getElementById("loginPassword");
+const loginStatus = document.getElementById("loginStatus");
+const registerUserBtn = document.getElementById("registerUserBtn");
+const clearLoginBtn = document.getElementById("clearLoginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
 let activeId = null;
+const AUTH_USERS_STORAGE_KEY = "mapletools_auth_users";
+const AUTH_SESSION_STORAGE_KEY = "mapletools_auth_session";
 const CHARACTER_STORAGE_KEY = "mapletools_active_character";
 const CHARACTER_LIST_STORAGE_KEY = "mapletools_characters";
 const ACTIVE_CHARACTER_ID_KEY = "mapletools_active_character_id";
 let skillsData = null;
 let costsData = null;
+
+function encodeCredential(value) {
+  return btoa(unescape(encodeURIComponent(value)));
+}
+
+function loadAuthUsers() {
+  try {
+    return JSON.parse(localStorage.getItem(AUTH_USERS_STORAGE_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveAuthUsers(users) {
+  localStorage.setItem(AUTH_USERS_STORAGE_KEY, JSON.stringify(users));
+}
+
+function setLoginStatus(message, state = "neutral") {
+  if (!loginStatus) return;
+  loginStatus.textContent = message;
+  loginStatus.dataset.state = state;
+}
+
+function normalizeUsername(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function showAppSession(username) {
+  localStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify({
+    username,
+    loggedAt: new Date().toISOString(),
+  }));
+  document.body.classList.remove("auth-locked");
+  loginScreen?.classList.add("hidden");
+}
+
+function showLoginSession(message = "") {
+  localStorage.removeItem(AUTH_SESSION_STORAGE_KEY);
+  document.body.classList.add("auth-locked");
+  loginScreen?.classList.remove("hidden");
+  setLoginStatus(message);
+  loginUsername?.focus();
+}
+
+function getSavedSession() {
+  try {
+    return JSON.parse(localStorage.getItem(AUTH_SESSION_STORAGE_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function registerLocalUser() {
+  const username = normalizeUsername(loginUsername?.value);
+  const password = loginPassword?.value || "";
+
+  if (!username || !password) {
+    setLoginStatus("Completa usuario y password para registrar.", "error");
+    return;
+  }
+
+  if (password.length < 4) {
+    setLoginStatus("El password debe tener al menos 4 caracteres.", "error");
+    return;
+  }
+
+  const users = loadAuthUsers();
+  if (users[username]) {
+    setLoginStatus("Ese usuario ya existe. Usa Login para entrar.", "error");
+    return;
+  }
+
+  users[username] = {
+    username,
+    password: encodeCredential(password),
+    createdAt: new Date().toISOString(),
+  };
+  saveAuthUsers(users);
+  showAppSession(username);
+}
+
+function loginLocalUser(event) {
+  event?.preventDefault();
+  const username = normalizeUsername(loginUsername?.value);
+  const password = loginPassword?.value || "";
+  const users = loadAuthUsers();
+
+  if (!username || !password) {
+    setLoginStatus("Escribe usuario y password.", "error");
+    return;
+  }
+
+  if (!users[username]) {
+    setLoginStatus("Usuario no registrado. Presiona Register primero.", "error");
+    return;
+  }
+
+  if (users[username].password !== encodeCredential(password)) {
+    setLoginStatus("Password incorrecto.", "error");
+    return;
+  }
+
+  showAppSession(username);
+}
 
 // ── Build selector cards ──────────────────────────────────────────────────
 BOSSES.forEach((boss) => {
@@ -997,6 +1111,28 @@ fragmentsMaxDesiredBtn?.addEventListener("click", async () => {
   await renderFragmentsPage();
   setFragmentsStatus(`Objetivo max aplicado a ${character.name}.`, "success");
 });
+
+loginForm?.addEventListener("submit", loginLocalUser);
+
+registerUserBtn?.addEventListener("click", registerLocalUser);
+
+clearLoginBtn?.addEventListener("click", () => {
+  if (loginUsername) loginUsername.value = "";
+  if (loginPassword) loginPassword.value = "";
+  setLoginStatus("");
+  loginUsername?.focus();
+});
+
+logoutBtn?.addEventListener("click", () => {
+  showLoginSession("Sesion cerrada.");
+});
+
+const savedSession = getSavedSession();
+if (savedSession?.username) {
+  showAppSession(savedSession.username);
+} else {
+  showLoginSession();
+}
 
 selectBoss("gloom");
 const savedCharacters = loadCharacters();
