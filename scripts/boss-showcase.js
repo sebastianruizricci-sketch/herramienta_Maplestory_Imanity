@@ -90,14 +90,15 @@ const BOSSES = [
     background: "bosses/will/background.png",
     bgPosition: "50% 40%",
     bgFilter: "none",
-    sprite: "bosses/will/sprite.png",
-    accessories: "bosses/will/accessories.png",
-    accessoriesBlend: "multiply",
-    spriteSize: "min(520px, 58%)",
-    stageDark: 0.22,
-    spriteTop: "10%",
-    accTop: "-38%",
-    noMask: true,
+    sprite: "bosses/will/will_showcase_aligned.png",
+    accessories: null,
+    accessoriesBlend: "normal",
+    spriteSize: "min(940px, 114%)",
+    spriteScale: 1,
+    stageDark: 0,
+    spriteTop: "8%",
+    spriteX: "-13%",
+    transparentBg: true,
   },
   {
     id: "verus-hilla",
@@ -210,6 +211,7 @@ function selectBoss(id) {
 
   const boss = BOSSES.find((b) => b.id === id);
   if (!boss) return;
+  showcase.dataset.activeBoss = id;
 
   // Update active card
   document.querySelectorAll(".boss-thumb").forEach((c) => {
@@ -241,7 +243,12 @@ function selectBoss(id) {
     bossWrap.style.width = boss.spriteSize || "min(700px, 90%)";
     stage.style.setProperty("--stage-dark", boss.stageDark ?? 0.42);
     stage.style.setProperty("--sprite-top", boss.spriteTop || "0%");
-    document.querySelector(".boss-wrap").style.setProperty("--acc-top", boss.accTop || "-20%");
+    bossWrap.style.setProperty("--sprite-scale", boss.spriteScale || 1);
+    bossWrap.style.setProperty("--sprite-x", boss.spriteX || "0%");
+    bossWrap.style.setProperty("--acc-top", boss.accTop || "-20%");
+    bossWrap.style.setProperty("--acc-left", boss.accLeft || "-20%");
+    bossWrap.style.setProperty("--acc-width", boss.accWidth || "140%");
+    bossWrap.style.setProperty("--acc-scale", boss.accScale || 1);
 
     // Update sprite
     if (boss.sprite) {

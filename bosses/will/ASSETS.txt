@@ -1,5 +1,34 @@
-Assets requeridos — will
-============================================
-background.png    1920 x 1080 px  —  Fondo del escenario
-sprite.png         900 x 1000 px  —  Boss solo, fondo transparente
-accessories.png   1400 x 1000 px  —  Efectos/accesorios, fondo transparente
+Assets requeridos para la tarjeta de Will
+=========================================
+
+background.png    1920 x 1080 px  —  Fondo del escenario, sin Will encima.
+                                       Debe ser solo el salon/escenario de Will.
+                                       No debe incluir al personaje ni efectos flotantes.
+
+sprite.png        900 x 1000 px   —  Solo Will, fondo 100% transparente (PNG).
+                                       El personaje debe estar completo, centrado y con
+                                       padding alrededor para que la animacion float no
+                                       corte cabello, capa, pies ni manos.
+
+chains.png        1100 x 700 px   —  Cadenas, alas/sombras laterales o efectos largos
+                                       que rodean al personaje, fondo 100% transparente.
+                                       Igual que en Gloom, esta capa debe poder pasar por
+                                       detras y delante del sprite usando CSS.
+
+magic.png         900 x 700 px    —  Libro, particulas, ojos rojos, humo y brillos
+                                       decorativos, fondo 100% transparente.
+                                       No debe incluir el cuerpo ni la cara de Will.
+
+Estructura final esperada:
+  bosses/
+  └── will/
+      ├── background.png
+      ├── sprite.png
+      ├── chains.png
+      └── magic.png
+
+Notas importantes:
+- No mezclar background, sprite y accesorios en una sola imagen.
+- Todas las capas excepto background.png deben ser PNG con transparencia real.
+- Las capas deben mantener una posicion relativa compatible entre si, para que
+  al superponerlas no queden corridas ni tapen incorrectamente al personaje.
