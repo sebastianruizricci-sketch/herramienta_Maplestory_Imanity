@@ -1,6 +1,9 @@
 node_modules/
 .claude/
 screenshots/
+dist/
+.firebase/
+firebase-debug.log
 
 .DS_Store
 Thumbs.db
