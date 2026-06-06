@@ -210,6 +210,33 @@ function normalizeUsername(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+function getFirebaseAuth() {
+  if (!window.firebase?.auth) return null;
+  return window.firebase.auth();
+}
+
+function usernameToAuthEmail(username) {
+  return username.includes("@") ? username : `${username}@imanity.local`;
+}
+
+function getAuthErrorMessage(error) {
+  const code = error?.code || "";
+  if (code === "auth/email-already-in-use") return "Ese usuario ya existe. Usa Login para entrar.";
+  if (code === "auth/invalid-credential" || code === "auth/wrong-password") return "Usuario o password incorrecto.";
+  if (code === "auth/user-not-found") return "Usuario no registrado. Presiona Register primero.";
+  if (code === "auth/weak-password") return "El password debe tener al menos 6 caracteres.";
+  if (code === "auth/operation-not-allowed") return "Activa Email/Password en Firebase Authentication.";
+  if (code === "auth/configuration-not-found") return "Inicializa Firebase Authentication y activa Email/Password.";
+  if (code === "auth/network-request-failed") return "No hay conexion con Firebase Auth.";
+  return error?.message || "No se pudo autenticar con Firebase.";
+}
+
+function setAuthButtonsDisabled(disabled) {
+  const submitButton = loginForm?.querySelector('button[type="submit"]');
+  if (submitButton) submitButton.disabled = disabled;
+  if (registerUserBtn) registerUserBtn.disabled = disabled;
+}
+
 function showAppSession(username) {
   localStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify({
     username,
@@ -235,7 +262,7 @@ function getSavedSession() {
   }
 }
 
-function registerLocalUser() {
+async function registerFirebaseUser() {
   const username = normalizeUsername(loginUsername?.value);
   const password = loginPassword?.value || "";
 
@@ -244,48 +271,60 @@ function registerLocalUser() {
     return;
   }
 
-  if (password.length < 4) {
-    setLoginStatus("El password debe tener al menos 4 caracteres.", "error");
+  if (password.length < 6) {
+    setLoginStatus("El password debe tener al menos 6 caracteres.", "error");
     return;
   }
 
-  const users = loadAuthUsers();
-  if (users[username]) {
-    setLoginStatus("Ese usuario ya existe. Usa Login para entrar.", "error");
+  const auth = getFirebaseAuth();
+  if (!auth) {
+    setLoginStatus("Firebase Auth no cargo. Recarga la pagina.", "error");
     return;
   }
 
-  users[username] = {
-    username,
-    password: encodeCredential(password),
-    createdAt: new Date().toISOString(),
-  };
-  saveAuthUsers(users);
-  showAppSession(username);
+  setAuthButtonsDisabled(true);
+  setLoginStatus("Registrando en Firebase...", "loading");
+
+  try {
+    const credential = await auth.createUserWithEmailAndPassword(usernameToAuthEmail(username), password);
+    await credential.user.updateProfile({ displayName: username });
+    showAppSession(username);
+    setLoginStatus("");
+  } catch (error) {
+    setLoginStatus(getAuthErrorMessage(error), "error");
+  } finally {
+    setAuthButtonsDisabled(false);
+  }
 }
 
-function loginLocalUser(event) {
+async function loginFirebaseUser(event) {
   event?.preventDefault();
   const username = normalizeUsername(loginUsername?.value);
   const password = loginPassword?.value || "";
-  const users = loadAuthUsers();
 
   if (!username || !password) {
     setLoginStatus("Escribe usuario y password.", "error");
     return;
   }
 
-  if (!users[username]) {
-    setLoginStatus("Usuario no registrado. Presiona Register primero.", "error");
+  const auth = getFirebaseAuth();
+  if (!auth) {
+    setLoginStatus("Firebase Auth no cargo. Recarga la pagina.", "error");
     return;
   }
 
-  if (users[username].password !== encodeCredential(password)) {
-    setLoginStatus("Password incorrecto.", "error");
-    return;
-  }
+  setAuthButtonsDisabled(true);
+  setLoginStatus("Conectando con Firebase...", "loading");
 
-  showAppSession(username);
+  try {
+    const credential = await auth.signInWithEmailAndPassword(usernameToAuthEmail(username), password);
+    showAppSession(credential.user.displayName || username);
+    setLoginStatus("");
+  } catch (error) {
+    setLoginStatus(getAuthErrorMessage(error), "error");
+  } finally {
+    setAuthButtonsDisabled(false);
+  }
 }
 
 // ── Build selector cards ──────────────────────────────────────────────────
@@ -1113,9 +1152,9 @@ fragmentsMaxDesiredBtn?.addEventListener("click", async () => {
   setFragmentsStatus(`Objetivo max aplicado a ${character.name}.`, "success");
 });
 
-loginForm?.addEventListener("submit", loginLocalUser);
+loginForm?.addEventListener("submit", loginFirebaseUser);
 
-registerUserBtn?.addEventListener("click", registerLocalUser);
+registerUserBtn?.addEventListener("click", registerFirebaseUser);
 
 clearLoginBtn?.addEventListener("click", () => {
   if (loginUsername) loginUsername.value = "";
@@ -1124,15 +1163,29 @@ clearLoginBtn?.addEventListener("click", () => {
   loginUsername?.focus();
 });
 
-logoutBtn?.addEventListener("click", () => {
-  showLoginSession("Sesion cerrada.");
+logoutBtn?.addEventListener("click", async () => {
+  try {
+    await getFirebaseAuth()?.signOut();
+  } finally {
+    showLoginSession("Sesion cerrada.");
+  }
 });
 
-const savedSession = getSavedSession();
-if (savedSession?.username) {
-  showAppSession(savedSession.username);
+const auth = getFirebaseAuth();
+if (auth) {
+  auth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL).catch((error) => {
+    console.warn("Firebase Auth persistence error:", error);
+  });
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      const username = user.displayName || user.email?.split("@")[0] || "usuario";
+      showAppSession(username);
+    } else {
+      showLoginSession();
+    }
+  });
 } else {
-  showLoginSession();
+  showLoginSession("Firebase Auth no cargo. Revisa la configuracion.");
 }
 
 selectBoss("gloom");

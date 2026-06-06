@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build:firebase": "node scripts/build-firebase.js",
-    "deploy:firebase": "npm run build:firebase && firebase deploy --only hosting,functions",
+    "deploy:firebase": "npm run build:firebase && npx firebase-tools deploy --only hosting",
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
