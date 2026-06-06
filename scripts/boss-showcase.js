@@ -180,6 +180,7 @@ const AUTH_SESSION_STORAGE_KEY = "mapletools_auth_session";
 const CHARACTER_STORAGE_KEY = "mapletools_active_character";
 const CHARACTER_LIST_STORAGE_KEY = "mapletools_characters";
 const ACTIVE_CHARACTER_ID_KEY = "mapletools_active_character_id";
+const API_BASE_URL = String(window.MAPLETOOLS_API_BASE || "").replace(/\/$/, "");
 let skillsData = null;
 let costsData = null;
 
@@ -495,7 +496,7 @@ async function fetchMapleHubCharacter(ign, region = "na") {
   const safeIgn = encodeURIComponent(ign.trim());
   const safeRegion = encodeURIComponent(region);
   const timestamp = Date.now();
-  const url = `/api/character/?characterName=${safeIgn}&region=${safeRegion}&_t=${timestamp}`;
+  const url = `${API_BASE_URL}/api/character/?characterName=${safeIgn}&region=${safeRegion}&_t=${timestamp}`;
 
   const response = await fetch(url, {
     method: "GET",
@@ -517,7 +518,7 @@ async function fetchMapleHubCharacter(ign, region = "na") {
 
   if ((data.level ?? 0) >= 260 && (!data.additionalData || !data.additionalData.expData)) {
     try {
-      const fallback = await fetch(`/api/character-fallback/?characterName=${safeIgn}&region=${safeRegion}&_t=${timestamp}`, {
+      const fallback = await fetch(`${API_BASE_URL}/api/character-fallback/?characterName=${safeIgn}&region=${safeRegion}&_t=${timestamp}`, {
         method: "GET",
         cache: "no-cache",
         headers: {

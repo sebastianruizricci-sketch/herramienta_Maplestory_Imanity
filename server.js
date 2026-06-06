@@ -11,7 +11,7 @@ dotenv.config({ path: path.join(ROOT, ".env") });
 dotenv.config({ path: path.join(CHATBOT_ROOT, ".env") });
 
 const PORT = Number(process.env.PORT) || 4173;
-const HOST = process.env.HOST || "127.0.0.1";
+const HOST = process.env.HOST || (process.env.RENDER ? "0.0.0.0" : "127.0.0.1");
 const CHATBOT_CONFIG = require(path.join(CHATBOT_ROOT, "docs.config.cjs"));
 const SKILL_DATA = require(path.join(ROOT, "data", "skills.json"));
 
@@ -107,6 +107,12 @@ const send = (res, status, body, headers = {}) => {
   res.writeHead(status, headers);
   res.end(body);
 };
+
+function setApiCorsHeaders(res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Accept, Content-Type, X-MapleHub-Request");
+}
 
 const readJsonBody = (req) =>
   new Promise((resolve, reject) => {
@@ -445,6 +451,15 @@ function handleChatBotHealth(req, res) {
 }
 
 http.createServer((req, res) => {
+  if (req.url.startsWith("/api/")) {
+    setApiCorsHeaders(res);
+  }
+
+  if (req.method === "OPTIONS" && req.url.startsWith("/api/")) {
+    send(res, 204, "");
+    return;
+  }
+
   if (req.method === "POST" && req.url === "/api/ask") {
     handleChatBotAsk(req, res);
     return;
