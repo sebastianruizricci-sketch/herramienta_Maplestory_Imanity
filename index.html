@@ -6,7 +6,35 @@
     <title>MapleStory Bosses</title>
     <link rel="stylesheet" href="styles/boss-showcase.css" />
   </head>
-  <body>
+  <body class="auth-locked">
+
+    <section class="login-screen" id="loginScreen" aria-label="Entrada de usuario">
+      <div class="login-ambient" aria-hidden="true"></div>
+      <form class="login-panel" id="loginForm" autocomplete="on">
+        <div class="login-brand">
+          <span class="login-brand-title">imanity</span>
+          <span class="login-brand-subtitle">MapleStory Guild</span>
+        </div>
+
+        <div class="login-fields">
+          <label for="loginUsername">Username</label>
+          <input id="loginUsername" name="username" type="text" autocomplete="username" placeholder="Enter your username" required />
+
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required />
+        </div>
+
+        <p class="login-status" id="loginStatus"></p>
+
+        <div class="login-actions">
+          <button class="login-primary" id="loginSubmit" type="submit">Login</button>
+          <div class="login-secondary-row">
+            <button type="button" id="registerUserBtn">Register</button>
+            <button type="button" id="clearLoginBtn">Quit</button>
+          </div>
+        </div>
+      </form>
+    </section>
 
     <div class="showcase" id="showcase">
 
@@ -81,6 +109,7 @@
         </nav>
 
         <div class="sidebar-footer">
+          <button class="sidebar-logout" id="logoutBtn" type="button">Salir</button>
           <span class="sidebar-version">v1.0 MVP</span>
         </div>
 
