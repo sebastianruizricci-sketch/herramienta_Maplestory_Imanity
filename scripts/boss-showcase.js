@@ -185,6 +185,47 @@ const BOSSES = [
   },
 ];
 
+const PARTY_BOSS_OPTIONS = [
+  "Balrog",
+  "Monster Park Extreme",
+  "Zakum",
+  "Magnus",
+  "Hilla",
+  "OMNI-CLN",
+  "Papulatus",
+  "Pierre",
+  "Von Bon",
+  "Crimson Queen",
+  "Vellum",
+  "Von Leon",
+  "Horntail",
+  "Arkarium",
+  "Pink Bean",
+  "Cygnus",
+  "Lotus",
+  "Damien",
+  "Guardian Angel Slime",
+  "Lucid",
+  "Will",
+  "Gloom",
+  "Verus Hilla",
+  "Darknell",
+  "Black Mage",
+  "Chosen Seren",
+  "Kalos the Guardian",
+  "Kaling",
+  "Limbo",
+  "Gollux",
+  "Ranmaru",
+  "Princess No",
+  "Akechi Mitsuhide",
+  "Baldrix",
+  "First Adversary",
+].map((name) => ({
+  id: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+  name,
+}));
+
 // ── DOM refs ──────────────────────────────────────────────────────────────
 const bgLayer         = document.getElementById("bgLayer");
 const showcase        = document.getElementById("showcase");
@@ -217,6 +258,7 @@ const partysAllianceSectionTab = document.getElementById("partysAllianceSectionT
 const partysCreateTab = document.getElementById("partysCreateTab");
 const partysListTab   = document.getElementById("partysListTab");
 const partysBossSelect = document.getElementById("partysBossSelect");
+const partysCreateBossSelect = document.getElementById("partysCreateBossSelect");
 const partysCreateView = document.getElementById("partysCreateView");
 const partysListView  = document.getElementById("partysListView");
 const partysRoster    = document.getElementById("partysRoster");
@@ -1047,9 +1089,23 @@ function rosterCharacterKey(character) {
   return `${character.ownerId || ""}:${(character.region || "").toLowerCase()}:${(character.name || "").toLowerCase()}`;
 }
 
+function getPartyBossLabel(bossId) {
+  return PARTY_BOSS_OPTIONS.find((boss) => boss.id === bossId)?.name
+    || BOSSES.find((boss) => boss.id === bossId)?.name
+    || bossId;
+}
+
 function populatePartysBossSelect() {
-  if (!partysBossSelect || partysBossSelect.options.length) return;
-  partysBossSelect.innerHTML = BOSSES.map((boss) => `<option value="${boss.id}">${boss.name}</option>`).join("");
+  const optionsMarkup = PARTY_BOSS_OPTIONS.map((boss) => `<option value="${boss.id}">${boss.name}</option>`).join("");
+  [partysBossSelect, partysCreateBossSelect].forEach((select) => {
+    if (!select || select.options.length) return;
+    select.innerHTML = optionsMarkup;
+  });
+}
+
+function syncPartysBossSelects(value = partysCurrentBossId) {
+  if (partysBossSelect) partysBossSelect.value = value || "";
+  if (partysCreateBossSelect) partysCreateBossSelect.value = value || "";
 }
 
 function findRosterCharacter(ownerId, region, name) {
@@ -1155,15 +1211,13 @@ function renderPartysList() {
 
   const currentUserId = getCurrentUserId();
 
-  const bossLabel = BOSSES.find((boss) => boss.id === partysCurrentBossId)?.name || partysCurrentBossId;
-
   partysGrid.innerHTML = partysCurrentParties.map((party) => `
     <article class="party-card">
       <header>
         <div>
           <h4>${party.label || "Party sin nombre"}</h4>
           <p class="party-card-subtitle">
-            Boss: ${bossLabel}
+            Boss: ${getPartyBossLabel(party.bossId || partysCurrentBossId)}
           </p>
           ${(party.runTime || party.timezone) ? `
             <div class="party-card-runline">
@@ -1203,9 +1257,9 @@ function updatePartysSectionLabels() {
 async function initPartysPage() {
   populatePartysBossSelect();
   if (!partysCurrentBossId) {
-    partysCurrentBossId = partysBossSelect?.value || BOSSES[0]?.id || null;
+    partysCurrentBossId = partysBossSelect?.value || PARTY_BOSS_OPTIONS[0]?.id || null;
   }
-  if (partysBossSelect) partysBossSelect.value = partysCurrentBossId;
+  syncPartysBossSelects(partysCurrentBossId);
 
   if (partysInitialized) {
     await loadCurrentUserProfile();
@@ -1232,14 +1286,23 @@ async function initPartysPage() {
   renderPartysList();
 }
 
-partysBossSelect?.addEventListener("change", async () => {
-  partysCurrentBossId = partysBossSelect.value;
+async function changePartysBoss(bossId) {
+  partysCurrentBossId = bossId;
+  syncPartysBossSelects(partysCurrentBossId);
   partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
   setPartysStatus("");
   renderPartySlots();
   renderPartysRoster();
   await loadPartiesForCurrentBoss();
   renderPartysList();
+}
+
+partysBossSelect?.addEventListener("change", () => {
+  changePartysBoss(partysBossSelect.value);
+});
+
+partysCreateBossSelect?.addEventListener("change", () => {
+  changePartysBoss(partysCreateBossSelect.value);
 });
 
 async function switchPartysSection(section) {
@@ -1330,7 +1393,7 @@ partysSaveBtn?.addEventListener("click", async () => {
   partysSaveBtn.disabled = true;
 
   try {
-    const bossLabel = BOSSES.find((boss) => boss.id === partysCurrentBossId)?.name || partysCurrentBossId;
+    const bossLabel = getPartyBossLabel(partysCurrentBossId);
     const created = await fetchAuthedJson("/api/parties", {
       method: "POST",
       body: JSON.stringify({
