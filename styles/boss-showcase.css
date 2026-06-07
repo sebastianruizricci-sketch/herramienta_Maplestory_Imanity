@@ -1193,13 +1193,17 @@ body.auth-locked .showcase {
 .showcase.fragments-view .boss-selector,
 .showcase.chatbot-view .info-panel,
 .showcase.chatbot-view .boss-stage,
-.showcase.chatbot-view .boss-selector {
+.showcase.chatbot-view .boss-selector,
+.showcase.partys-view .info-panel,
+.showcase.partys-view .boss-stage,
+.showcase.partys-view .boss-selector {
   display: none;
 }
 
 .showcase.character-view .bg-overlay,
 .showcase.fragments-view .bg-overlay,
-.showcase.chatbot-view .bg-overlay {
+.showcase.chatbot-view .bg-overlay,
+.showcase.partys-view .bg-overlay {
   background:
     linear-gradient(90deg,
       rgba(5, 4, 11, 1.00) 0%,
