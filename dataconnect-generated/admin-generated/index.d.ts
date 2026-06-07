@@ -31,6 +31,7 @@ export interface CreateBossPartyData {
 export interface CreateBossPartyVariables {
   bossId: string;
   label?: string | null;
+  category?: string | null;
 }
 
 export interface DeleteBossPartyData {
@@ -47,6 +48,8 @@ export interface GetCurrentUserData {
     username: string;
     displayName?: string | null;
     email?: string | null;
+    guild?: string | null;
+    timezone?: string | null;
     createdAt: TimestampString;
     updatedAt: TimestampString;
   } & AppUser_Key;
@@ -62,6 +65,23 @@ export interface LegacyUser_Key {
   __typename?: 'LegacyUser_Key';
 }
 
+export interface ListAllianceRosterData {
+  mapleCharacters: ({
+    ownerId: string;
+    region: string;
+    name: string;
+    jobName?: string | null;
+    level?: number | null;
+    worldName?: string | null;
+    characterImgURL?: string | null;
+    owner: {
+      username: string;
+      guild?: string | null;
+      timezone?: string | null;
+    };
+  } & MapleCharacter_Key)[];
+}
+
 export interface ListGuildRosterData {
   mapleCharacters: ({
     ownerId: string;
@@ -71,7 +91,16 @@ export interface ListGuildRosterData {
     level?: number | null;
     worldName?: string | null;
     characterImgURL?: string | null;
+    owner: {
+      username: string;
+      guild?: string | null;
+      timezone?: string | null;
+    };
   } & MapleCharacter_Key)[];
+}
+
+export interface ListGuildRosterVariables {
+  guild?: string | null;
 }
 
 export interface ListMyMapleCharactersData {
@@ -93,6 +122,7 @@ export interface ListPartiesByBossData {
     id: UUIDString;
     bossId: string;
     label?: string | null;
+    category?: string | null;
     ownerId: string;
     createdAt: TimestampString;
     members: ({
@@ -106,6 +136,7 @@ export interface ListPartiesByBossData {
 
 export interface ListPartiesByBossVariables {
   bossId: string;
+  category?: string | null;
 }
 
 export interface MapleCharacter_Key {
@@ -132,6 +163,8 @@ export interface UpsertCurrentUserVariables {
   username: string;
   displayName?: string | null;
   email?: string | null;
+  guild?: string | null;
+  timezone?: string | null;
 }
 
 export interface UpsertMapleCharacterData {
@@ -172,9 +205,14 @@ export function listMyMapleCharacters(dc: DataConnect, options?: OperationOption
 export function listMyMapleCharacters(options?: OperationOptions): Promise<ExecuteOperationResponse<ListMyMapleCharactersData>>;
 
 /** Generated Node Admin SDK operation action function for the 'ListGuildRoster' Query. Allow users to execute without passing in DataConnect. */
-export function listGuildRoster(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<ListGuildRosterData>>;
+export function listGuildRoster(dc: DataConnect, vars?: ListGuildRosterVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ListGuildRosterData>>;
 /** Generated Node Admin SDK operation action function for the 'ListGuildRoster' Query. Allow users to pass in custom DataConnect instances. */
-export function listGuildRoster(options?: OperationOptions): Promise<ExecuteOperationResponse<ListGuildRosterData>>;
+export function listGuildRoster(vars?: ListGuildRosterVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ListGuildRosterData>>;
+
+/** Generated Node Admin SDK operation action function for the 'ListAllianceRoster' Query. Allow users to execute without passing in DataConnect. */
+export function listAllianceRoster(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<ListAllianceRosterData>>;
+/** Generated Node Admin SDK operation action function for the 'ListAllianceRoster' Query. Allow users to pass in custom DataConnect instances. */
+export function listAllianceRoster(options?: OperationOptions): Promise<ExecuteOperationResponse<ListAllianceRosterData>>;
 
 /** Generated Node Admin SDK operation action function for the 'CreateBossParty' Mutation. Allow users to execute without passing in DataConnect. */
 export function createBossParty(dc: DataConnect, vars: CreateBossPartyVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<CreateBossPartyData>>;

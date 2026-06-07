@@ -137,6 +137,8 @@ const fragmentsPage   = document.getElementById("fragmentsPage");
 const chatbotPage     = document.getElementById("chatbotPage");
 const partysNav       = document.getElementById("partysNav");
 const partysPage      = document.getElementById("partysPage");
+const partysOwnSectionTab = document.getElementById("partysOwnSectionTab");
+const partysAllianceSectionTab = document.getElementById("partysAllianceSectionTab");
 const partysCreateTab = document.getElementById("partysCreateTab");
 const partysListTab   = document.getElementById("partysListTab");
 const partysBossSelect = document.getElementById("partysBossSelect");
@@ -396,9 +398,16 @@ async function registerFirebaseUser(event) {
   const password = registerPassword?.value || "";
   const confirmPassword = registerConfirmPassword?.value || "";
   const inviteToken = registerToken?.value || "";
+  const guild = registerForm?.querySelector('input[name="guild"]:checked')?.value || "";
+  const timezone = document.getElementById("registerTimezone")?.value || "";
 
   if (!username || !password || !inviteToken) {
     setRegisterStatus("Completa usuario, password y token.", "error");
+    return;
+  }
+
+  if (!guild) {
+    setRegisterStatus("Selecciona tu gremio (Imanity o Lorien).", "error");
     return;
   }
 
@@ -425,7 +434,7 @@ async function registerFirebaseUser(event) {
     const response = await fetch(`${API_BASE_URL}/api/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password, inviteToken }),
+      body: JSON.stringify({ username, email, password, inviteToken, guild, timezone }),
     });
     const result = await response.json();
 
@@ -928,6 +937,29 @@ let partysCurrentBossId = null;
 let partysCurrentParties = [];
 let partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
 let partysInitialized = false;
+let partysSection = "own"; // "own" | "alianza"
+let currentUserGuild = null;
+let currentUserTimezone = null;
+
+function partysCurrentCategory() {
+  return partysSection === "alianza" ? "alianza" : (currentUserGuild || "imanity");
+}
+
+const GUILD_LABELS = { imanity: "Imanity", lorien: "Lorien" };
+
+function guildLabel(guild) {
+  return GUILD_LABELS[guild] || "Sin gremio";
+}
+
+async function loadCurrentUserProfile() {
+  try {
+    const data = await fetchAuthedJson("/api/me");
+    currentUserGuild = data.user?.guild || null;
+    currentUserTimezone = data.user?.timezone || null;
+  } catch (error) {
+    setPartysStatus(error.message || "No se pudo cargar tu perfil de gremio.", "error");
+  }
+}
 
 function setPartysStatus(message, state = "neutral") {
   if (!partysStatus) return;
@@ -954,7 +986,10 @@ function findRosterCharacter(ownerId, region, name) {
 
 async function loadGuildRoster() {
   try {
-    const data = await fetchAuthedJson("/api/roster");
+    const query = partysSection === "own" && currentUserGuild
+      ? `?guild=${encodeURIComponent(currentUserGuild)}`
+      : "";
+    const data = await fetchAuthedJson(`/api/roster${query}`);
     partysGuildRoster = data.characters || [];
   } catch (error) {
     setPartysStatus(error.message || "No se pudo cargar el roster del gremio.", "error");
@@ -964,7 +999,8 @@ async function loadGuildRoster() {
 async function loadPartiesForCurrentBoss() {
   if (!partysCurrentBossId) return;
   try {
-    const data = await fetchAuthedJson(`/api/parties?bossId=${encodeURIComponent(partysCurrentBossId)}`);
+    const params = new URLSearchParams({ bossId: partysCurrentBossId, category: partysCurrentCategory() });
+    const data = await fetchAuthedJson(`/api/parties?${params.toString()}`);
     partysCurrentParties = data.parties || [];
   } catch (error) {
     setPartysStatus(error.message || "No se pudieron cargar las partys.", "error");
@@ -1004,6 +1040,7 @@ function renderPartysRoster() {
           </div>
           <div class="roster-meta">
             <span>${character.jobName || "Sin clase"}</span>
+            ${character.owner?.timezone ? `<span class="roster-timezone-badge">${character.owner.timezone}</span>` : ""}
             ${assigned ? `<span class="party-assigned-badge">En la party</span>` : ""}
           </div>
         </div>
@@ -1060,12 +1097,22 @@ function renderPartysList() {
               <span class="party-member-slot">#${member.slotIndex + 1}</span>
               <strong>${member.characterName}</strong>
               <em>${character?.jobName || "Sin clase"} · Lv. ${character?.level ?? "-"}</em>
+              ${character?.owner?.guild ? `<span class="party-member-guild-badge">${guildLabel(character.owner.guild)}</span>` : ""}
+              ${character?.owner?.timezone ? `<span class="party-member-timezone-badge">${character.owner.timezone}</span>` : ""}
             </li>
           `;
         }).join("") || "<li>Sin miembros aún</li>"}
       </ul>
     </article>
   `).join("");
+}
+
+function updatePartysSectionLabels() {
+  if (partysOwnSectionTab) {
+    partysOwnSectionTab.textContent = currentUserGuild
+      ? `Partys ${guildLabel(currentUserGuild)}`
+      : "Partys de mi gremio";
+  }
 }
 
 async function initPartysPage() {
@@ -1083,6 +1130,8 @@ async function initPartysPage() {
   }
   partysInitialized = true;
 
+  await loadCurrentUserProfile();
+  updatePartysSectionLabels();
   await loadGuildRoster();
   await loadPartiesForCurrentBoss();
   renderPartysRoster();
@@ -1099,6 +1148,23 @@ partysBossSelect?.addEventListener("change", async () => {
   await loadPartiesForCurrentBoss();
   renderPartysList();
 });
+
+async function switchPartysSection(section) {
+  if (partysSection === section) return;
+  partysSection = section;
+  partysOwnSectionTab?.classList.toggle("active", section === "own");
+  partysAllianceSectionTab?.classList.toggle("active", section === "alianza");
+  partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
+  setPartysStatus("");
+  renderPartySlots();
+  await loadGuildRoster();
+  await loadPartiesForCurrentBoss();
+  renderPartysRoster();
+  renderPartysList();
+}
+
+partysOwnSectionTab?.addEventListener("click", () => switchPartysSection("own"));
+partysAllianceSectionTab?.addEventListener("click", () => switchPartysSection("alianza"));
 
 partysCreateTab?.addEventListener("click", () => {
   partysCreateTab.classList.add("active");
@@ -1166,7 +1232,7 @@ partysSaveBtn?.addEventListener("click", async () => {
     const bossLabel = BOSSES.find((boss) => boss.id === partysCurrentBossId)?.name || partysCurrentBossId;
     const created = await fetchAuthedJson("/api/parties", {
       method: "POST",
-      body: JSON.stringify({ bossId: partysCurrentBossId, label: `Party ${bossLabel}` }),
+      body: JSON.stringify({ bossId: partysCurrentBossId, label: `Party ${bossLabel}`, category: partysCurrentCategory() }),
     });
     const partyId = created.party?.id;
 

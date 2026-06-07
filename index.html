@@ -56,6 +56,28 @@
 
           <label for="registerToken">Token de invitacion</label>
           <input id="registerToken" name="inviteToken" type="password" autocomplete="off" placeholder="Token entregado por Imanity" required />
+
+          <label>Gremio</label>
+          <div class="register-guild-options" role="radiogroup" aria-label="Selecciona tu gremio">
+            <label class="register-guild-option">
+              <input type="radio" name="guild" value="imanity" required />
+              <span>Imanity</span>
+            </label>
+            <label class="register-guild-option">
+              <input type="radio" name="guild" value="lorien" required />
+              <span>Lorien</span>
+            </label>
+          </div>
+
+          <label for="registerTimezone">Zona horaria</label>
+          <select id="registerTimezone" name="timezone">
+            <option value="">Sin especificar</option>
+            <option value="UTC-5 (Peru, Colombia, Panama - reset 7:00pm)">UTC-5 — Peru, Colombia, Panama (reset 7:00pm)</option>
+            <option value="UTC-4 (Bolivia, Venezuela, Rep. Dominicana - reset 8:00pm)">UTC-4 — Bolivia, Venezuela, Rep. Dominicana (reset 8:00pm)</option>
+            <option value="UTC-3 (Argentina, Chile, Brasil - reset 9:00pm)">UTC-3 — Argentina, Chile, Brasil (reset 9:00pm)</option>
+            <option value="UTC-6 (Mexico, Centroamerica - reset 6:00pm)">UTC-6 — Mexico, Centroamerica (reset 6:00pm)</option>
+            <option value="UTC+1 (Espana - reset 1:00am)">UTC+1 — Espana (reset 1:00am)</option>
+          </select>
         </div>
 
         <p class="register-status" id="registerStatus"></p>
@@ -316,6 +338,11 @@
             <p class="character-kicker">Coordinación de gremio</p>
             <h2>Partys</h2>
           </div>
+        </div>
+
+        <div class="partys-section-nav" id="partysSectionNav">
+          <button type="button" class="partys-section-item active" id="partysOwnSectionTab" data-section="own">Partys de mi gremio</button>
+          <button type="button" class="partys-section-item" id="partysAllianceSectionTab" data-section="alianza">Alianza</button>
         </div>
 
         <div class="partys-toolbar">

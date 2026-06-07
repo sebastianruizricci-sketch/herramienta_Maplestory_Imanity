@@ -1,4 +1,24 @@
-query ListGuildRoster @auth(level: USER) {
+query ListGuildRoster($guild: String) @auth(level: USER) {
+  mapleCharacters(
+    where: { owner: { guild: { eq: $guild } } }
+    orderBy: [{ level: DESC }, { name: ASC }]
+  ) {
+    ownerId
+    region
+    name
+    jobName
+    level
+    worldName
+    characterImgURL
+    owner {
+      username
+      guild
+      timezone
+    }
+  }
+}
+
+query ListAllianceRoster @auth(level: USER) {
   mapleCharacters(orderBy: [{ level: DESC }, { name: ASC }]) {
     ownerId
     region
@@ -7,13 +27,19 @@ query ListGuildRoster @auth(level: USER) {
     level
     worldName
     characterImgURL
+    owner {
+      username
+      guild
+      timezone
+    }
   }
 }
 
-mutation CreateBossParty($bossId: String!, $label: String) @auth(level: USER) {
+mutation CreateBossParty($bossId: String!, $label: String, $category: String) @auth(level: USER) {
   bossParty_insert(data: {
     bossId: $bossId
     label: $label
+    category: $category
     ownerId_expr: "auth.uid"
   })
 }
@@ -43,11 +69,15 @@ mutation RemovePartyMember($partyId: UUID!, $slotIndex: Int!) @auth(level: USER)
   bossPartyMember_delete(key: { partyId: $partyId, slotIndex: $slotIndex })
 }
 
-query ListPartiesByBoss($bossId: String!) @auth(level: USER) {
-  bossParties(where: { bossId: { eq: $bossId } }, orderBy: [{ createdAt: DESC }]) {
+query ListPartiesByBoss($bossId: String!, $category: String) @auth(level: USER) {
+  bossParties(
+    where: { bossId: { eq: $bossId }, category: { eq: $category } }
+    orderBy: [{ createdAt: DESC }]
+  ) {
     id
     bossId
     label
+    category
     ownerId
     createdAt
     members: bossPartyMembers_on_party(orderBy: [{ slotIndex: ASC }]) {
