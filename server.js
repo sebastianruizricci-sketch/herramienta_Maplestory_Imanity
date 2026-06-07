@@ -786,7 +786,12 @@ async function handleCreateParty(req, res) {
     }
 
     const result = await createBossParty(
-      { bossId, label: body.label || null, category: normalizePartyCategory(body.category) },
+      {
+        bossId,
+        label: body.label || null,
+        category: normalizePartyCategory(body.category),
+        timezone: normalizeTimezone(body.timezone),
+      },
       getImpersonationOptions(authClaims)
     );
     sendJson(res, 201, { party: result.data.bossParty_insert });

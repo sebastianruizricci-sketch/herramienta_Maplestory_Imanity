@@ -32,6 +32,7 @@ export interface CreateBossPartyVariables {
   bossId: string;
   label?: string | null;
   category?: string | null;
+  timezone?: string | null;
 }
 
 export interface DeleteBossPartyData {
@@ -123,6 +124,7 @@ export interface ListPartiesByBossData {
     bossId: string;
     label?: string | null;
     category?: string | null;
+    timezone?: string | null;
     ownerId: string;
     createdAt: TimestampString;
     members: ({
