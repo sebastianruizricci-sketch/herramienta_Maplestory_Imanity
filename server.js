@@ -504,6 +504,11 @@ function normalizeRunTime(value) {
   return runTime ? runTime.slice(0, 64) : null;
 }
 
+function normalizeDifficulty(value) {
+  const difficulty = String(value || "").trim();
+  return difficulty ? difficulty.slice(0, 20) : null;
+}
+
 function normalizePartyCategory(value, fallbackGuild) {
   const category = String(value || "").trim().toLowerCase();
   if (VALID_PARTY_CATEGORIES.includes(category)) return category;
@@ -795,6 +800,7 @@ async function handleCreateParty(req, res) {
         bossId,
         label: body.label || null,
         category: normalizePartyCategory(body.category),
+        difficulty: normalizeDifficulty(body.difficulty),
         timezone: normalizeTimezone(body.timezone),
         runTime: normalizeRunTime(body.runTime),
       },

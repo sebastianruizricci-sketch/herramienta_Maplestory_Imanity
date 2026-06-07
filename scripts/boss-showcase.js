@@ -226,6 +226,25 @@ const PARTY_BOSS_OPTIONS = [
   name,
 }));
 
+const DEFAULT_PARTY_DIFFICULTIES = ["Easy", "Normal", "Hard", "Chaos", "Extreme"];
+const PARTY_BOSS_DIFFICULTIES = {
+  "baldrix": ["Normal", "Hard"],
+  "limbo": ["Normal", "Hard"],
+  "kaling": ["Easy", "Normal", "Hard", "Extreme"],
+  "first-adversary": ["Easy", "Normal", "Hard", "Extreme"],
+  "kalos-the-guardian": ["Easy", "Normal", "Chaos", "Extreme"],
+  "chosen-seren": ["Normal", "Hard", "Extreme"],
+  "black-mage": ["Hard", "Extreme"],
+  "darknell": ["Normal", "Hard"],
+  "verus-hilla": ["Normal", "Hard"],
+  "gloom": ["Normal", "Chaos"],
+  "will": ["Easy", "Normal", "Hard"],
+  "lucid": ["Easy", "Normal", "Hard"],
+  "guardian-angel-slime": ["Normal", "Chaos"],
+  "damien": ["Normal", "Hard"],
+  "lotus": ["Normal", "Hard", "Extreme"],
+};
+
 // ── DOM refs ──────────────────────────────────────────────────────────────
 const bgLayer         = document.getElementById("bgLayer");
 const showcase        = document.getElementById("showcase");
@@ -264,6 +283,7 @@ const partysListView  = document.getElementById("partysListView");
 const partysRoster    = document.getElementById("partysRoster");
 const partySlotsGrid  = document.getElementById("partySlotsGrid");
 const partysSaveBtn   = document.getElementById("partysSaveBtn");
+const partysDifficultySelect = document.getElementById("partysDifficultySelect");
 const partysTimezoneSelect = document.getElementById("partysTimezoneSelect");
 populateTimezoneSelect(partysTimezoneSelect);
 const partysRunTimeSelect = document.getElementById("partysRunTimeSelect");
@@ -1095,6 +1115,21 @@ function getPartyBossLabel(bossId) {
     || bossId;
 }
 
+function getPartyBossDifficulties(bossId) {
+  return PARTY_BOSS_DIFFICULTIES[bossId] || DEFAULT_PARTY_DIFFICULTIES;
+}
+
+function populatePartysDifficultySelect(preferredValue = partysDifficultySelect?.value || "") {
+  if (!partysDifficultySelect) return;
+  const difficulties = getPartyBossDifficulties(partysCurrentBossId);
+  partysDifficultySelect.innerHTML = difficulties
+    .map((difficulty) => `<option value="${difficulty}">${difficulty}</option>`)
+    .join("");
+  partysDifficultySelect.value = difficulties.includes(preferredValue)
+    ? preferredValue
+    : difficulties[0] || "";
+}
+
 function populatePartysBossSelect() {
   const optionsMarkup = PARTY_BOSS_OPTIONS.map((boss) => `<option value="${boss.id}">${boss.name}</option>`).join("");
   [partysBossSelect, partysCreateBossSelect].forEach((select) => {
@@ -1106,6 +1141,7 @@ function populatePartysBossSelect() {
 function syncPartysBossSelects(value = partysCurrentBossId) {
   if (partysBossSelect) partysBossSelect.value = value || "";
   if (partysCreateBossSelect) partysCreateBossSelect.value = value || "";
+  populatePartysDifficultySelect();
 }
 
 function findRosterCharacter(ownerId, region, name) {
@@ -1219,8 +1255,9 @@ function renderPartysList() {
           <p class="party-card-subtitle">
             Boss: ${getPartyBossLabel(party.bossId || partysCurrentBossId)}
           </p>
-          ${(party.runTime || party.timezone) ? `
+          ${(party.difficulty || party.runTime || party.timezone) ? `
             <div class="party-card-runline">
+              ${party.difficulty ? `<span>Dificultad: ${party.difficulty}</span>` : ""}
               ${party.runTime ? `<span>Run: ${party.runTime}</span>` : ""}
               ${party.timezone ? `<span>${party.timezone}</span>` : ""}
             </div>
@@ -1400,6 +1437,7 @@ partysSaveBtn?.addEventListener("click", async () => {
         bossId: partysCurrentBossId,
         label: `Party ${bossLabel}`,
         category: partysCurrentCategory(),
+        difficulty: partysDifficultySelect?.value || "",
         timezone: partysTimezoneSelect?.value || "",
         runTime: partysRunTimeSelect?.value || "",
       }),

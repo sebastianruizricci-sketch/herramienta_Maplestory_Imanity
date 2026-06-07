@@ -32,6 +32,7 @@ export interface CreateBossPartyVariables {
   bossId: string;
   label?: string | null;
   category?: string | null;
+  difficulty?: string | null;
   timezone?: string | null;
   runTime?: string | null;
 }
@@ -125,6 +126,7 @@ export interface ListPartiesByBossData {
     bossId: string;
     label?: string | null;
     category?: string | null;
+    difficulty?: string | null;
     timezone?: string | null;
     runTime?: string | null;
     ownerId: string;
