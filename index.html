@@ -70,14 +70,7 @@
           </div>
 
           <label for="registerTimezone">Zona horaria</label>
-          <select id="registerTimezone" name="timezone">
-            <option value="">Sin especificar</option>
-            <option value="UTC-5 (Peru, Colombia, Panama - reset 7:00pm)">UTC-5 — Peru, Colombia, Panama (reset 7:00pm)</option>
-            <option value="UTC-4 (Bolivia, Venezuela, Rep. Dominicana - reset 8:00pm)">UTC-4 — Bolivia, Venezuela, Rep. Dominicana (reset 8:00pm)</option>
-            <option value="UTC-3 (Argentina, Chile, Brasil - reset 9:00pm)">UTC-3 — Argentina, Chile, Brasil (reset 9:00pm)</option>
-            <option value="UTC-6 (Mexico, Centroamerica - reset 6:00pm)">UTC-6 — Mexico, Centroamerica (reset 6:00pm)</option>
-            <option value="UTC+1 (Espana - reset 1:00am)">UTC+1 — Espana (reset 1:00am)</option>
-          </select>
+          <select id="registerTimezone" name="timezone"></select>
         </div>
 
         <p class="register-status" id="registerStatus"></p>
@@ -385,6 +378,10 @@
                   <h3>Slots (1-6)</h3>
                 </div>
                 <button type="button" id="partysSaveBtn">Guardar party</button>
+              </div>
+              <div class="partys-timezone-row">
+                <label for="partysTimezoneSelect">Zona horaria del party</label>
+                <select id="partysTimezoneSelect" aria-label="Zona horaria del party"></select>
               </div>
               <div class="party-slots-grid" id="partySlotsGrid"></div>
               <p class="character-status" id="partysStatus"></p>

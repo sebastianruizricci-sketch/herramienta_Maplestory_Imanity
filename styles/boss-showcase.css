@@ -1742,7 +1742,12 @@ body.auth-locked .showcase {
 
 .partys-subnav {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 13px;
+  border: 1px solid rgba(192, 132, 252, .14);
+  background: rgba(255, 255, 255, .02);
 }
 
 .partys-subnav-item {
@@ -1767,11 +1772,17 @@ body.auth-locked .showcase {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
+  padding: 8px;
+  border-radius: 13px;
+  border: 1px solid rgba(232, 121, 249, .18);
+  background: rgba(255, 255, 255, .025);
 }
 
 .partys-section-item {
-  padding: 10px 18px;
+  flex: 1 1 160px;
+  min-height: 44px;
+  padding: 11px 20px;
   border-radius: 10px;
   border: 1px solid rgba(192, 132, 252, .25);
   background: rgba(139, 92, 246, .08);
@@ -1780,12 +1791,20 @@ body.auth-locked .showcase {
   font: inherit;
   font-size: 14px;
   font-weight: 850;
+  text-align: center;
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+
+.partys-section-item:hover {
+  border-color: rgba(232, 121, 249, .4);
+  color: #fff;
 }
 
 .partys-section-item.active {
   border-color: rgba(232, 121, 249, .6);
   background: rgba(232, 121, 249, .22);
   color: #fff;
+  box-shadow: 0 6px 20px rgba(232, 121, 249, .18);
 }
 
 .roster-timezone-badge,
@@ -1806,6 +1825,44 @@ body.auth-locked .showcase {
   padding: 3px 7px;
   border-radius: 6px;
   font-size: 10px;
+  font-weight: 800;
+}
+
+.partys-timezone-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.partys-timezone-row label {
+  color: rgba(248, 244, 255, .68);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.partys-timezone-row select {
+  flex: 1;
+  min-height: 38px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(192, 132, 252, .22);
+  background: rgba(0, 0, 0, .32);
+  color: #f8f4ff;
+  font: inherit;
+  font-size: 13px;
+}
+
+.party-card-timezone-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  background: rgba(56, 189, 248, .16);
+  color: #bae6fd;
+  font-size: 11px;
   font-weight: 800;
 }
 
@@ -1997,6 +2054,13 @@ body.auth-locked .showcase {
   margin: 0;
   color: #fff;
   font-size: 17px;
+}
+
+.party-card-subtitle {
+  margin: 4px 0 0;
+  color: rgba(248, 244, 255, .58);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .party-delete {

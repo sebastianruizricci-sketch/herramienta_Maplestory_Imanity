@@ -1,3 +1,24 @@
+const TIMEZONE_OPTIONS = [
+  { value: "", label: "Sin especificar" },
+  { value: "UTC-5 (Peru, Colombia, Panama - reset 7:00pm)", label: "UTC-5 — Peru, Colombia, Panama (reset 7:00pm)" },
+  { value: "UTC-4 (Bolivia, Venezuela, Rep. Dominicana - reset 8:00pm)", label: "UTC-4 — Bolivia, Venezuela, Rep. Dominicana (reset 8:00pm)" },
+  { value: "UTC-3 (Argentina, Chile, Brasil - reset 9:00pm)", label: "UTC-3 — Argentina, Chile, Brasil (reset 9:00pm)" },
+  { value: "UTC-6 (Mexico, Centroamerica - reset 6:00pm)", label: "UTC-6 — Mexico, Centroamerica (reset 6:00pm)" },
+  { value: "UTC-8 (EE.UU. Pacifico - reset 4:00pm)", label: "UTC-8 — EE.UU. Pacifico (reset 4:00pm)" },
+  { value: "UTC-7 (EE.UU. Montana - reset 5:00pm)", label: "UTC-7 — EE.UU. Montana (reset 5:00pm)" },
+  { value: "UTC+0 (Reino Unido, Portugal - reset 12:00am)", label: "UTC+0 — Reino Unido, Portugal (reset 12:00am)" },
+  { value: "UTC+1 (Espana - reset 1:00am)", label: "UTC+1 — Espana (reset 1:00am)" },
+  { value: "UTC+8 (China, Filipinas, Singapur - reset 10:00am)", label: "UTC+8 — China, Filipinas, Singapur (reset 10:00am)" },
+  { value: "UTC+9 (Japon, Corea del Sur - reset 9:00am)", label: "UTC+9 — Japon, Corea del Sur (reset 9:00am)" },
+  { value: "UTC+10 (Australia Este - reset 11:00am)", label: "UTC+10 — Australia Este (reset 11:00am)" },
+  { value: "UTC+12 (Nueva Zelanda - reset 1:00pm)", label: "UTC+12 — Nueva Zelanda (reset 1:00pm)" },
+];
+
+function populateTimezoneSelect(select) {
+  if (!select || select.options.length) return;
+  select.innerHTML = TIMEZONE_OPTIONS.map((tz) => `<option value="${tz.value}">${tz.label}</option>`).join("");
+}
+
 const BOSSES = [
   {
     id: "gloom",
@@ -149,6 +170,8 @@ const partysListView  = document.getElementById("partysListView");
 const partysRoster    = document.getElementById("partysRoster");
 const partySlotsGrid  = document.getElementById("partySlotsGrid");
 const partysSaveBtn   = document.getElementById("partysSaveBtn");
+const partysTimezoneSelect = document.getElementById("partysTimezoneSelect");
+populateTimezoneSelect(partysTimezoneSelect);
 const partysStatus    = document.getElementById("partysStatus");
 const partysGrid      = document.getElementById("partysGrid");
 const closeCharacterPanel = document.getElementById("closeCharacterPanel");
@@ -192,6 +215,8 @@ const registerEmail = document.getElementById("registerEmail");
 const registerPassword = document.getElementById("registerPassword");
 const registerConfirmPassword = document.getElementById("registerConfirmPassword");
 const registerToken = document.getElementById("registerToken");
+const registerTimezone = document.getElementById("registerTimezone");
+populateTimezoneSelect(registerTimezone);
 const registerStatus = document.getElementById("registerStatus");
 const registerUserBtn = document.getElementById("registerUserBtn");
 const backToLoginBtn = document.getElementById("backToLoginBtn");
@@ -1076,10 +1101,18 @@ function renderPartysList() {
 
   const currentUserId = getCurrentUserId();
 
+  const bossLabel = BOSSES.find((boss) => boss.id === partysCurrentBossId)?.name || partysCurrentBossId;
+
   partysGrid.innerHTML = partysCurrentParties.map((party) => `
     <article class="party-card">
       <header>
-        <h4>${party.label || "Party sin nombre"}</h4>
+        <div>
+          <h4>${party.label || "Party sin nombre"}</h4>
+          <p class="party-card-subtitle">
+            Boss: ${bossLabel}
+            ${party.timezone ? `<span class="party-card-timezone-badge">${party.timezone}</span>` : ""}
+          </p>
+        </div>
         ${party.ownerId === currentUserId ? `<button type="button" class="party-delete" data-party-id="${party.id}">Eliminar</button>` : ""}
       </header>
       <ul class="party-members-list">
@@ -1225,7 +1258,12 @@ partysSaveBtn?.addEventListener("click", async () => {
     const bossLabel = BOSSES.find((boss) => boss.id === partysCurrentBossId)?.name || partysCurrentBossId;
     const created = await fetchAuthedJson("/api/parties", {
       method: "POST",
-      body: JSON.stringify({ bossId: partysCurrentBossId, label: `Party ${bossLabel}`, category: partysCurrentCategory() }),
+      body: JSON.stringify({
+        bossId: partysCurrentBossId,
+        label: `Party ${bossLabel}`,
+        category: partysCurrentCategory(),
+        timezone: partysTimezoneSelect?.value || "",
+      }),
     });
     const partyId = created.party?.id;
 
