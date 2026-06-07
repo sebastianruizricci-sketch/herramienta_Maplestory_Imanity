@@ -499,6 +499,11 @@ function normalizeTimezone(value) {
   return timezone ? timezone.slice(0, 48) : null;
 }
 
+function normalizeRunTime(value) {
+  const runTime = String(value || "").trim();
+  return runTime ? runTime.slice(0, 64) : null;
+}
+
 function normalizePartyCategory(value, fallbackGuild) {
   const category = String(value || "").trim().toLowerCase();
   if (VALID_PARTY_CATEGORIES.includes(category)) return category;
@@ -791,6 +796,7 @@ async function handleCreateParty(req, res) {
         label: body.label || null,
         category: normalizePartyCategory(body.category),
         timezone: normalizeTimezone(body.timezone),
+        runTime: normalizeRunTime(body.runTime),
       },
       getImpersonationOptions(authClaims)
     );

@@ -19,6 +19,32 @@ function populateTimezoneSelect(select) {
   select.innerHTML = TIMEZONE_OPTIONS.map((tz) => `<option value="${tz.value}">${tz.label}</option>`).join("");
 }
 
+// Referencia: reset diario de Maple a las 7:00pm hora Peru/Colombia/Panama (UTC-5)
+const RESET_HOUR_24 = 19;
+
+function formatRunClock(hour24) {
+  const normalized = ((hour24 % 24) + 24) % 24;
+  const period = normalized < 12 ? "am" : "pm";
+  let hour12 = normalized % 12;
+  if (hour12 === 0) hour12 = 12;
+  return `${hour12}:00${period}`;
+}
+
+const RUN_TIME_OPTIONS = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map((offset) => {
+  const clock = formatRunClock(RESET_HOUR_24 + offset);
+  const offsetLabel = offset === 0 ? "Reset" : (offset > 0 ? `+${offset}` : `${offset}`);
+  return {
+    value: `${offsetLabel} - ${clock} (hora Peru/Colombia/Panama)`,
+    label: `${offsetLabel} - ${clock} (hora Peru/Colombia/Panama)`,
+  };
+});
+RUN_TIME_OPTIONS.unshift({ value: "", label: "Sin especificar" });
+
+function populateRunTimeSelect(select) {
+  if (!select || select.options.length) return;
+  select.innerHTML = RUN_TIME_OPTIONS.map((rt) => `<option value="${rt.value}">${rt.label}</option>`).join("");
+}
+
 const BOSSES = [
   {
     id: "gloom",
@@ -172,6 +198,8 @@ const partySlotsGrid  = document.getElementById("partySlotsGrid");
 const partysSaveBtn   = document.getElementById("partysSaveBtn");
 const partysTimezoneSelect = document.getElementById("partysTimezoneSelect");
 populateTimezoneSelect(partysTimezoneSelect);
+const partysRunTimeSelect = document.getElementById("partysRunTimeSelect");
+populateRunTimeSelect(partysRunTimeSelect);
 const partysStatus    = document.getElementById("partysStatus");
 const partysGrid      = document.getElementById("partysGrid");
 const closeCharacterPanel = document.getElementById("closeCharacterPanel");
@@ -1110,8 +1138,13 @@ function renderPartysList() {
           <h4>${party.label || "Party sin nombre"}</h4>
           <p class="party-card-subtitle">
             Boss: ${bossLabel}
-            ${party.timezone ? `<span class="party-card-timezone-badge">${party.timezone}</span>` : ""}
           </p>
+          ${(party.runTime || party.timezone) ? `
+            <div class="party-card-runline">
+              ${party.runTime ? `<span>Run: ${party.runTime}</span>` : ""}
+              ${party.timezone ? `<span>${party.timezone}</span>` : ""}
+            </div>
+          ` : ""}
         </div>
         ${party.ownerId === currentUserId ? `<button type="button" class="party-delete" data-party-id="${party.id}">Eliminar</button>` : ""}
       </header>
@@ -1263,6 +1296,7 @@ partysSaveBtn?.addEventListener("click", async () => {
         label: `Party ${bossLabel}`,
         category: partysCurrentCategory(),
         timezone: partysTimezoneSelect?.value || "",
+        runTime: partysRunTimeSelect?.value || "",
       }),
     });
     const partyId = created.party?.id;

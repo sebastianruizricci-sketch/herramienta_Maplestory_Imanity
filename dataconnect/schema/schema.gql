@@ -28,6 +28,7 @@ type BossParty @table(name: "boss_party", key: "id") {
   label: String @col(dataType: "varchar(80)")
   category: String @col(dataType: "varchar(20)")
   timezone: String @col(dataType: "varchar(48)")
+  runTime: String @col(dataType: "varchar(64)")
   owner: AppUser!
   createdAt: Timestamp! @default(expr: "request.time")
   updatedAt: Timestamp! @default(expr: "request.time")
