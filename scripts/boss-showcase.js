@@ -135,6 +135,18 @@ const chatbotNav      = document.getElementById("chatbotNav");
 const characterPanel  = document.getElementById("characterPanel");
 const fragmentsPage   = document.getElementById("fragmentsPage");
 const chatbotPage     = document.getElementById("chatbotPage");
+const partysNav       = document.getElementById("partysNav");
+const partysPage      = document.getElementById("partysPage");
+const partysCreateTab = document.getElementById("partysCreateTab");
+const partysListTab   = document.getElementById("partysListTab");
+const partysBossSelect = document.getElementById("partysBossSelect");
+const partysCreateView = document.getElementById("partysCreateView");
+const partysListView  = document.getElementById("partysListView");
+const partysRoster    = document.getElementById("partysRoster");
+const partySlotsGrid  = document.getElementById("partySlotsGrid");
+const partysSaveBtn   = document.getElementById("partysSaveBtn");
+const partysStatus    = document.getElementById("partysStatus");
+const partysGrid      = document.getElementById("partysGrid");
 const closeCharacterPanel = document.getElementById("closeCharacterPanel");
 const characterSearchForm = document.getElementById("characterSearchForm");
 const characterIgn    = document.getElementById("characterIgn");
@@ -591,6 +603,7 @@ function showCharacterPage() {
   characterPanel?.classList.remove("hidden");
   fragmentsPage?.classList.add("hidden");
   chatbotPage?.classList.add("hidden");
+  partysPage?.classList.add("hidden");
   document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
   characterNav?.classList.add("active");
   characterIgn?.focus();
@@ -600,9 +613,11 @@ function showBossPage() {
   showcase?.classList.remove("character-view");
   showcase?.classList.remove("fragments-view");
   showcase?.classList.remove("chatbot-view");
+  showcase?.classList.remove("partys-view");
   characterPanel?.classList.add("hidden");
   fragmentsPage?.classList.add("hidden");
   chatbotPage?.classList.add("hidden");
+  partysPage?.classList.add("hidden");
   document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
   bossNav?.classList.add("active");
 }
@@ -611,9 +626,11 @@ async function showFragmentsPage() {
   showcase?.classList.remove("character-view");
   showcase?.classList.add("fragments-view");
   showcase?.classList.remove("chatbot-view");
+  showcase?.classList.remove("partys-view");
   characterPanel?.classList.add("hidden");
   fragmentsPage?.classList.remove("hidden");
   chatbotPage?.classList.add("hidden");
+  partysPage?.classList.add("hidden");
   document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
   fragmentsNav?.classList.add("active");
   await renderFragmentsPage();
@@ -623,11 +640,27 @@ function showChatBotPage() {
   showcase?.classList.remove("character-view");
   showcase?.classList.remove("fragments-view");
   showcase?.classList.add("chatbot-view");
+  showcase?.classList.remove("partys-view");
   characterPanel?.classList.add("hidden");
   fragmentsPage?.classList.add("hidden");
   chatbotPage?.classList.remove("hidden");
+  partysPage?.classList.add("hidden");
   document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
   chatbotNav?.classList.add("active");
+}
+
+async function showPartysPage() {
+  showcase?.classList.remove("character-view");
+  showcase?.classList.remove("fragments-view");
+  showcase?.classList.remove("chatbot-view");
+  showcase?.classList.add("partys-view");
+  characterPanel?.classList.add("hidden");
+  fragmentsPage?.classList.add("hidden");
+  chatbotPage?.classList.add("hidden");
+  partysPage?.classList.remove("hidden");
+  document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
+  partysNav?.classList.add("active");
+  await initPartysPage();
 }
 
 function setCharacterStatus(message, state = "neutral") {
@@ -888,6 +921,294 @@ function renderRoster(characters = loadCharacters(), activeCharacterId = getActi
   `).join("");
 }
 
+// ── Partys ────────────────────────────────────────────────────────────────
+const PARTY_SLOT_COUNT = 6;
+let partysGuildRoster = [];
+let partysCurrentBossId = null;
+let partysCurrentParties = [];
+let partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
+let partysInitialized = false;
+
+function setPartysStatus(message, state = "neutral") {
+  if (!partysStatus) return;
+  partysStatus.textContent = message;
+  partysStatus.dataset.state = state;
+}
+
+function getCurrentUserId() {
+  return getFirebaseAuth()?.currentUser?.uid || null;
+}
+
+function rosterCharacterKey(character) {
+  return `${character.ownerId || ""}:${(character.region || "").toLowerCase()}:${(character.name || "").toLowerCase()}`;
+}
+
+function populatePartysBossSelect() {
+  if (!partysBossSelect || partysBossSelect.options.length) return;
+  partysBossSelect.innerHTML = BOSSES.map((boss) => `<option value="${boss.id}">${boss.name}</option>`).join("");
+}
+
+function findRosterCharacter(ownerId, region, name) {
+  return partysGuildRoster.find((c) => c.ownerId === ownerId && c.region === region && c.name === name) || null;
+}
+
+async function loadGuildRoster() {
+  try {
+    const data = await fetchAuthedJson("/api/roster");
+    partysGuildRoster = data.characters || [];
+  } catch (error) {
+    setPartysStatus(error.message || "No se pudo cargar el roster del gremio.", "error");
+  }
+}
+
+async function loadPartiesForCurrentBoss() {
+  if (!partysCurrentBossId) return;
+  try {
+    const data = await fetchAuthedJson(`/api/parties?bossId=${encodeURIComponent(partysCurrentBossId)}`);
+    partysCurrentParties = data.parties || [];
+  } catch (error) {
+    setPartysStatus(error.message || "No se pudieron cargar las partys.", "error");
+  }
+}
+
+function renderPartysRoster() {
+  if (!partysRoster) return;
+
+  if (!partysGuildRoster.length) {
+    partysRoster.innerHTML = `
+      <div class="roster-empty">
+        <h4>Sin personajes registrados</h4>
+        <p>Cuando los miembros del gremio registren sus personajes en "Mi Personaje", aparecerán aquí.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const assignedKeys = new Set(partySlotAssignments.filter(Boolean).map(rosterCharacterKey));
+
+  partysRoster.innerHTML = partysGuildRoster.map((character) => {
+    const key = rosterCharacterKey(character);
+    const assigned = assignedKeys.has(key);
+    return `
+      <article class="roster-card ${assigned ? "assigned" : ""}" data-character-key="${key}">
+        <div class="roster-avatar">
+          ${character.characterImgURL ? `<img src="${character.characterImgURL}" alt="${character.name}" />` : `<span>${character.name?.[0] || "?"}</span>`}
+        </div>
+        <div class="roster-body">
+          <div class="roster-title-row">
+            <div>
+              <p>${character.worldName || character.region?.toUpperCase() || "NA"}</p>
+              <h4>${character.name || "Sin nombre"}</h4>
+            </div>
+            <span class="roster-level">Lv. ${character.level ?? "-"}</span>
+          </div>
+          <div class="roster-meta">
+            <span>${character.jobName || "Sin clase"}</span>
+            ${assigned ? `<span class="party-assigned-badge">En la party</span>` : ""}
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderPartySlots() {
+  if (!partySlotsGrid) return;
+
+  partySlotsGrid.innerHTML = partySlotAssignments.map((slot, index) => `
+    <div class="party-slot ${slot ? "filled" : "empty"}">
+      <span class="party-slot-index">${index + 1}</span>
+      ${slot
+        ? `
+          <div class="party-slot-member">
+            <strong>${slot.name}</strong>
+            <span>${slot.jobName || "Sin clase"} · Lv. ${slot.level ?? "-"}</span>
+          </div>
+          <button type="button" class="party-slot-remove" data-slot-index="${index}" aria-label="Quitar de la party">✕</button>
+        `
+        : `<div class="party-slot-placeholder">Vacío — clic en un personaje del roster</div>`}
+    </div>
+  `).join("");
+}
+
+function renderPartysList() {
+  if (!partysGrid) return;
+
+  if (!partysCurrentParties.length) {
+    partysGrid.innerHTML = `
+      <div class="roster-empty">
+        <h4>No hay partys formadas</h4>
+        <p>Crea una party para este boss desde la pestaña "Crear party".</p>
+      </div>
+    `;
+    return;
+  }
+
+  const currentUserId = getCurrentUserId();
+
+  partysGrid.innerHTML = partysCurrentParties.map((party) => `
+    <article class="party-card">
+      <header>
+        <h4>${party.label || "Party sin nombre"}</h4>
+        ${party.ownerId === currentUserId ? `<button type="button" class="party-delete" data-party-id="${party.id}">Eliminar</button>` : ""}
+      </header>
+      <ul class="party-members-list">
+        ${(party.members || []).map((member) => {
+          const character = findRosterCharacter(member.characterOwnerId, member.characterRegion, member.characterName);
+          return `
+            <li>
+              <span class="party-member-slot">#${member.slotIndex + 1}</span>
+              <strong>${member.characterName}</strong>
+              <em>${character?.jobName || "Sin clase"} · Lv. ${character?.level ?? "-"}</em>
+            </li>
+          `;
+        }).join("") || "<li>Sin miembros aún</li>"}
+      </ul>
+    </article>
+  `).join("");
+}
+
+async function initPartysPage() {
+  populatePartysBossSelect();
+  if (!partysCurrentBossId) {
+    partysCurrentBossId = partysBossSelect?.value || BOSSES[0]?.id || null;
+  }
+  if (partysBossSelect) partysBossSelect.value = partysCurrentBossId;
+
+  if (partysInitialized) {
+    renderPartysRoster();
+    renderPartySlots();
+    renderPartysList();
+    return;
+  }
+  partysInitialized = true;
+
+  await loadGuildRoster();
+  await loadPartiesForCurrentBoss();
+  renderPartysRoster();
+  renderPartySlots();
+  renderPartysList();
+}
+
+partysBossSelect?.addEventListener("change", async () => {
+  partysCurrentBossId = partysBossSelect.value;
+  partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
+  setPartysStatus("");
+  renderPartySlots();
+  renderPartysRoster();
+  await loadPartiesForCurrentBoss();
+  renderPartysList();
+});
+
+partysCreateTab?.addEventListener("click", () => {
+  partysCreateTab.classList.add("active");
+  partysListTab?.classList.remove("active");
+  partysCreateView?.classList.remove("hidden");
+  partysListView?.classList.add("hidden");
+});
+
+partysListTab?.addEventListener("click", () => {
+  partysListTab.classList.add("active");
+  partysCreateTab?.classList.remove("active");
+  partysListView?.classList.remove("hidden");
+  partysCreateView?.classList.add("hidden");
+});
+
+partysRoster?.addEventListener("click", (event) => {
+  const card = event.target.closest(".roster-card");
+  if (!card) return;
+
+  const key = card.dataset.characterKey;
+  const character = partysGuildRoster.find((c) => rosterCharacterKey(c) === key);
+  if (!character) return;
+
+  if (partySlotAssignments.some((slot) => slot && rosterCharacterKey(slot) === key)) {
+    setPartysStatus("Ese personaje ya está en la party.", "error");
+    return;
+  }
+
+  const emptyIndex = partySlotAssignments.findIndex((slot) => slot === null);
+  if (emptyIndex === -1) {
+    setPartysStatus("La party ya tiene 6 miembros.", "error");
+    return;
+  }
+
+  partySlotAssignments[emptyIndex] = character;
+  setPartysStatus("");
+  renderPartySlots();
+  renderPartysRoster();
+});
+
+partySlotsGrid?.addEventListener("click", (event) => {
+  const removeBtn = event.target.closest(".party-slot-remove");
+  if (!removeBtn) return;
+
+  const index = Number(removeBtn.dataset.slotIndex);
+  partySlotAssignments[index] = null;
+  renderPartySlots();
+  renderPartysRoster();
+});
+
+partysSaveBtn?.addEventListener("click", async () => {
+  const filled = partySlotAssignments
+    .map((slot, index) => ({ slot, index }))
+    .filter((entry) => entry.slot);
+
+  if (!filled.length) {
+    setPartysStatus("Asigna al menos un miembro antes de guardar.", "error");
+    return;
+  }
+
+  setPartysStatus("Guardando party...", "neutral");
+  partysSaveBtn.disabled = true;
+
+  try {
+    const bossLabel = BOSSES.find((boss) => boss.id === partysCurrentBossId)?.name || partysCurrentBossId;
+    const created = await fetchAuthedJson("/api/parties", {
+      method: "POST",
+      body: JSON.stringify({ bossId: partysCurrentBossId, label: `Party ${bossLabel}` }),
+    });
+    const partyId = created.party?.id;
+
+    for (const { slot, index } of filled) {
+      await fetchAuthedJson(`/api/parties/${partyId}/members`, {
+        method: "POST",
+        body: JSON.stringify({
+          slotIndex: index,
+          characterOwnerId: slot.ownerId,
+          characterRegion: slot.region,
+          characterName: slot.name,
+        }),
+      });
+    }
+
+    setPartysStatus("Party guardada correctamente.", "success");
+    partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
+    renderPartySlots();
+    renderPartysRoster();
+    await loadPartiesForCurrentBoss();
+    renderPartysList();
+  } catch (error) {
+    setPartysStatus(error.message || "No se pudo guardar la party.", "error");
+  } finally {
+    partysSaveBtn.disabled = false;
+  }
+});
+
+partysGrid?.addEventListener("click", async (event) => {
+  const deleteBtn = event.target.closest(".party-delete");
+  if (!deleteBtn) return;
+  if (!confirm("¿Eliminar esta party?")) return;
+
+  try {
+    await fetchAuthedJson(`/api/parties/${deleteBtn.dataset.partyId}`, { method: "DELETE" });
+    await loadPartiesForCurrentBoss();
+    renderPartysList();
+  } catch (error) {
+    setPartysStatus(error.message || "No se pudo eliminar la party.", "error");
+  }
+});
+
 function normalizeSkillName(name) {
   return name.trim().replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "");
 }
@@ -1137,6 +1458,11 @@ fragmentsNav?.addEventListener("click", (event) => {
 chatbotNav?.addEventListener("click", (event) => {
   event.preventDefault();
   showChatBotPage();
+});
+
+partysNav?.addEventListener("click", (event) => {
+  event.preventDefault();
+  showPartysPage();
 });
 
 chatbotIframe?.addEventListener("load", () => {

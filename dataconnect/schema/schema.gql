@@ -20,6 +20,25 @@ type MapleCharacter @table(name: "maple_character", key: ["owner", "region", "na
   updatedAt: Timestamp! @default(expr: "request.time")
 }
 
+type BossParty @table(name: "boss_party", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  bossId: String! @col(dataType: "varchar(40)")
+  label: String @col(dataType: "varchar(80)")
+  owner: AppUser!
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type BossPartyMember @table(name: "boss_party_member", key: ["party", "slotIndex"]) {
+  party: BossParty!
+  slotIndex: Int!
+  characterOwnerId: String! @col(dataType: "varchar(128)")
+  characterRegion: String! @col(dataType: "varchar(12)")
+  characterName: String! @col(dataType: "varchar(32)")
+  assignedBy: AppUser!
+  assignedAt: Timestamp! @default(expr: "request.time")
+}
+
 type LegacyUser @table(name: "user", key: "id") {
   id: UUID! @default(expr: "uuidV4()")
   createdAt: Timestamp! @col(name: "created_at")
