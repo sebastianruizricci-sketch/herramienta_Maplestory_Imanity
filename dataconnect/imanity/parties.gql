@@ -35,11 +35,12 @@ query ListAllianceRoster @auth(level: USER) {
   }
 }
 
-mutation CreateBossParty($bossId: String!, $label: String, $category: String, $timezone: String, $runTime: String) @auth(level: USER) {
+mutation CreateBossParty($bossId: String!, $label: String, $category: String, $difficulty: String, $timezone: String, $runTime: String) @auth(level: USER) {
   bossParty_insert(data: {
     bossId: $bossId
     label: $label
     category: $category
+    difficulty: $difficulty
     timezone: $timezone
     runTime: $runTime
     ownerId_expr: "auth.uid"
@@ -80,6 +81,7 @@ query ListPartiesByBoss($bossId: String!, $category: String) @auth(level: USER) 
     bossId
     label
     category
+    difficulty
     timezone
     runTime
     ownerId
