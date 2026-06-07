@@ -115,7 +115,7 @@
         <nav class="sidebar-nav">
 
           <span class="sidebar-group">Principal</span>
-          <a class="sidebar-item" href="#">
+          <a class="sidebar-item" href="#" id="dashboardNav">
             <span class="sidebar-icon">⬡</span>
             <span>Dashboard</span>
           </a>
@@ -195,6 +195,17 @@
 
       <!-- Derecha: selector de bosses -->
       <nav class="boss-selector" id="bossSelector" aria-label="Selección de boss"></nav>
+
+      <!-- Pagina: dashboard -->
+      <section class="dashboard-page hidden" id="dashboardPage" aria-label="Dashboard">
+        <div class="dashboard-bg" style="background-image: url('/assets/dashboard-background.png');"></div>
+        <div class="dashboard-overlay"></div>
+        <div class="dashboard-content">
+          <p class="character-kicker">Bienvenido a</p>
+          <h1>Imanity App</h1>
+          <p class="dashboard-subtitle">Usa el menú lateral para revisar tu personaje, coordinar bosses, gestionar tus partys y más.</p>
+        </div>
+      </section>
 
       <!-- Pagina: mi personaje -->
       <section class="character-page hidden" id="characterPanel" aria-label="Mi personaje">

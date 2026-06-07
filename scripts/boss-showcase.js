@@ -128,6 +128,8 @@ const sidebarChar     = document.getElementById("sidebarChar");
 const sidebarCharName = document.getElementById("sidebarCharName");
 const sidebarCharSub  = document.querySelector(".sidebar-char-sub");
 const sidebarCharAvatar = document.getElementById("sidebarCharAvatar");
+const dashboardNav    = document.getElementById("dashboardNav");
+const dashboardPage   = document.getElementById("dashboardPage");
 const characterNav    = document.getElementById("characterNav");
 const bossNav         = document.getElementById("bossNav");
 const fragmentsNav    = document.getElementById("fragmentsNav");
@@ -324,6 +326,7 @@ function initializeAuthenticatedApp() {
   selectBoss("gloom");
   renderCharacter(null);
   renderRoster([]);
+  showDashboardPage();
 }
 
 function normalizeRemoteCharacter(character) {
@@ -605,69 +608,59 @@ function selectBoss(id) {
 }
 
 // ── Init: load first boss ─────────────────────────────────────────────────
-function showCharacterPage() {
-  showcase?.classList.add("character-view");
+function hideAllPages() {
+  showcase?.classList.remove("character-view");
   showcase?.classList.remove("fragments-view");
   showcase?.classList.remove("chatbot-view");
-  characterPanel?.classList.remove("hidden");
+  showcase?.classList.remove("partys-view");
+  showcase?.classList.remove("dashboard-view");
+  dashboardPage?.classList.add("hidden");
+  characterPanel?.classList.add("hidden");
   fragmentsPage?.classList.add("hidden");
   chatbotPage?.classList.add("hidden");
   partysPage?.classList.add("hidden");
   document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
+}
+
+function showDashboardPage() {
+  hideAllPages();
+  showcase?.classList.add("dashboard-view");
+  dashboardPage?.classList.remove("hidden");
+  dashboardNav?.classList.add("active");
+}
+
+function showCharacterPage() {
+  hideAllPages();
+  showcase?.classList.add("character-view");
+  characterPanel?.classList.remove("hidden");
   characterNav?.classList.add("active");
   characterIgn?.focus();
 }
 
 function showBossPage() {
-  showcase?.classList.remove("character-view");
-  showcase?.classList.remove("fragments-view");
-  showcase?.classList.remove("chatbot-view");
-  showcase?.classList.remove("partys-view");
-  characterPanel?.classList.add("hidden");
-  fragmentsPage?.classList.add("hidden");
-  chatbotPage?.classList.add("hidden");
-  partysPage?.classList.add("hidden");
-  document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
+  hideAllPages();
   bossNav?.classList.add("active");
 }
 
 async function showFragmentsPage() {
-  showcase?.classList.remove("character-view");
+  hideAllPages();
   showcase?.classList.add("fragments-view");
-  showcase?.classList.remove("chatbot-view");
-  showcase?.classList.remove("partys-view");
-  characterPanel?.classList.add("hidden");
   fragmentsPage?.classList.remove("hidden");
-  chatbotPage?.classList.add("hidden");
-  partysPage?.classList.add("hidden");
-  document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
   fragmentsNav?.classList.add("active");
   await renderFragmentsPage();
 }
 
 function showChatBotPage() {
-  showcase?.classList.remove("character-view");
-  showcase?.classList.remove("fragments-view");
+  hideAllPages();
   showcase?.classList.add("chatbot-view");
-  showcase?.classList.remove("partys-view");
-  characterPanel?.classList.add("hidden");
-  fragmentsPage?.classList.add("hidden");
   chatbotPage?.classList.remove("hidden");
-  partysPage?.classList.add("hidden");
-  document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
   chatbotNav?.classList.add("active");
 }
 
 async function showPartysPage() {
-  showcase?.classList.remove("character-view");
-  showcase?.classList.remove("fragments-view");
-  showcase?.classList.remove("chatbot-view");
+  hideAllPages();
   showcase?.classList.add("partys-view");
-  characterPanel?.classList.add("hidden");
-  fragmentsPage?.classList.add("hidden");
-  chatbotPage?.classList.add("hidden");
   partysPage?.classList.remove("hidden");
-  document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
   partysNav?.classList.add("active");
   await initPartysPage();
 }
@@ -1509,6 +1502,10 @@ async function renderFragmentsPage() {
 }
 
 sidebarChar?.addEventListener("click", showCharacterPage);
+dashboardNav?.addEventListener("click", (event) => {
+  event.preventDefault();
+  showDashboardPage();
+});
 characterNav?.addEventListener("click", (event) => {
   event.preventDefault();
   showCharacterPage();
