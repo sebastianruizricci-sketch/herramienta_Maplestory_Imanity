@@ -3,6 +3,8 @@ type AppUser @table(name: "app_user", key: "id") {
   username: String! @unique @col(dataType: "varchar(40)")
   displayName: String @col(dataType: "varchar(80)")
   email: String @col(dataType: "varchar(160)")
+  guild: String @col(dataType: "varchar(20)")
+  timezone: String @col(dataType: "varchar(48)")
   createdAt: Timestamp! @default(expr: "request.time")
   updatedAt: Timestamp! @default(expr: "request.time")
 }
@@ -24,6 +26,7 @@ type BossParty @table(name: "boss_party", key: "id") {
   id: UUID! @default(expr: "uuidV4()")
   bossId: String! @col(dataType: "varchar(40)")
   label: String @col(dataType: "varchar(80)")
+  category: String @col(dataType: "varchar(20)")
   owner: AppUser!
   createdAt: Timestamp! @default(expr: "request.time")
   updatedAt: Timestamp! @default(expr: "request.time")

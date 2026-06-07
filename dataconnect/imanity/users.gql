@@ -2,12 +2,16 @@ mutation UpsertCurrentUser(
   $username: String!
   $displayName: String
   $email: String
+  $guild: String
+  $timezone: String
 ) @auth(level: USER) {
   appUser_upsert(data: {
     id_expr: "auth.uid"
     username: $username
     displayName: $displayName
     email: $email
+    guild: $guild
+    timezone: $timezone
     updatedAt_expr: "request.time"
   })
 }
@@ -18,6 +22,8 @@ query GetCurrentUser @auth(level: USER) {
     username
     displayName
     email
+    guild
+    timezone
     createdAt
     updatedAt
   }

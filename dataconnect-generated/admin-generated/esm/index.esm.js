@@ -18,10 +18,16 @@ export function listMyMapleCharacters(dcOrOptions, options) {
   return dcInstance.executeQuery('ListMyMapleCharacters', undefined, inputOpts);
 }
 
-export function listGuildRoster(dcOrOptions, options) {
+export function listGuildRoster(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, false);
+  dcInstance.useGen(true);
+  return dcInstance.executeQuery('ListGuildRoster', inputVars, inputOpts);
+}
+
+export function listAllianceRoster(dcOrOptions, options) {
   const { dc: dcInstance, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrOptions, options, undefined);
   dcInstance.useGen(true);
-  return dcInstance.executeQuery('ListGuildRoster', undefined, inputOpts);
+  return dcInstance.executeQuery('ListAllianceRoster', undefined, inputOpts);
 }
 
 export function createBossParty(dcOrVarsOrOptions, varsOrOptions, options) {

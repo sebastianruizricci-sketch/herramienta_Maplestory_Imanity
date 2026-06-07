@@ -11,6 +11,7 @@ const {
   upsertCurrentUser,
   upsertMapleCharacter,
   listGuildRoster,
+  listAllianceRoster,
   listPartiesByBoss,
   createBossParty,
   deleteBossParty,
@@ -481,8 +482,27 @@ function handleChatBotHealth(req, res) {
   });
 }
 
+const VALID_GUILDS = ["imanity", "lorien"];
+const VALID_PARTY_CATEGORIES = ["imanity", "lorien", "alianza"];
+
 function normalizeUsername(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function normalizeGuild(value) {
+  const guild = String(value || "").trim().toLowerCase();
+  return VALID_GUILDS.includes(guild) ? guild : null;
+}
+
+function normalizeTimezone(value) {
+  const timezone = String(value || "").trim();
+  return timezone ? timezone.slice(0, 48) : null;
+}
+
+function normalizePartyCategory(value, fallbackGuild) {
+  const category = String(value || "").trim().toLowerCase();
+  if (VALID_PARTY_CATEGORIES.includes(category)) return category;
+  return fallbackGuild || "imanity";
 }
 
 function normalizeEmail(value) {
@@ -556,6 +576,8 @@ async function handleRegister(req, res) {
     const email = normalizeEmail(body.email);
     const password = String(body.password || "");
     const inviteToken = String(body.inviteToken || "").trim();
+    const guild = normalizeGuild(body.guild);
+    const timezone = normalizeTimezone(body.timezone);
 
     if (!REGISTER_TOKEN) {
       send(res, 500, JSON.stringify({ error: "REGISTER_TOKEN no esta configurado en Render." }), {
@@ -573,6 +595,13 @@ async function handleRegister(req, res) {
 
     if (!username || !password) {
       send(res, 400, JSON.stringify({ error: "Usuario y password son obligatorios." }), {
+        "Content-Type": "application/json; charset=utf-8",
+      });
+      return;
+    }
+
+    if (!guild) {
+      send(res, 400, JSON.stringify({ error: "Debes elegir un gremio (Imanity o Lorien)." }), {
         "Content-Type": "application/json; charset=utf-8",
       });
       return;
@@ -602,7 +631,7 @@ async function handleRegister(req, res) {
     try {
       const authClaims = await getAuth().verifyIdToken(created.idToken);
       await upsertCurrentUser(
-        { username, displayName: username, email: authEmail },
+        { username, displayName: username, email: authEmail, guild, timezone },
         getImpersonationOptions(authClaims)
       );
       appUserSynced = true;
@@ -632,8 +661,13 @@ async function handleUpsertMe(req, res) {
       return;
     }
 
+    const existing = await getCurrentUser(getImpersonationOptions(authClaims));
+    const existingUser = existing.data.appUser || null;
+    const guild = body.guild !== undefined ? normalizeGuild(body.guild) : existingUser?.guild || null;
+    const timezone = body.timezone !== undefined ? normalizeTimezone(body.timezone) : existingUser?.timezone || null;
+
     await upsertCurrentUser(
-      { username, displayName, email: email || null },
+      { username, displayName, email: email || null, guild, timezone },
       getImpersonationOptions(authClaims)
     );
     const result = await getCurrentUser(getImpersonationOptions(authClaims));
@@ -704,19 +738,22 @@ async function handleSaveCharacter(req, res) {
   }
 }
 
-async function handleListGuildRoster(req, res) {
+async function handleListGuildRoster(req, res, guild) {
   const authClaims = await requireAuth(req, res);
   if (!authClaims) return;
 
   try {
-    const result = await listGuildRoster(getImpersonationOptions(authClaims));
+    const normalizedGuild = normalizeGuild(guild);
+    const result = normalizedGuild
+      ? await listGuildRoster({ guild: normalizedGuild }, getImpersonationOptions(authClaims))
+      : await listAllianceRoster(getImpersonationOptions(authClaims));
     sendJson(res, 200, { characters: result.data.mapleCharacters || [] });
   } catch (error) {
     sendJson(res, 500, { error: error.message || "No se pudo obtener el roster del gremio." });
   }
 }
 
-async function handleListParties(req, res, bossId) {
+async function handleListParties(req, res, bossId, category) {
   const authClaims = await requireAuth(req, res);
   if (!authClaims) return;
 
@@ -726,7 +763,10 @@ async function handleListParties(req, res, bossId) {
   }
 
   try {
-    const result = await listPartiesByBoss({ bossId }, getImpersonationOptions(authClaims));
+    const result = await listPartiesByBoss(
+      { bossId, category: normalizePartyCategory(category) },
+      getImpersonationOptions(authClaims)
+    );
     sendJson(res, 200, { parties: result.data.bossParties || [] });
   } catch (error) {
     sendJson(res, 500, { error: error.message || "No se pudieron obtener las partys." });
@@ -746,7 +786,7 @@ async function handleCreateParty(req, res) {
     }
 
     const result = await createBossParty(
-      { bossId, label: body.label || null },
+      { bossId, label: body.label || null, category: normalizePartyCategory(body.category) },
       getImpersonationOptions(authClaims)
     );
     sendJson(res, 201, { party: result.data.bossParty_insert });
@@ -850,14 +890,15 @@ http.createServer((req, res) => {
     return;
   }
 
-  if (req.method === "GET" && req.url === "/api/roster") {
-    handleListGuildRoster(req, res);
+  if (req.method === "GET" && req.url.startsWith("/api/roster")) {
+    const guild = new URL(req.url, `http://${req.headers.host || "localhost"}`).searchParams.get("guild");
+    handleListGuildRoster(req, res, guild);
     return;
   }
 
   if (req.method === "GET" && req.url.startsWith("/api/parties?")) {
-    const bossId = new URL(req.url, `http://${req.headers.host || "localhost"}`).searchParams.get("bossId");
-    handleListParties(req, res, bossId);
+    const searchParams = new URL(req.url, `http://${req.headers.host || "localhost"}`).searchParams;
+    handleListParties(req, res, searchParams.get("bossId"), searchParams.get("category"));
     return;
   }
 
