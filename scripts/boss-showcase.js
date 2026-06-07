@@ -1,17 +1,17 @@
 const TIMEZONE_OPTIONS = [
   { value: "", label: "Sin especificar" },
-  { value: "UTC-5 (Peru, Colombia, Panama - reset 7:00pm)", label: "UTC-5 — Peru, Colombia, Panama (reset 7:00pm)" },
-  { value: "UTC-4 (Bolivia, Venezuela, Rep. Dominicana - reset 8:00pm)", label: "UTC-4 — Bolivia, Venezuela, Rep. Dominicana (reset 8:00pm)" },
-  { value: "UTC-3 (Argentina, Chile, Brasil - reset 9:00pm)", label: "UTC-3 — Argentina, Chile, Brasil (reset 9:00pm)" },
-  { value: "UTC-6 (Mexico, Centroamerica - reset 6:00pm)", label: "UTC-6 — Mexico, Centroamerica (reset 6:00pm)" },
-  { value: "UTC-8 (EE.UU. Pacifico - reset 4:00pm)", label: "UTC-8 — EE.UU. Pacifico (reset 4:00pm)" },
-  { value: "UTC-7 (EE.UU. Montana - reset 5:00pm)", label: "UTC-7 — EE.UU. Montana (reset 5:00pm)" },
-  { value: "UTC+0 (Reino Unido, Portugal - reset 12:00am)", label: "UTC+0 — Reino Unido, Portugal (reset 12:00am)" },
-  { value: "UTC+1 (Espana - reset 1:00am)", label: "UTC+1 — Espana (reset 1:00am)" },
-  { value: "UTC+8 (China, Filipinas, Singapur - reset 10:00am)", label: "UTC+8 — China, Filipinas, Singapur (reset 10:00am)" },
-  { value: "UTC+9 (Japon, Corea del Sur - reset 9:00am)", label: "UTC+9 — Japon, Corea del Sur (reset 9:00am)" },
-  { value: "UTC+10 (Australia Este - reset 11:00am)", label: "UTC+10 — Australia Este (reset 11:00am)" },
-  { value: "UTC+12 (Nueva Zelanda - reset 1:00pm)", label: "UTC+12 — Nueva Zelanda (reset 1:00pm)" },
+  { value: "UTC-5 (Peru, Colombia, Panama - reset 7:00pm)", label: "UTC-5 — Peru, Colombia, Panama (reset 7:00pm)", shortLabel: "Peru/Colombia/Panama", resetHour: 19 },
+  { value: "UTC-4 (Bolivia, Venezuela, Rep. Dominicana - reset 8:00pm)", label: "UTC-4 — Bolivia, Venezuela, Rep. Dominicana (reset 8:00pm)", shortLabel: "Bolivia/Venezuela/Rep. Dominicana", resetHour: 20 },
+  { value: "UTC-3 (Argentina, Chile, Brasil - reset 9:00pm)", label: "UTC-3 — Argentina, Chile, Brasil (reset 9:00pm)", shortLabel: "Argentina/Chile/Brasil", resetHour: 21 },
+  { value: "UTC-6 (Mexico, Centroamerica - reset 6:00pm)", label: "UTC-6 — Mexico, Centroamerica (reset 6:00pm)", shortLabel: "Mexico/Centroamerica", resetHour: 18 },
+  { value: "UTC-8 (EE.UU. Pacifico - reset 4:00pm)", label: "UTC-8 — EE.UU. Pacifico (reset 4:00pm)", shortLabel: "EE.UU. Pacifico", resetHour: 16 },
+  { value: "UTC-7 (EE.UU. Montana - reset 5:00pm)", label: "UTC-7 — EE.UU. Montana (reset 5:00pm)", shortLabel: "EE.UU. Montana", resetHour: 17 },
+  { value: "UTC+0 (Reino Unido, Portugal - reset 12:00am)", label: "UTC+0 — Reino Unido, Portugal (reset 12:00am)", shortLabel: "Reino Unido/Portugal", resetHour: 0 },
+  { value: "UTC+1 (Espana - reset 1:00am)", label: "UTC+1 — Espana (reset 1:00am)", shortLabel: "Espana", resetHour: 1 },
+  { value: "UTC+8 (China, Filipinas, Singapur - reset 10:00am)", label: "UTC+8 — China, Filipinas, Singapur (reset 10:00am)", shortLabel: "China/Filipinas/Singapur", resetHour: 10 },
+  { value: "UTC+9 (Japon, Corea del Sur - reset 9:00am)", label: "UTC+9 — Japon, Corea del Sur (reset 9:00am)", shortLabel: "Japon/Corea del Sur", resetHour: 9 },
+  { value: "UTC+10 (Australia Este - reset 11:00am)", label: "UTC+10 — Australia Este (reset 11:00am)", shortLabel: "Australia Este", resetHour: 11 },
+  { value: "UTC+12 (Nueva Zelanda - reset 1:00pm)", label: "UTC+12 — Nueva Zelanda (reset 1:00pm)", shortLabel: "Nueva Zelanda", resetHour: 13 },
 ];
 
 function populateTimezoneSelect(select) {
@@ -19,8 +19,7 @@ function populateTimezoneSelect(select) {
   select.innerHTML = TIMEZONE_OPTIONS.map((tz) => `<option value="${tz.value}">${tz.label}</option>`).join("");
 }
 
-// Referencia: reset diario de Maple a las 7:00pm hora Peru/Colombia/Panama (UTC-5)
-const RESET_HOUR_24 = 19;
+const RUN_TIME_OFFSETS = Array.from({ length: 36 }, (_, index) => index - 12);
 
 function formatRunClock(hour24) {
   const normalized = ((hour24 % 24) + 24) % 24;
@@ -30,19 +29,46 @@ function formatRunClock(hour24) {
   return `${hour12}:00${period}`;
 }
 
-const RUN_TIME_OPTIONS = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map((offset) => {
-  const clock = formatRunClock(RESET_HOUR_24 + offset);
-  const offsetLabel = offset === 0 ? "Reset" : (offset > 0 ? `+${offset}` : `${offset}`);
-  return {
-    value: `${offsetLabel} - ${clock} (hora Peru/Colombia/Panama)`,
-    label: `${offsetLabel} - ${clock} (hora Peru/Colombia/Panama)`,
-  };
-});
-RUN_TIME_OPTIONS.unshift({ value: "", label: "Sin especificar" });
+function getTimezoneOption(value) {
+  return TIMEZONE_OPTIONS.find((tz) => tz.value === value) || null;
+}
 
-function populateRunTimeSelect(select) {
-  if (!select || select.options.length) return;
-  select.innerHTML = RUN_TIME_OPTIONS.map((rt) => `<option value="${rt.value}">${rt.label}</option>`).join("");
+function getRunOffsetKey(value) {
+  if (String(value || "").startsWith("Reset")) return "Reset";
+  return String(value || "").match(/^([+-]\d+)/)?.[1] || "";
+}
+
+function buildRunTimeOptions(timezoneValue) {
+  const timezone = getTimezoneOption(timezoneValue);
+  if (!timezone?.value) return [{ value: "", label: "Sin especificar" }];
+
+  const zoneLabel = timezone.shortLabel || "zona seleccionada";
+  return [
+    { value: "", label: "Sin especificar" },
+    ...RUN_TIME_OFFSETS.map((offset) => {
+      const clock = formatRunClock(timezone.resetHour + offset);
+      const offsetLabel = offset === 0 ? "Reset" : (offset > 0 ? `+${offset}` : `${offset}`);
+      return {
+        value: `${offsetLabel} - ${clock} (hora ${zoneLabel})`,
+        label: `${offsetLabel} - ${clock} (hora ${zoneLabel})`,
+      };
+    }),
+  ];
+}
+
+function populateRunTimeSelect(select, timezoneValue, preferredValue = select?.value || "") {
+  if (!select) return;
+  const previousOffset = getRunOffsetKey(preferredValue);
+  const options = buildRunTimeOptions(timezoneValue);
+  select.innerHTML = options.map((rt) => `<option value="${rt.value}">${rt.label}</option>`).join("");
+
+  const exactOption = options.find((rt) => rt.value === preferredValue);
+  const offsetOption = previousOffset ? options.find((rt) => getRunOffsetKey(rt.value) === previousOffset) : null;
+  select.value = exactOption?.value || offsetOption?.value || "";
+}
+
+function syncPartyRunTimeOptions(preferredValue = partysRunTimeSelect?.value || "") {
+  populateRunTimeSelect(partysRunTimeSelect, partysTimezoneSelect?.value || "", preferredValue);
 }
 
 const BOSSES = [
@@ -199,7 +225,7 @@ const partysSaveBtn   = document.getElementById("partysSaveBtn");
 const partysTimezoneSelect = document.getElementById("partysTimezoneSelect");
 populateTimezoneSelect(partysTimezoneSelect);
 const partysRunTimeSelect = document.getElementById("partysRunTimeSelect");
-populateRunTimeSelect(partysRunTimeSelect);
+syncPartyRunTimeOptions();
 const partysStatus    = document.getElementById("partysStatus");
 const partysGrid      = document.getElementById("partysGrid");
 const closeCharacterPanel = document.getElementById("closeCharacterPanel");
@@ -1182,6 +1208,10 @@ async function initPartysPage() {
   if (partysBossSelect) partysBossSelect.value = partysCurrentBossId;
 
   if (partysInitialized) {
+    await loadCurrentUserProfile();
+    updatePartysSectionLabels();
+    await loadGuildRoster();
+    await loadPartiesForCurrentBoss();
     renderPartysRoster();
     renderPartySlots();
     renderPartysList();
@@ -1190,6 +1220,10 @@ async function initPartysPage() {
   partysInitialized = true;
 
   await loadCurrentUserProfile();
+  if (partysTimezoneSelect && currentUserTimezone && !partysTimezoneSelect.value) {
+    partysTimezoneSelect.value = currentUserTimezone;
+  }
+  syncPartyRunTimeOptions();
   updatePartysSectionLabels();
   await loadGuildRoster();
   await loadPartiesForCurrentBoss();
@@ -1209,7 +1243,6 @@ partysBossSelect?.addEventListener("change", async () => {
 });
 
 async function switchPartysSection(section) {
-  if (partysSection === section) return;
   partysSection = section;
   partysOwnSectionTab?.classList.toggle("active", section === "own");
   partysAllianceSectionTab?.classList.toggle("active", section === "alianza");
@@ -1224,6 +1257,10 @@ async function switchPartysSection(section) {
 
 partysOwnSectionTab?.addEventListener("click", () => switchPartysSection("own"));
 partysAllianceSectionTab?.addEventListener("click", () => switchPartysSection("alianza"));
+
+partysTimezoneSelect?.addEventListener("change", () => {
+  syncPartyRunTimeOptions();
+});
 
 partysCreateTab?.addEventListener("click", () => {
   partysCreateTab.classList.add("active");
@@ -1281,6 +1318,11 @@ partysSaveBtn?.addEventListener("click", async () => {
 
   if (!filled.length) {
     setPartysStatus("Asigna al menos un miembro antes de guardar.", "error");
+    return;
+  }
+
+  if (partysRunTimeSelect?.value && !partysTimezoneSelect?.value) {
+    setPartysStatus("Selecciona una zona horaria para guardar la hora de run.", "error");
     return;
   }
 
