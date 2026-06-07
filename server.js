@@ -10,6 +10,12 @@ const {
   listMyMapleCharacters,
   upsertCurrentUser,
   upsertMapleCharacter,
+  listGuildRoster,
+  listPartiesByBoss,
+  createBossParty,
+  deleteBossParty,
+  upsertPartyMember,
+  removePartyMember,
 } = require("@dataconnect/admin-generated");
 
 const ROOT = __dirname;
@@ -698,6 +704,112 @@ async function handleSaveCharacter(req, res) {
   }
 }
 
+async function handleListGuildRoster(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const result = await listGuildRoster(getImpersonationOptions(authClaims));
+    sendJson(res, 200, { characters: result.data.mapleCharacters || [] });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo obtener el roster del gremio." });
+  }
+}
+
+async function handleListParties(req, res, bossId) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  if (!bossId) {
+    sendJson(res, 400, { error: "bossId es requerido." });
+    return;
+  }
+
+  try {
+    const result = await listPartiesByBoss({ bossId }, getImpersonationOptions(authClaims));
+    sendJson(res, 200, { parties: result.data.bossParties || [] });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudieron obtener las partys." });
+  }
+}
+
+async function handleCreateParty(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const body = await readJsonBody(req);
+    const bossId = String(body.bossId || "").trim();
+    if (!bossId) {
+      sendJson(res, 400, { error: "bossId es requerido." });
+      return;
+    }
+
+    const result = await createBossParty(
+      { bossId, label: body.label || null },
+      getImpersonationOptions(authClaims)
+    );
+    sendJson(res, 201, { party: result.data.bossParty_insert });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo crear la party." });
+  }
+}
+
+async function handleDeleteParty(req, res, partyId) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    await deleteBossParty({ id: partyId }, getImpersonationOptions(authClaims));
+    sendJson(res, 200, { ok: true });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo eliminar la party." });
+  }
+}
+
+async function handleUpsertPartyMember(req, res, partyId) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const body = await readJsonBody(req);
+    const slotIndex = Number(body.slotIndex);
+    if (!Number.isInteger(slotIndex) || slotIndex < 0) {
+      sendJson(res, 400, { error: "slotIndex inválido." });
+      return;
+    }
+
+    await upsertPartyMember(
+      {
+        partyId,
+        slotIndex,
+        characterOwnerId: String(body.characterOwnerId || ""),
+        characterRegion: String(body.characterRegion || ""),
+        characterName: String(body.characterName || ""),
+      },
+      getImpersonationOptions(authClaims)
+    );
+    sendJson(res, 200, { ok: true });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo asignar el miembro." });
+  }
+}
+
+async function handleRemovePartyMember(req, res, partyId, slotIndex) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    await removePartyMember(
+      { partyId, slotIndex: Number(slotIndex) },
+      getImpersonationOptions(authClaims)
+    );
+    sendJson(res, 200, { ok: true });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo quitar el miembro." });
+  }
+}
+
 http.createServer((req, res) => {
   if (req.url.startsWith("/api/")) {
     setApiCorsHeaders(res);
@@ -736,6 +848,42 @@ http.createServer((req, res) => {
   if (req.method === "POST" && req.url === "/api/characters") {
     handleSaveCharacter(req, res);
     return;
+  }
+
+  if (req.method === "GET" && req.url === "/api/roster") {
+    handleListGuildRoster(req, res);
+    return;
+  }
+
+  if (req.method === "GET" && req.url.startsWith("/api/parties?")) {
+    const bossId = new URL(req.url, `http://${req.headers.host || "localhost"}`).searchParams.get("bossId");
+    handleListParties(req, res, bossId);
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/parties") {
+    handleCreateParty(req, res);
+    return;
+  }
+
+  {
+    const partyMatch = req.url.match(/^\/api\/parties\/([^/]+)$/);
+    if (partyMatch && req.method === "DELETE") {
+      handleDeleteParty(req, res, decodeURIComponent(partyMatch[1]));
+      return;
+    }
+
+    const memberMatch = req.url.match(/^\/api\/parties\/([^/]+)\/members$/);
+    if (memberMatch && req.method === "POST") {
+      handleUpsertPartyMember(req, res, decodeURIComponent(memberMatch[1]));
+      return;
+    }
+
+    const memberDeleteMatch = req.url.match(/^\/api\/parties\/([^/]+)\/members\/(\d+)$/);
+    if (memberDeleteMatch && req.method === "DELETE") {
+      handleRemovePartyMember(req, res, decodeURIComponent(memberDeleteMatch[1]), memberDeleteMatch[2]);
+      return;
+    }
   }
 
   if (req.method === "GET" && req.url === "/api/health") {

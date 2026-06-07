@@ -1621,6 +1621,295 @@ body.auth-locked .showcase {
   font-size: 13px;
 }
 
+/* ── Partys ──────────────────────────────────────────────────────────────── */
+.partys-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.partys-subnav {
+  display: flex;
+  gap: 8px;
+}
+
+.partys-subnav-item {
+  padding: 9px 16px;
+  border-radius: 9px;
+  border: 1px solid rgba(192, 132, 252, .2);
+  background: rgba(139, 92, 246, .1);
+  color: rgba(248, 244, 255, .68);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.partys-subnav-item.active {
+  border-color: rgba(192, 132, 252, .55);
+  background: rgba(139, 92, 246, .26);
+  color: #fff;
+}
+
+.partys-boss-select-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.partys-boss-select-row label {
+  color: rgba(192, 132, 252, .72);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.partys-boss-select-row select {
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(192, 132, 252, .22);
+  background: rgba(9, 5, 22, .8);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+}
+
+.partys-create-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.partys-roster-panel,
+.partys-slots-panel {
+  border-radius: 12px;
+  border: 1px solid rgba(192, 132, 252, .18);
+  background: rgba(9, 5, 22, .74);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, .28);
+  backdrop-filter: blur(12px);
+  padding: 14px;
+}
+
+.partys-slots-panel .fragments-config-head button {
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 9px;
+  border: 1px solid rgba(192, 132, 252, .3);
+  background: rgba(139, 92, 246, .22);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.partys-slots-panel .fragments-config-head button:hover {
+  border-color: rgba(192, 132, 252, .6);
+  background: rgba(139, 92, 246, .34);
+}
+
+.partys-slots-panel .fragments-config-head button:disabled {
+  cursor: wait;
+  opacity: .6;
+}
+
+.roster-card.assigned {
+  opacity: .45;
+}
+
+.roster-card[data-character-key] {
+  cursor: pointer;
+}
+
+.party-assigned-badge {
+  background: rgba(34, 197, 94, .18) !important;
+  color: #86efac !important;
+}
+
+.party-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.party-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.party-slot.empty {
+  border: 1px dashed rgba(192, 132, 252, .25);
+  background: rgba(255, 255, 255, .02);
+}
+
+.party-slot.filled {
+  border: 1px solid rgba(134, 239, 172, .35);
+  background: rgba(34, 197, 94, .08);
+}
+
+.party-slot-index {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: rgba(139, 92, 246, .2);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.party-slot-placeholder {
+  color: rgba(248, 244, 255, .42);
+  font-size: 12px;
+}
+
+.party-slot-member {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.party-slot-member strong {
+  color: #fff;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.party-slot-member span {
+  color: rgba(248, 244, 255, .58);
+  font-size: 11px;
+}
+
+.party-slot-remove {
+  margin-left: auto;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  border: 1px solid rgba(252, 165, 165, .3);
+  background: rgba(248, 113, 113, .12);
+  color: #fca5a5;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.party-slot-remove:hover {
+  border-color: rgba(252, 165, 165, .6);
+  background: rgba(248, 113, 113, .22);
+}
+
+.partys-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.party-card {
+  border-radius: 12px;
+  border: 1px solid rgba(192, 132, 252, .18);
+  background: rgba(9, 5, 22, .74);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, .28);
+  backdrop-filter: blur(12px);
+  padding: 14px;
+}
+
+.party-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.party-card header h4 {
+  margin: 0;
+  color: #fff;
+  font-size: 17px;
+}
+
+.party-delete {
+  padding: 6px 11px;
+  border-radius: 7px;
+  border: 1px solid rgba(252, 165, 165, .3);
+  background: rgba(248, 113, 113, .12);
+  color: #fca5a5;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.party-delete:hover {
+  border-color: rgba(252, 165, 165, .6);
+  background: rgba(248, 113, 113, .22);
+}
+
+.party-members-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.party-members-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .03);
+  color: rgba(248, 244, 255, .8);
+  font-size: 12px;
+}
+
+.party-members-list li strong {
+  color: #fff;
+}
+
+.party-members-list li em {
+  margin-left: auto;
+  color: rgba(248, 244, 255, .5);
+  font-style: normal;
+  font-size: 11px;
+}
+
+.party-member-slot {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(139, 92, 246, .2);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.partys-list-view.hidden,
+.partys-create-view.hidden {
+  display: none;
+}
+
 .fragments-character {
   display: flex;
   align-items: center;
@@ -1874,6 +2163,13 @@ body.auth-locked .showcase {
   }
   .fragments-layout {
     grid-template-columns: 1fr;
+  }
+  .partys-create-layout {
+    grid-template-columns: 1fr;
+  }
+  .partys-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
   }
   .fragments-side {
     position: static;

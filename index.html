@@ -115,6 +115,10 @@
             <span class="sidebar-icon">◇</span>
             <span>Fragmentos</span>
           </a>
+          <a class="sidebar-item" href="#" id="partysNav">
+            <span class="sidebar-icon">♕</span>
+            <span>Partys</span>
+          </a>
           <a class="sidebar-item" href="#" id="chatbotNav">
             <span class="sidebar-icon">💬</span>
             <span>ChatBot</span>
@@ -302,6 +306,56 @@
           <div class="chatbot-iframe-fallback hidden" id="chatbotFallback">
             <p>Si no ves el ChatBot, arranca el servidor con <code>npm start</code> y recarga la página.</p>
           </div>
+        </div>
+      </section>
+
+      <!-- Pagina: partys -->
+      <section class="fragments-page hidden" id="partysPage" aria-label="Partys">
+        <div class="fragments-page-head">
+          <div>
+            <p class="character-kicker">Coordinación de gremio</p>
+            <h2>Partys</h2>
+          </div>
+        </div>
+
+        <div class="partys-toolbar">
+          <div class="partys-subnav">
+            <button type="button" class="partys-subnav-item active" id="partysCreateTab">Crear party</button>
+            <button type="button" class="partys-subnav-item" id="partysListTab">Partys formadas</button>
+          </div>
+          <div class="partys-boss-select-row">
+            <label for="partysBossSelect">Boss</label>
+            <select id="partysBossSelect" aria-label="Seleccionar boss"></select>
+          </div>
+        </div>
+
+        <div class="partys-create-view" id="partysCreateView">
+          <div class="partys-create-layout">
+            <aside class="roster-section partys-roster-panel">
+              <div class="fragments-config-head">
+                <div>
+                  <p class="character-kicker">Roster del gremio</p>
+                  <h3>Personajes disponibles</h3>
+                </div>
+              </div>
+              <div class="character-roster" id="partysRoster"></div>
+            </aside>
+            <section class="partys-slots-panel">
+              <div class="fragments-config-head">
+                <div>
+                  <p class="character-kicker">Party</p>
+                  <h3>Slots (1-6)</h3>
+                </div>
+                <button type="button" id="partysSaveBtn">Guardar party</button>
+              </div>
+              <div class="party-slots-grid" id="partySlotsGrid"></div>
+              <p class="character-status" id="partysStatus"></p>
+            </section>
+          </div>
+        </div>
+
+        <div class="partys-list-view hidden" id="partysListView">
+          <div class="partys-grid" id="partysGrid"></div>
         </div>
       </section>
 
