@@ -288,6 +288,7 @@ const partysTimezoneSelect = document.getElementById("partysTimezoneSelect");
 populateTimezoneSelect(partysTimezoneSelect);
 const partysRunTimeSelect = document.getElementById("partysRunTimeSelect");
 syncPartyRunTimeOptions();
+const partysDestinationSelect = document.getElementById("partysDestinationSelect");
 const partysStatus    = document.getElementById("partysStatus");
 const partysGrid      = document.getElementById("partysGrid");
 const closeCharacterPanel = document.getElementById("closeCharacterPanel");
@@ -1431,12 +1432,13 @@ partysSaveBtn?.addEventListener("click", async () => {
 
   try {
     const bossLabel = getPartyBossLabel(partysCurrentBossId);
+    const destinationCategory = partysDestinationSelect?.value || partysCurrentCategory();
     const created = await fetchAuthedJson("/api/parties", {
       method: "POST",
       body: JSON.stringify({
         bossId: partysCurrentBossId,
         label: `Party ${bossLabel}`,
-        category: partysCurrentCategory(),
+        category: destinationCategory,
         difficulty: partysDifficultySelect?.value || "",
         timezone: partysTimezoneSelect?.value || "",
         runTime: partysRunTimeSelect?.value || "",
@@ -1460,6 +1462,11 @@ partysSaveBtn?.addEventListener("click", async () => {
     partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
     renderPartySlots();
     renderPartysRoster();
+    if (destinationCategory === "alianza") {
+      partysAllianceSectionTab?.click();
+    } else {
+      partysOwnSectionTab?.click();
+    }
     await loadPartiesForCurrentBoss();
     renderPartysList();
   } catch (error) {
@@ -1741,6 +1748,14 @@ chatbotNav?.addEventListener("click", (event) => {
 partysNav?.addEventListener("click", (event) => {
   event.preventDefault();
   showPartysPage();
+});
+
+partysOwnSectionTab?.addEventListener("click", () => {
+  if (partysDestinationSelect) partysDestinationSelect.value = "imanity";
+});
+
+partysAllianceSectionTab?.addEventListener("click", () => {
+  if (partysDestinationSelect) partysDestinationSelect.value = "alianza";
 });
 
 chatbotIframe?.addEventListener("load", () => {
