@@ -246,67 +246,67 @@ const PARTY_BOSS_DIFFICULTIES = {
 };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────
-const bgLayer         = document.getElementById("bgLayer");
-const showcase        = document.getElementById("showcase");
-const infoPanel       = document.getElementById("infoPanel");
-const infoRegion      = document.getElementById("infoRegion");
-const infoName        = document.getElementById("infoName");
-const infoTags        = document.getElementById("infoTags");
-const infoStats       = document.getElementById("infoStats");
-const bossSprite      = document.getElementById("bossSprite");
+const bgLayer = document.getElementById("bgLayer");
+const showcase = document.getElementById("showcase");
+const infoPanel = document.getElementById("infoPanel");
+const infoRegion = document.getElementById("infoRegion");
+const infoName = document.getElementById("infoName");
+const infoTags = document.getElementById("infoTags");
+const infoStats = document.getElementById("infoStats");
+const bossSprite = document.getElementById("bossSprite");
 const bossAccessories = document.getElementById("bossAccessories");
-const bossWrap        = document.querySelector(".boss-wrap");
-const selector        = document.getElementById("bossSelector");
-const sidebarChar     = document.getElementById("sidebarChar");
+const bossWrap = document.querySelector(".boss-wrap");
+const selector = document.getElementById("bossSelector");
+const sidebarChar = document.getElementById("sidebarChar");
 const sidebarCharName = document.getElementById("sidebarCharName");
-const sidebarCharSub  = document.querySelector(".sidebar-char-sub");
+const sidebarCharSub = document.querySelector(".sidebar-char-sub");
 const sidebarCharAvatar = document.getElementById("sidebarCharAvatar");
-const dashboardNav    = document.getElementById("dashboardNav");
-const dashboardPage   = document.getElementById("dashboardPage");
-const characterNav    = document.getElementById("characterNav");
-const bossNav         = document.getElementById("bossNav");
-const fragmentsNav    = document.getElementById("fragmentsNav");
-const chatbotNav      = document.getElementById("chatbotNav");
-const characterPanel  = document.getElementById("characterPanel");
-const fragmentsPage   = document.getElementById("fragmentsPage");
-const chatbotPage     = document.getElementById("chatbotPage");
-const partysNav       = document.getElementById("partysNav");
-const partysPage      = document.getElementById("partysPage");
+const dashboardNav = document.getElementById("dashboardNav");
+const dashboardPage = document.getElementById("dashboardPage");
+const characterNav = document.getElementById("characterNav");
+const bossNav = document.getElementById("bossNav");
+const fragmentsNav = document.getElementById("fragmentsNav");
+const chatbotNav = document.getElementById("chatbotNav");
+const characterPanel = document.getElementById("characterPanel");
+const fragmentsPage = document.getElementById("fragmentsPage");
+const chatbotPage = document.getElementById("chatbotPage");
+const partysNav = document.getElementById("partysNav");
+const partysPage = document.getElementById("partysPage");
 const partysOwnSectionTab = document.getElementById("partysOwnSectionTab");
 const partysAllianceSectionTab = document.getElementById("partysAllianceSectionTab");
 const partysCreateTab = document.getElementById("partysCreateTab");
-const partysListTab   = document.getElementById("partysListTab");
+const partysListTab = document.getElementById("partysListTab");
 const partysBossSelect = document.getElementById("partysBossSelect");
 const partysCreateBossSelect = document.getElementById("partysCreateBossSelect");
 const partysCreateView = document.getElementById("partysCreateView");
-const partysListView  = document.getElementById("partysListView");
-const partysRoster    = document.getElementById("partysRoster");
-const partySlotsGrid  = document.getElementById("partySlotsGrid");
-const partysSaveBtn   = document.getElementById("partysSaveBtn");
+const partysListView = document.getElementById("partysListView");
+const partysRoster = document.getElementById("partysRoster");
+const partySlotsGrid = document.getElementById("partySlotsGrid");
+const partysSaveBtn = document.getElementById("partysSaveBtn");
 const partysDifficultySelect = document.getElementById("partysDifficultySelect");
 const partysTimezoneSelect = document.getElementById("partysTimezoneSelect");
 populateTimezoneSelect(partysTimezoneSelect);
 const partysRunTimeSelect = document.getElementById("partysRunTimeSelect");
 syncPartyRunTimeOptions();
 const partysDestinationSelect = document.getElementById("partysDestinationSelect");
-const partysStatus    = document.getElementById("partysStatus");
-const partysGrid      = document.getElementById("partysGrid");
+const partysStatus = document.getElementById("partysStatus");
+const partysGrid = document.getElementById("partysGrid");
 const closeCharacterPanel = document.getElementById("closeCharacterPanel");
 const characterSearchForm = document.getElementById("characterSearchForm");
-const characterIgn    = document.getElementById("characterIgn");
+const characterIgn = document.getElementById("characterIgn");
 const characterRegion = document.getElementById("characterRegion");
 const fetchCharacterBtn = document.getElementById("fetchCharacterBtn");
 const characterStatus = document.getElementById("characterStatus");
 const characterPortrait = document.getElementById("characterPortrait");
 const characterPortraitEmpty = document.getElementById("characterPortraitEmpty");
-const characterWorld  = document.getElementById("characterWorld");
-const characterName   = document.getElementById("characterName");
-const characterJob    = document.getElementById("characterJob");
-const characterLevel  = document.getElementById("characterLevel");
-const characterRank   = document.getElementById("characterRank");
+const characterWorld = document.getElementById("characterWorld");
+const characterName = document.getElementById("characterName");
+const characterJob = document.getElementById("characterJob");
+const characterLevel = document.getElementById("characterLevel");
+const characterRank = document.getElementById("characterRank");
 const characterJobRank = document.getElementById("characterJobRank");
 const characterGlobalRank = document.getElementById("characterGlobalRank");
-const characterCount  = document.getElementById("characterCount");
+const characterCount = document.getElementById("characterCount");
 const characterRoster = document.getElementById("characterRoster");
 const fragmentsCharacterAvatar = document.getElementById("fragmentsCharacterAvatar");
 const fragmentsCharacterClass = document.getElementById("fragmentsCharacterClass");
@@ -389,7 +389,13 @@ function setRegisterStatus(message, state = "neutral") {
 }
 
 function normalizeUsername(value) {
-  return String(value || "").trim().toLowerCase();
+  // Trim, lower-case, remove spaces and strip characters that could
+  // break email-based auth (keeps letters, numbers, dot, underscore, hyphen).
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[^a-z0-9._-]/g, "");
 }
 
 function normalizeEmail(value) {
@@ -1221,14 +1227,14 @@ function renderPartySlots() {
     <div class="party-slot ${slot ? "filled" : "empty"}">
       <span class="party-slot-index">${index + 1}</span>
       ${slot
-        ? `
+      ? `
           <div class="party-slot-member">
             <strong>${slot.name}</strong>
             <span>${slot.jobName || "Sin clase"} · Lv. ${slot.level ?? "-"}</span>
           </div>
           <button type="button" class="party-slot-remove" data-slot-index="${index}" aria-label="Quitar de la party">✕</button>
         `
-        : `<div class="party-slot-placeholder">Vacío — clic en un personaje del roster</div>`}
+      : `<div class="party-slot-placeholder">Vacío — clic en un personaje del roster</div>`}
     </div>
   `).join("");
 }
@@ -1268,8 +1274,8 @@ function renderPartysList() {
       </header>
       <ul class="party-members-list">
         ${(party.members || []).map((member) => {
-          const character = findRosterCharacter(member.characterOwnerId, member.characterRegion, member.characterName);
-          return `
+    const character = findRosterCharacter(member.characterOwnerId, member.characterRegion, member.characterName);
+    return `
             <li>
               <span class="party-member-slot">#${member.slotIndex + 1}</span>
               <strong>${member.characterName}</strong>
@@ -1278,7 +1284,7 @@ function renderPartysList() {
               ${character?.owner?.timezone ? `<span class="party-member-timezone-badge">${character.owner.timezone}</span>` : ""}
             </li>
           `;
-        }).join("") || "<li>Sin miembros aún</li>"}
+  }).join("") || "<li>Sin miembros aún</li>"}
       </ul>
     </article>
   `).join("");

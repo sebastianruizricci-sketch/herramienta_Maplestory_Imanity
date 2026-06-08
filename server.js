@@ -134,6 +134,8 @@ const classNames = [
 ];
 
 const docCache = new Map();
+// In-memory local storage for characters when running without Data Connect / Firebase Admin.
+const LOCAL_CHARACTERS = new Map();
 
 const send = (res, status, body, headers = {}) => {
   res.writeHead(status, headers);
@@ -486,7 +488,13 @@ const VALID_GUILDS = ["imanity", "lorien"];
 const VALID_PARTY_CATEGORIES = ["imanity", "lorien", "alianza"];
 
 function normalizeUsername(value) {
-  return String(value || "").trim().toLowerCase();
+  // Trim, lower-case, remove spaces and strip characters that are invalid
+  // for an email local-part to avoid Firebase validation errors.
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[^a-z0-9._-]/g, "");
 }
 
 function normalizeGuild(value) {
@@ -552,6 +560,20 @@ function getRegisterErrorMessage(error) {
 async function getAuthClaimsFromRequest(req) {
   const token = req.headers.authorization?.replace(/^bearer\s+/i, "");
   if (!token) return null;
+  // Allow a local bypass for testing when Firebase Admin credentials are not available.
+  // Set LOCAL_AUTH_BYPASS=true in the environment to enable. This will decode the
+  // JWT payload without verification — use only for local development.
+  if (process.env.LOCAL_AUTH_BYPASS === "true") {
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2) return null;
+      const payload = Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+      return JSON.parse(payload);
+    } catch (err) {
+      return null;
+    }
+  }
+
   return getAuth().verifyIdToken(token);
 }
 
@@ -738,6 +760,20 @@ async function handleSaveCharacter(req, res) {
     if (!character) {
       sendJson(res, 400, { error: "Character name is required." });
       return;
+    }
+    // If running locally without Data Connect credentials, store characters in memory.
+    if (process.env.LOCAL_AUTH_BYPASS === "true") {
+      try {
+        const userKey = authClaims?.sub || authClaims?.user_id || authClaims?.localId || authClaims?.email || "local";
+        const list = LOCAL_CHARACTERS.get(userKey) || [];
+        list.push(character);
+        LOCAL_CHARACTERS.set(userKey, list);
+        sendJson(res, 200, { character, characters: list });
+        return;
+      } catch (err) {
+        sendJson(res, 500, { error: "Local character storage failed." });
+        return;
+      }
     }
 
     await upsertMapleCharacter(character, getImpersonationOptions(authClaims));
