@@ -1972,6 +1972,98 @@ body.auth-locked .showcase {
   font-size: 13px;
 }
 
+.partys-boss-filter {
+  position: relative;
+}
+
+.partys-boss-filter.hidden {
+  display: none;
+}
+
+#partysBossFilterToggle {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(192, 132, 252, .22);
+  background: rgba(139, 92, 246, .14);
+  color: rgba(248, 244, 255, .85);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+#partysBossFilterToggle:hover {
+  border-color: rgba(192, 132, 252, .5);
+}
+
+.partys-boss-filter-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  width: 240px;
+  max-height: 320px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  border: 1px solid rgba(192, 132, 252, .25);
+  background: rgba(9, 5, 22, .96);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, .4);
+  backdrop-filter: blur(12px);
+  padding: 10px;
+  gap: 8px;
+}
+
+.partys-boss-filter-panel.hidden {
+  display: none;
+}
+
+.partys-boss-filter-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.partys-boss-filter-actions button {
+  flex: 1;
+  min-height: 30px;
+  border-radius: 7px;
+  border: 1px solid rgba(192, 132, 252, .22);
+  background: rgba(139, 92, 246, .12);
+  color: rgba(248, 244, 255, .8);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.partys-boss-filter-actions button:hover {
+  border-color: rgba(192, 132, 252, .5);
+}
+
+.partys-boss-filter-list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.partys-boss-filter-list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: rgba(248, 244, 255, .8);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.partys-boss-filter-list label:hover {
+  background: rgba(255, 255, 255, .04);
+}
+
 .partys-create-layout {
   display: grid;
   grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
@@ -2190,8 +2282,8 @@ body.auth-locked .showcase {
 }
 
 .partys-board-column {
-  flex: 0 0 220px;
-  width: 220px;
+  flex: 0 0 260px;
+  width: 260px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -2209,7 +2301,7 @@ body.auth-locked .showcase {
 }
 
 .party-boss-card-slot {
-  min-height: 220px;
+  min-height: 260px;
   border: 1px dashed rgba(192, 132, 252, .35);
   border-radius: 12px;
   background: rgba(255, 255, 255, .02);
@@ -2217,6 +2309,21 @@ body.auth-locked .showcase {
   align-items: flex-end;
   justify-content: center;
   padding: 10px;
+  overflow: hidden;
+}
+
+.party-boss-card-slot:has(img) {
+  border-style: solid;
+  padding: 0;
+}
+
+.party-boss-card-slot img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 0.72;
+  object-fit: cover;
+  border-radius: 11px;
+  display: block;
 }
 
 .party-boss-card-slot span {
