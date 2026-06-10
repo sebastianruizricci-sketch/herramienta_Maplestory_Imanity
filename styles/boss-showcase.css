@@ -2089,42 +2089,10 @@ body.auth-locked .showcase {
   display: none;
 }
 
-.partys-view-mode-options {
-  display: flex;
-  gap: 8px;
-}
-
-.partys-view-mode-option {
-  flex: 1;
-  min-height: 32px;
-  border-radius: 7px;
-  border: 1px solid rgba(192, 132, 252, .22);
-  background: rgba(139, 92, 246, .12);
-  color: rgba(248, 244, 255, .8);
-  cursor: pointer;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 850;
-}
-
-.partys-view-mode-option:hover {
-  border-color: rgba(192, 132, 252, .5);
-}
-
-.partys-view-mode-option.active {
-  background: rgba(192, 132, 252, .35);
-  border-color: rgba(192, 132, 252, .6);
-  color: #fff;
-}
-
 .partys-view-mode-player {
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.partys-view-mode-player.hidden {
-  display: none;
 }
 
 .partys-view-mode-player label {
@@ -2144,84 +2112,6 @@ body.auth-locked .showcase {
   color: #f8f4ff;
   font: inherit;
   font-size: 13px;
-}
-
-.partys-player-board {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 28px;
-}
-
-.partys-player-boss-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  padding: 16px;
-  border: 1px solid rgba(192, 132, 252, .25);
-  border-top: 4px solid var(--boss-accent, #c084fc);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, .035);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
-}
-
-.partys-player-boss-card {
-  width: 240px;
-  min-height: 240px;
-  border: 1px dashed rgba(192, 132, 252, .35);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, .02);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 10px;
-  overflow: hidden;
-}
-
-.partys-player-boss-card:has(img) {
-  border-style: solid;
-  padding: 0;
-}
-
-.partys-player-boss-card img {
-  width: 100%;
-  height: 100%;
-  aspect-ratio: 0.72;
-  object-fit: cover;
-  border-radius: 11px;
-  display: block;
-}
-
-.partys-player-boss-card span {
-  color: rgba(248, 244, 255, .55);
-  font-size: 12px;
-  font-weight: 800;
-  text-align: center;
-}
-
-.partys-player-boss-name {
-  margin: 0;
-  padding: 5px 16px;
-  border-radius: 999px;
-  border: 1px solid var(--boss-accent, #c084fc);
-  background: rgba(255, 255, 255, .04);
-  color: #f8f4ff;
-  font-size: 13px;
-  font-weight: 850;
-  text-align: center;
-}
-
-.partys-player-boss-parties {
-  display: flex;
-  gap: 12px;
-}
-
-.partys-player-boss-subcolumn {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 240px;
 }
 
 .partys-create-layout {
