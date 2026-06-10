@@ -17,6 +17,9 @@ const {
   deleteBossParty,
   upsertPartyMember,
   removePartyMember,
+  listAppUsers,
+  updateUserRole,
+  updateUserGuild,
 } = require("@dataconnect/admin-generated");
 
 const ROOT = __dirname;
@@ -486,6 +489,7 @@ function handleChatBotHealth(req, res) {
 
 const VALID_GUILDS = ["imanity", "lorien"];
 const VALID_PARTY_CATEGORIES = ["imanity", "lorien", "alianza"];
+const VALID_ROLES = ["admin", "lider", "jr", "usuario"];
 
 function normalizeUsername(value) {
   // Trim, lower-case, remove spaces and strip characters that are invalid
@@ -500,6 +504,11 @@ function normalizeUsername(value) {
 function normalizeGuild(value) {
   const guild = String(value || "").trim().toLowerCase();
   return VALID_GUILDS.includes(guild) ? guild : null;
+}
+
+function normalizeRole(value) {
+  const role = String(value || "").trim().toLowerCase();
+  return VALID_ROLES.includes(role) ? role : "usuario";
 }
 
 function normalizeTimezone(value) {
@@ -597,6 +606,21 @@ async function requireAuth(req, res) {
     return authClaims;
   } catch {
     sendJson(res, 401, { error: "Unauthorized" });
+    return null;
+  }
+}
+
+async function requireAdmin(authClaims, res) {
+  try {
+    const result = await getCurrentUser(getImpersonationOptions(authClaims));
+    const user = result.data.appUser || null;
+    if (!user || normalizeRole(user.role) !== "admin") {
+      sendJson(res, 403, { error: "Solo un admin puede realizar esta accion." });
+      return null;
+    }
+    return user;
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo verificar el rol del usuario." });
     return null;
   }
 }
@@ -793,9 +817,70 @@ async function handleListGuildRoster(req, res, guild) {
     const result = normalizedGuild
       ? await listGuildRoster({ guild: normalizedGuild }, getImpersonationOptions(authClaims))
       : await listAllianceRoster(getImpersonationOptions(authClaims));
-    sendJson(res, 200, { characters: result.data.mapleCharacters || [] });
+    let characters = result.data.mapleCharacters || [];
+
+    const me = await getCurrentUser(getImpersonationOptions(authClaims));
+    const role = normalizeRole(me.data.appUser?.role);
+    if (role === "usuario") {
+      const userId = authClaims.uid || authClaims.sub;
+      characters = characters.filter((character) => character.ownerId === userId);
+    }
+
+    sendJson(res, 200, { characters });
   } catch (error) {
     sendJson(res, 500, { error: error.message || "No se pudo obtener el roster del gremio." });
+  }
+}
+
+async function handleListAppUsers(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+  if (!(await requireAdmin(authClaims, res))) return;
+
+  try {
+    const result = await listAppUsers(getImpersonationOptions(authClaims));
+    sendJson(res, 200, { users: result.data.appUsers || [] });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo obtener la lista de usuarios." });
+  }
+}
+
+async function handleUpdateUserRole(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+  if (!(await requireAdmin(authClaims, res))) return;
+
+  try {
+    const body = await readJsonBody(req);
+    const userId = String(body.userId || "").trim();
+    if (!userId) {
+      sendJson(res, 400, { error: "userId es obligatorio." });
+      return;
+    }
+    const role = normalizeRole(body.role);
+    await updateUserRole({ userId, role }, getImpersonationOptions(authClaims));
+    sendJson(res, 200, { ok: true, userId, role });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo actualizar el rol del usuario." });
+  }
+}
+
+async function handleRemoveUserFromGuild(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+  if (!(await requireAdmin(authClaims, res))) return;
+
+  try {
+    const body = await readJsonBody(req);
+    const userId = String(body.userId || "").trim();
+    if (!userId) {
+      sendJson(res, 400, { error: "userId es obligatorio." });
+      return;
+    }
+    await updateUserGuild({ userId, guild: null }, getImpersonationOptions(authClaims));
+    sendJson(res, 200, { ok: true, userId });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo sacar al usuario del gremio." });
   }
 }
 
@@ -946,6 +1031,21 @@ http.createServer((req, res) => {
   if (req.method === "GET" && req.url.startsWith("/api/roster")) {
     const guild = new URL(req.url, `http://${req.headers.host || "localhost"}`).searchParams.get("guild");
     handleListGuildRoster(req, res, guild);
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/api/admin/users") {
+    handleListAppUsers(req, res);
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/admin/users/role") {
+    handleUpdateUserRole(req, res);
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/admin/users/guild") {
+    handleRemoveUserFromGuild(req, res);
     return;
   }
 
