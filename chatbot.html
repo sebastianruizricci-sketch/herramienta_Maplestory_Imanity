@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MapleStory Bosses</title>
+    <title>ChatBot - MapleTools</title>
     <script>
       window.tailwind = window.tailwind || {};
       window.tailwind.config = { corePlugins: { preflight: false } };
@@ -11,7 +11,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles/boss-showcase.css" />
   </head>
-  <body class="auth-locked">
+  <body class="auth-locked" data-initial-page="chatbot">
 
     <section class="login-screen" id="loginScreen" aria-label="Entrada de usuario">
       <div class="login-ambient" aria-hidden="true"></div>
@@ -87,7 +87,7 @@
       </form>
     </section>
 
-    <div class="showcase" id="showcase">
+    <div class="showcase chatbot-view" id="showcase">
 
       <!-- Fondo dinámico -->
       <div class="bg-layer" id="bgLayer"></div>
@@ -116,7 +116,7 @@
         <nav class="sidebar-nav">
 
           <span class="sidebar-group">Principal</span>
-          <a class="sidebar-item" href="#" id="dashboardNav">
+          <a class="sidebar-item" href="index.html">
             <span class="sidebar-icon">⬡</span>
             <span>Dashboard</span>
           </a>
@@ -126,7 +126,7 @@
           </a>
 
           <span class="sidebar-group">Progreso</span>
-          <a class="sidebar-item active" href="#" id="bossNav">
+          <a class="sidebar-item" href="index.html">
             <span class="sidebar-icon">⚔</span>
             <span>Bosses</span>
           </a>
@@ -150,7 +150,7 @@
             <span class="sidebar-icon">T</span>
             <span>Trades</span>
           </a>
-          <a class="sidebar-item" href="chatbot.html">
+          <a class="sidebar-item active" href="chatbot.html" id="chatbotNav">
             <span class="sidebar-icon">💬</span>
             <span>ChatBot</span>
           </a>
@@ -182,13 +182,13 @@
 
         <div class="sidebar-footer">
           <button class="sidebar-logout" id="logoutBtn" type="button">Salir</button>
-          <span class="sidebar-version">v1.0 MVP</span>
+          <span class="sidebar-version">chatbot</span>
         </div>
 
       </aside>
 
       <!-- Info del boss -->
-      <aside class="info-panel" id="infoPanel">
+      <aside class="info-panel hidden" id="infoPanel">
         <p class="region" id="infoRegion"></p>
         <h1 class="boss-name" id="infoName"></h1>
         <div class="divider"></div>
@@ -201,7 +201,7 @@
       </aside>
 
       <!-- Centro: boss flotando -->
-      <div class="boss-stage">
+      <div class="boss-stage hidden">
         <div class="boss-wrap">
           <img class="boss-accessories" id="bossAccessories" src="" alt="" />
           <img class="boss-sprite" id="bossSprite" src="" alt="" />
@@ -209,12 +209,26 @@
       </div>
 
       <!-- Derecha: selector de bosses -->
-      <nav class="boss-selector" id="bossSelector" aria-label="Selección de boss"></nav>
+      <nav class="boss-selector hidden" id="bossSelector" aria-label="Selección de boss"></nav>
 
-      <!-- Pagina: dashboard -->
-      <section class="dashboard-page hidden" id="dashboardPage" aria-label="Dashboard">
-        <div class="dashboard-bg" style="background-image: url('/assets/dashboard-background.png');"></div>
-        <div class="dashboard-overlay"></div>
+      <section class="fragments-page chatbot-page" id="chatbotPage" aria-label="ChatBot">
+        <div class="fragments-page-head">
+          <div>
+            <p class="character-kicker">Asistente</p>
+            <h2>ChatBot</h2>
+          </div>
+        </div>
+        <div class="chatbot-iframe-wrapper">
+          <iframe
+            src="/chatbot/"
+            title="ChatBot"
+            sandbox="allow-scripts allow-same-origin allow-forms"
+            id="chatbotIframe"
+          ></iframe>
+          <div class="chatbot-iframe-fallback hidden" id="chatbotFallback">
+            <p>Si no ves el ChatBot, arranca el servidor con <code>npm start</code> y recarga la página.</p>
+          </div>
+        </div>
       </section>
 
     </div>

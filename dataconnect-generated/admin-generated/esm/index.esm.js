@@ -6,34 +6,22 @@ export const connectorConfig = {
   location: 'us-east4'
 };
 
-export function upsertCurrentUser(dcOrVarsOrOptions, varsOrOptions, options) {
-  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
-  dcInstance.useGen(true);
-  return dcInstance.executeMutation('UpsertCurrentUser', inputVars, inputOpts);
-}
-
-export function getCurrentUser(dcOrOptions, options) {
+export function listChallengerProposals(dcOrOptions, options) {
   const { dc: dcInstance, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrOptions, options, undefined);
   dcInstance.useGen(true);
-  return dcInstance.executeQuery('GetCurrentUser', undefined, inputOpts);
+  return dcInstance.executeQuery('ListChallengerProposals', undefined, inputOpts);
 }
 
-export function listAppUsers(dcOrOptions, options) {
-  const { dc: dcInstance, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrOptions, options, undefined);
-  dcInstance.useGen(true);
-  return dcInstance.executeQuery('ListAppUsers', undefined, inputOpts);
-}
-
-export function updateUserRole(dcOrVarsOrOptions, varsOrOptions, options) {
+export function createChallengerProposal(dcOrVarsOrOptions, varsOrOptions, options) {
   const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
   dcInstance.useGen(true);
-  return dcInstance.executeMutation('UpdateUserRole', inputVars, inputOpts);
+  return dcInstance.executeMutation('CreateChallengerProposal', inputVars, inputOpts);
 }
 
-export function updateUserGuild(dcOrVarsOrOptions, varsOrOptions, options) {
+export function deleteChallengerProposal(dcOrVarsOrOptions, varsOrOptions, options) {
   const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
   dcInstance.useGen(true);
-  return dcInstance.executeMutation('UpdateUserGuild', inputVars, inputOpts);
+  return dcInstance.executeMutation('DeleteChallengerProposal', inputVars, inputOpts);
 }
 
 export function upsertMapleCharacter(dcOrVarsOrOptions, varsOrOptions, options) {
@@ -94,6 +82,36 @@ export function listPartiesByCategory(dcOrVarsOrOptions, varsOrOptions, options)
   const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, false);
   dcInstance.useGen(true);
   return dcInstance.executeQuery('ListPartiesByCategory', inputVars, inputOpts);
+}
+
+export function upsertCurrentUser(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('UpsertCurrentUser', inputVars, inputOpts);
+}
+
+export function getCurrentUser(dcOrOptions, options) {
+  const { dc: dcInstance, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrOptions, options, undefined);
+  dcInstance.useGen(true);
+  return dcInstance.executeQuery('GetCurrentUser', undefined, inputOpts);
+}
+
+export function listAppUsers(dcOrOptions, options) {
+  const { dc: dcInstance, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrOptions, options, undefined);
+  dcInstance.useGen(true);
+  return dcInstance.executeQuery('ListAppUsers', undefined, inputOpts);
+}
+
+export function updateUserRole(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('UpdateUserRole', inputVars, inputOpts);
+}
+
+export function updateUserGuild(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('UpdateUserGuild', inputVars, inputOpts);
 }
 
 export function createTradePost(dcOrVarsOrOptions, varsOrOptions, options) {

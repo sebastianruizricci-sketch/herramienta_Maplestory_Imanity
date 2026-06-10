@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MapleStory Bosses</title>
+    <title>Partys - MapleTools</title>
     <script>
       window.tailwind = window.tailwind || {};
       window.tailwind.config = { corePlugins: { preflight: false } };
@@ -11,7 +11,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles/boss-showcase.css" />
   </head>
-  <body class="auth-locked">
+  <body class="auth-locked" data-initial-page="partys">
 
     <section class="login-screen" id="loginScreen" aria-label="Entrada de usuario">
       <div class="login-ambient" aria-hidden="true"></div>
@@ -87,7 +87,7 @@
       </form>
     </section>
 
-    <div class="showcase" id="showcase">
+    <div class="showcase partys-view" id="showcase">
 
       <!-- Fondo dinámico -->
       <div class="bg-layer" id="bgLayer"></div>
@@ -116,7 +116,7 @@
         <nav class="sidebar-nav">
 
           <span class="sidebar-group">Principal</span>
-          <a class="sidebar-item" href="#" id="dashboardNav">
+          <a class="sidebar-item" href="index.html">
             <span class="sidebar-icon">⬡</span>
             <span>Dashboard</span>
           </a>
@@ -126,7 +126,7 @@
           </a>
 
           <span class="sidebar-group">Progreso</span>
-          <a class="sidebar-item active" href="#" id="bossNav">
+          <a class="sidebar-item" href="index.html">
             <span class="sidebar-icon">⚔</span>
             <span>Bosses</span>
           </a>
@@ -138,7 +138,7 @@
             <span class="sidebar-icon">◇</span>
             <span>Fragmentos</span>
           </a>
-          <a class="sidebar-item" href="partys.html">
+          <a class="sidebar-item active" href="partys.html" id="partysNav">
             <span class="sidebar-icon">♕</span>
             <span>Partys</span>
           </a>
@@ -182,13 +182,13 @@
 
         <div class="sidebar-footer">
           <button class="sidebar-logout" id="logoutBtn" type="button">Salir</button>
-          <span class="sidebar-version">v1.0 MVP</span>
+          <span class="sidebar-version">partys</span>
         </div>
 
       </aside>
 
       <!-- Info del boss -->
-      <aside class="info-panel" id="infoPanel">
+      <aside class="info-panel hidden" id="infoPanel">
         <p class="region" id="infoRegion"></p>
         <h1 class="boss-name" id="infoName"></h1>
         <div class="divider"></div>
@@ -201,7 +201,7 @@
       </aside>
 
       <!-- Centro: boss flotando -->
-      <div class="boss-stage">
+      <div class="boss-stage hidden">
         <div class="boss-wrap">
           <img class="boss-accessories" id="bossAccessories" src="" alt="" />
           <img class="boss-sprite" id="bossSprite" src="" alt="" />
@@ -209,12 +209,101 @@
       </div>
 
       <!-- Derecha: selector de bosses -->
-      <nav class="boss-selector" id="bossSelector" aria-label="Selección de boss"></nav>
+      <nav class="boss-selector hidden" id="bossSelector" aria-label="Selección de boss"></nav>
 
-      <!-- Pagina: dashboard -->
-      <section class="dashboard-page hidden" id="dashboardPage" aria-label="Dashboard">
-        <div class="dashboard-bg" style="background-image: url('/assets/dashboard-background.png');"></div>
-        <div class="dashboard-overlay"></div>
+      <!-- Pagina: partys -->
+      <section class="fragments-page" id="partysPage" aria-label="Partys">
+        <div class="fragments-page-head">
+          <div>
+            <h2>Partys</h2>
+          </div>
+        </div>
+
+        <div class="partys-section-nav" id="partysSectionNav">
+          <button type="button" class="partys-section-item active" id="partysOwnSectionTab" data-section="imanity">Imanity</button>
+          <button type="button" class="partys-section-item" id="partysAllianceSectionTab" data-section="alianza">Alianza</button>
+        </div>
+
+        <div class="partys-toolbar">
+          <div class="partys-subnav">
+            <button type="button" class="partys-subnav-item active" id="partysCreateTab">Crear party</button>
+            <button type="button" class="partys-subnav-item" id="partysListTab">Partys formadas</button>
+          </div>
+          <div class="partys-boss-select-row hidden" id="partysBossSelectRow">
+            <div class="partys-view-mode" id="partysViewMode">
+              <button type="button" id="partysViewModeToggle" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar partys por jugador" title="Filtrar por jugador">&#9881;</button>
+              <div class="partys-view-mode-panel hidden" id="partysViewModePanel">
+                <div class="partys-view-mode-player" id="partysViewModePlayerRow">
+                  <label for="partysViewModePlayerSelect">Filtrar por jugador</label>
+                  <select id="partysViewModePlayerSelect" aria-label="Filtrar por jugador"></select>
+                </div>
+              </div>
+            </div>
+            <div class="partys-boss-filter" id="partysBossFilter">
+              <button type="button" id="partysBossFilterToggle" aria-haspopup="true" aria-expanded="false">Filtrar bosses</button>
+              <div class="partys-boss-filter-panel hidden" id="partysBossFilterPanel">
+                <div class="partys-boss-filter-actions">
+                  <button type="button" id="partysBossFilterAll">Seleccionar todos</button>
+                  <button type="button" id="partysBossFilterNone">Ninguno</button>
+                </div>
+                <div class="partys-boss-filter-list" id="partysBossFilterList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="partys-create-view" id="partysCreateView">
+          <div class="partys-create-layout">
+            <aside class="roster-section partys-roster-panel">
+              <div class="fragments-config-head">
+                <div>
+                  <p class="character-kicker">Roster del gremio</p>
+                  <h3>Personajes disponibles</h3>
+                </div>
+              </div>
+              <div class="character-roster" id="partysRoster"></div>
+            </aside>
+            <section class="partys-slots-panel">
+              <div class="fragments-config-head">
+                <div>
+                  <p class="character-kicker">Party</p>
+                  <h3>Slots (1-6)</h3>
+                </div>
+                <button type="button" id="partysSaveBtn">Guardar party</button>
+              </div>
+              <div class="partys-timezone-row">
+                <label for="partysCreateBossSelect">Boss de la run</label>
+                <select id="partysCreateBossSelect" aria-label="Boss de la run"></select>
+              </div>
+              <div class="partys-timezone-row">
+                <label for="partysDifficultySelect">Dificultad</label>
+                <select id="partysDifficultySelect" aria-label="Dificultad de la run"></select>
+              </div>
+              <div class="partys-timezone-row">
+                <label for="partysTimezoneSelect">Zona horaria del party</label>
+                <select id="partysTimezoneSelect" aria-label="Zona horaria del party"></select>
+              </div>
+              <div class="partys-timezone-row">
+                <label for="partysRunTimeSelect">Hora de la run</label>
+                <select id="partysRunTimeSelect" aria-label="Hora de la run"></select>
+              </div>
+              <div class="partys-timezone-row">
+                <label for="partysDestinationSelect">Destino de la run</label>
+                <select id="partysDestinationSelect" aria-label="Destino de la run">
+                  <option value="imanity">Imanity</option>
+                  <option value="lorien">Lorien</option>
+                  <option value="alianza">Alianza</option>
+                </select>
+              </div>
+              <div class="party-slots-grid" id="partySlotsGrid"></div>
+              <p class="character-status" id="partysStatus"></p>
+            </section>
+          </div>
+        </div>
+
+        <div class="partys-list-view hidden" id="partysListView">
+          <div class="partys-grid" id="partysGrid"></div>
+        </div>
       </section>
 
     </div>

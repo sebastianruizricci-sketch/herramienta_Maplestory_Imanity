@@ -24,6 +24,11 @@ export interface BossParty_Key {
   __typename?: 'BossParty_Key';
 }
 
+export interface ChallengerProposal_Key {
+  id: UUIDString;
+  __typename?: 'ChallengerProposal_Key';
+}
+
 export interface TradePost_Key {
   id: UUIDString;
   __typename?: 'TradePost_Key';
@@ -47,11 +52,32 @@ export interface CreateBossPartyVariables {
   runTime?: string | null;
 }
 
+export interface CreateChallengerProposalData {
+  challengerProposal_insert: ChallengerProposal_Key;
+}
+
+export interface CreateChallengerProposalVariables {
+  nickname: string;
+  className?: string | null;
+  timezone?: string | null;
+  playingHours?: string | null;
+  expectedBosses?: string | null;
+  expectedLevelGoal?: string | null;
+}
+
 export interface DeleteBossPartyData {
   bossParty_delete?: BossParty_Key | null;
 }
 
 export interface DeleteBossPartyVariables {
+  id: UUIDString;
+}
+
+export interface DeleteChallengerProposalData {
+  challengerProposal_delete?: ChallengerProposal_Key | null;
+}
+
+export interface DeleteChallengerProposalVariables {
   id: UUIDString;
 }
 
@@ -180,6 +206,24 @@ export interface ListAppUsersData {
     guild?: string | null;
     role?: string | null;
   } & AppUser_Key)[];
+}
+
+export interface ListChallengerProposalsData {
+  challengerProposals: ({
+    id: UUIDString;
+    nickname: string;
+    className?: string | null;
+    timezone?: string | null;
+    playingHours?: string | null;
+    expectedBosses?: string | null;
+    expectedLevelGoal?: string | null;
+    ownerId: string;
+    createdAt: TimestampString;
+    owner: {
+      username: string;
+      guild?: string | null;
+    };
+  } & ChallengerProposal_Key)[];
 }
 
 export interface ListGuildRosterData {
@@ -385,6 +429,21 @@ export interface UpsertPartyMemberVariables {
   characterRegion: string;
   characterName: string;
 }
+
+/** Generated Node Admin SDK operation action function for the 'ListChallengerProposals' Query. Allow users to execute without passing in DataConnect. */
+export function listChallengerProposals(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<ListChallengerProposalsData>>;
+/** Generated Node Admin SDK operation action function for the 'ListChallengerProposals' Query. Allow users to pass in custom DataConnect instances. */
+export function listChallengerProposals(options?: OperationOptions): Promise<ExecuteOperationResponse<ListChallengerProposalsData>>;
+
+/** Generated Node Admin SDK operation action function for the 'CreateChallengerProposal' Mutation. Allow users to execute without passing in DataConnect. */
+export function createChallengerProposal(dc: DataConnect, vars: CreateChallengerProposalVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<CreateChallengerProposalData>>;
+/** Generated Node Admin SDK operation action function for the 'CreateChallengerProposal' Mutation. Allow users to pass in custom DataConnect instances. */
+export function createChallengerProposal(vars: CreateChallengerProposalVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<CreateChallengerProposalData>>;
+
+/** Generated Node Admin SDK operation action function for the 'DeleteChallengerProposal' Mutation. Allow users to execute without passing in DataConnect. */
+export function deleteChallengerProposal(dc: DataConnect, vars: DeleteChallengerProposalVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<DeleteChallengerProposalData>>;
+/** Generated Node Admin SDK operation action function for the 'DeleteChallengerProposal' Mutation. Allow users to pass in custom DataConnect instances. */
+export function deleteChallengerProposal(vars: DeleteChallengerProposalVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<DeleteChallengerProposalData>>;
 
 /** Generated Node Admin SDK operation action function for the 'UpsertCurrentUser' Mutation. Allow users to execute without passing in DataConnect. */
 export function upsertCurrentUser(dc: DataConnect, vars: UpsertCurrentUserVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertCurrentUserData>>;

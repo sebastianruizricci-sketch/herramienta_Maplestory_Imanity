@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MapleStory Bosses</title>
+    <title>Fragmentos - MapleTools</title>
     <script>
       window.tailwind = window.tailwind || {};
       window.tailwind.config = { corePlugins: { preflight: false } };
@@ -11,7 +11,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles/boss-showcase.css" />
   </head>
-  <body class="auth-locked">
+  <body class="auth-locked" data-initial-page="fragments">
 
     <section class="login-screen" id="loginScreen" aria-label="Entrada de usuario">
       <div class="login-ambient" aria-hidden="true"></div>
@@ -87,7 +87,7 @@
       </form>
     </section>
 
-    <div class="showcase" id="showcase">
+    <div class="showcase fragments-view" id="showcase">
 
       <!-- Fondo dinámico -->
       <div class="bg-layer" id="bgLayer"></div>
@@ -116,7 +116,7 @@
         <nav class="sidebar-nav">
 
           <span class="sidebar-group">Principal</span>
-          <a class="sidebar-item" href="#" id="dashboardNav">
+          <a class="sidebar-item" href="index.html">
             <span class="sidebar-icon">⬡</span>
             <span>Dashboard</span>
           </a>
@@ -126,7 +126,7 @@
           </a>
 
           <span class="sidebar-group">Progreso</span>
-          <a class="sidebar-item active" href="#" id="bossNav">
+          <a class="sidebar-item" href="index.html">
             <span class="sidebar-icon">⚔</span>
             <span>Bosses</span>
           </a>
@@ -134,7 +134,7 @@
             <span class="sidebar-icon">◎</span>
             <span>Mesos</span>
           </a>
-          <a class="sidebar-item" href="fragments.html">
+          <a class="sidebar-item active" href="fragments.html" id="fragmentsNav">
             <span class="sidebar-icon">◇</span>
             <span>Fragmentos</span>
           </a>
@@ -182,13 +182,13 @@
 
         <div class="sidebar-footer">
           <button class="sidebar-logout" id="logoutBtn" type="button">Salir</button>
-          <span class="sidebar-version">v1.0 MVP</span>
+          <span class="sidebar-version">fragments</span>
         </div>
 
       </aside>
 
       <!-- Info del boss -->
-      <aside class="info-panel" id="infoPanel">
+      <aside class="info-panel hidden" id="infoPanel">
         <p class="region" id="infoRegion"></p>
         <h1 class="boss-name" id="infoName"></h1>
         <div class="divider"></div>
@@ -201,7 +201,7 @@
       </aside>
 
       <!-- Centro: boss flotando -->
-      <div class="boss-stage">
+      <div class="boss-stage hidden">
         <div class="boss-wrap">
           <img class="boss-accessories" id="bossAccessories" src="" alt="" />
           <img class="boss-sprite" id="bossSprite" src="" alt="" />
@@ -209,12 +209,59 @@
       </div>
 
       <!-- Derecha: selector de bosses -->
-      <nav class="boss-selector" id="bossSelector" aria-label="Selección de boss"></nav>
+      <nav class="boss-selector hidden" id="bossSelector" aria-label="Selección de boss"></nav>
 
-      <!-- Pagina: dashboard -->
-      <section class="dashboard-page hidden" id="dashboardPage" aria-label="Dashboard">
-        <div class="dashboard-bg" style="background-image: url('/assets/dashboard-background.png');"></div>
-        <div class="dashboard-overlay"></div>
+      <section class="fragments-page" id="fragmentsPage" aria-label="Tracker de fragmentos">
+        <div class="fragments-page-head">
+          <div>
+            <p class="character-kicker">Hexa Matrix</p>
+            <h2>Fragmentos</h2>
+          </div>
+        </div>
+
+        <div class="fragments-layout">
+          <aside class="fragments-side">
+            <div class="fragments-panel fragments-character-panel">
+              <p class="character-kicker">Personaje</p>
+              <div class="fragments-character">
+                <div class="sidebar-char-avatar" id="fragmentsCharacterAvatar">?</div>
+                <div>
+                  <p id="fragmentsCharacterClass">Sin clase</p>
+                  <h3 id="fragmentsCharacterName">Sin personaje activo</h3>
+                </div>
+              </div>
+              <select id="fragmentsCharacterSelect" aria-label="Cambiar personaje"></select>
+            </div>
+
+            <div class="fragments-panel">
+              <p class="character-kicker">HEXA Progress</p>
+              <div class="fragments-summary">
+                <div><span>Gastados</span><strong id="fragsSpentTotal">0</strong></div>
+                <div><span>Al objetivo</span><strong id="fragsDesiredTotal">0</strong></div>
+                <div><span>Para max</span><strong id="fragsRemainingTotal">0</strong></div>
+              </div>
+            </div>
+
+            <div class="fragments-panel">
+              <p class="character-kicker">Acciones</p>
+              <div class="fragments-actions">
+                <button type="button" id="fragmentsResetBtn">Resetear niveles</button>
+                <button type="button" id="fragmentsMaxDesiredBtn">Objetivo max</button>
+              </div>
+              <div class="fragments-status" id="fragmentsStatus"></div>
+            </div>
+          </aside>
+
+          <section class="fragments-config">
+            <div class="fragments-config-head">
+              <div>
+                <p class="character-kicker">Skills Configuration</p>
+                <h3>Nodes</h3>
+              </div>
+            </div>
+            <div class="skills-grid" id="skillsGrid"></div>
+          </section>
+        </div>
       </section>
 
     </div>

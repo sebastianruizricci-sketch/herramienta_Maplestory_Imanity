@@ -29,6 +29,9 @@ const {
   listAppUsers,
   updateUserRole,
   updateUserGuild,
+  listChallengerProposals,
+  createChallengerProposal,
+  deleteChallengerProposal,
 } = require("@dataconnect/admin-generated");
 
 const ROOT = __dirname;
@@ -623,6 +626,11 @@ function normalizeDifficulty(value) {
   return difficulty ? difficulty.slice(0, 20) : null;
 }
 
+function normalizeChallengerField(value, maxLength) {
+  const text = String(value || "").trim();
+  return text ? text.slice(0, maxLength) : null;
+}
+
 function normalizePartyCategory(value, fallbackGuild) {
   const category = String(value || "").trim().toLowerCase();
   if (VALID_PARTY_CATEGORIES.includes(category)) return category;
@@ -1146,6 +1154,59 @@ async function handleRemovePartyMember(req, res, partyId, slotIndex) {
   }
 }
 
+async function handleListChallengerProposals(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const result = await listChallengerProposals(getImpersonationOptions(authClaims));
+    sendJson(res, 200, { proposals: result.data.challengerProposals || [] });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudieron obtener las propuestas." });
+  }
+}
+
+async function handleCreateChallengerProposal(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const body = await readJsonBody(req);
+    const nickname = normalizeChallengerField(body.nickname, 32);
+    if (!nickname) {
+      sendJson(res, 400, { error: "El nombre del personaje es requerido." });
+      return;
+    }
+
+    const result = await createChallengerProposal(
+      {
+        nickname,
+        className: normalizeChallengerField(body.className, 60),
+        timezone: normalizeChallengerField(body.timezone, 48),
+        playingHours: normalizeChallengerField(body.playingHours, 120),
+        expectedBosses: normalizeChallengerField(body.expectedBosses, 200),
+        expectedLevelGoal: normalizeChallengerField(body.expectedLevelGoal, 40),
+      },
+      getImpersonationOptions(authClaims)
+    );
+    sendJson(res, 201, { proposal: result.data.challengerProposal_insert });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo crear la propuesta." });
+  }
+}
+
+async function handleDeleteChallengerProposal(req, res, proposalId) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    await deleteChallengerProposal({ id: proposalId }, getImpersonationOptions(authClaims));
+    sendJson(res, 200, { ok: true });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo eliminar la propuesta." });
+  }
+}
+
 async function findTradePostById(tradeId, authClaims) {
   const categories = VALID_PARTY_CATEGORIES;
   for (const category of categories) {
@@ -1549,6 +1610,24 @@ http.createServer((req, res) => {
     const memberDeleteMatch = req.url.match(/^\/api\/parties\/([^/]+)\/members\/(\d+)$/);
     if (memberDeleteMatch && req.method === "DELETE") {
       handleRemovePartyMember(req, res, decodeURIComponent(memberDeleteMatch[1]), memberDeleteMatch[2]);
+      return;
+    }
+  }
+
+  if (req.method === "GET" && req.url === "/api/challenger-proposals") {
+    handleListChallengerProposals(req, res);
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/challenger-proposals") {
+    handleCreateChallengerProposal(req, res);
+    return;
+  }
+
+  {
+    const proposalDeleteMatch = req.url.match(/^\/api\/challenger-proposals\/([^/]+)$/);
+    if (proposalDeleteMatch && req.method === "DELETE") {
+      handleDeleteChallengerProposal(req, res, decodeURIComponent(proposalDeleteMatch[1]));
       return;
     }
   }
