@@ -4,6 +4,7 @@ mutation CreateTradePost(
   $bossId: String
   $bossIds: String
   $category: String
+  $desiredTrades: Int
   $weeklyRuns: Int
   $preferredDay: String
   $preferredTime: String
@@ -20,6 +21,7 @@ mutation CreateTradePost(
     bossId: $bossId
     bossIds: $bossIds
     category: $category
+    desiredTrades: $desiredTrades
     weeklyRuns: $weeklyRuns
     preferredDay: $preferredDay
     preferredTime: $preferredTime
@@ -40,6 +42,7 @@ mutation UpdateTradePost(
   $bossId: String
   $bossIds: String
   $category: String
+  $desiredTrades: Int
   $weeklyRuns: Int
   $preferredDay: String
   $preferredTime: String
@@ -56,6 +59,7 @@ mutation UpdateTradePost(
     bossId: $bossId
     bossIds: $bossIds
     category: $category
+    desiredTrades: $desiredTrades
     weeklyRuns: $weeklyRuns
     preferredDay: $preferredDay
     preferredTime: $preferredTime
@@ -120,6 +124,7 @@ query ListTradePosts($category: String) @auth(level: USER) {
     bossId
     bossIds
     category
+    desiredTrades
     weeklyRuns
     preferredDay
     preferredTime
