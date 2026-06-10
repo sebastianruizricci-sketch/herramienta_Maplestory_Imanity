@@ -587,6 +587,8 @@ function initializeAuthenticatedApp() {
     showTradesPage();
   } else if (document.body?.dataset.initialPage === "partys") {
     showPartysPage();
+  } else if (document.body?.dataset.initialPage === "challenger") {
+    showChallengerPage();
   } else {
     showDashboardPage();
   }

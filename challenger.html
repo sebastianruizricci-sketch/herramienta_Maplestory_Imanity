@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Partys - MapleTools</title>
+    <title>Challenger World - MapleTools</title>
     <script>
       window.tailwind = window.tailwind || {};
       window.tailwind.config = { corePlugins: { preflight: false } };
@@ -11,7 +11,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles/boss-showcase.css" />
   </head>
-  <body class="auth-locked" data-initial-page="partys">
+  <body class="auth-locked" data-initial-page="challenger">
 
     <section class="login-screen" id="loginScreen" aria-label="Entrada de usuario">
       <div class="login-ambient" aria-hidden="true"></div>
@@ -87,7 +87,7 @@
       </form>
     </section>
 
-    <div class="showcase partys-view" id="showcase">
+    <div class="showcase challenger-page-view" id="showcase">
 
       <!-- Fondo dinámico -->
       <div class="bg-layer" id="bgLayer"></div>
@@ -138,11 +138,11 @@
             <span class="sidebar-icon">◇</span>
             <span>Fragmentos</span>
           </a>
-          <a class="sidebar-item active" href="partys.html" id="partysNav">
+          <a class="sidebar-item" href="partys.html">
             <span class="sidebar-icon">♕</span>
             <span>Partys</span>
           </a>
-          <a class="sidebar-item" href="challenger.html">
+          <a class="sidebar-item active" href="challenger.html" id="challengerNav">
             <span class="sidebar-icon">📜</span>
             <span>Challenger World</span>
           </a>
@@ -182,7 +182,7 @@
 
         <div class="sidebar-footer">
           <button class="sidebar-logout" id="logoutBtn" type="button">Salir</button>
-          <span class="sidebar-version">partys</span>
+          <span class="sidebar-version">challenger</span>
         </div>
 
       </aside>
@@ -211,98 +211,58 @@
       <!-- Derecha: selector de bosses -->
       <nav class="boss-selector hidden" id="bossSelector" aria-label="Selección de boss"></nav>
 
-      <!-- Pagina: partys -->
-      <section class="fragments-page" id="partysPage" aria-label="Partys">
-        <div class="fragments-page-head">
-          <div>
-            <h2>Partys</h2>
-          </div>
+      <!-- Pagina: challenger world -->
+      <section class="fragments-page challenger-page" id="challengerPage" aria-label="Challenger World">
+        <div class="challenger-toolbar">
+          <button type="button" class="challenger-tab active" id="challengerCoverTab">Challenger World</button>
+          <button type="button" class="challenger-tab" id="challengerBoardTab">Partys formadas</button>
         </div>
 
-        <div class="partys-section-nav" id="partysSectionNav">
-          <button type="button" class="partys-section-item active" id="partysOwnSectionTab" data-section="imanity">Imanity</button>
-          <button type="button" class="partys-section-item" id="partysAllianceSectionTab" data-section="alianza">Alianza</button>
+        <div class="challenger-view" id="challengerCoverView">
+          <button type="button" class="challenger-bg-btn" id="challengerCoverBtn" aria-label="Crear propuesta de party">
+            <img class="challenger-bg-image" src="assets/challenger-world/portada al entrar en seccion_Challenger.png" alt="Se busca partner para Challenger World" />
+          </button>
         </div>
 
-        <div class="partys-toolbar">
-          <div class="partys-subnav">
-            <button type="button" class="partys-subnav-item active" id="partysCreateTab">Crear party</button>
-            <button type="button" class="partys-subnav-item" id="partysListTab">Partys formadas</button>
-          </div>
-          <div class="partys-boss-select-row hidden" id="partysBossSelectRow">
-            <div class="partys-view-mode" id="partysViewMode">
-              <button type="button" id="partysViewModeToggle" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar partys por jugador" title="Filtrar por jugador">&#9881;</button>
-              <div class="partys-view-mode-panel hidden" id="partysViewModePanel">
-                <div class="partys-view-mode-player" id="partysViewModePlayerRow">
-                  <label for="partysViewModePlayerSelect">Filtrar por jugador</label>
-                  <select id="partysViewModePlayerSelect" aria-label="Filtrar por jugador"></select>
-                </div>
+        <div class="challenger-view hidden" id="challengerFormView">
+          <div class="challenger-bg-wrap">
+            <img class="challenger-bg-image" src="assets/challenger-world/background_de_formulario.png" alt="" />
+            <form class="challenger-form" id="challengerForm">
+              <div class="challenger-form-field">
+                <label for="challengerNickname">Nick name in Maple</label>
+                <input id="challengerNickname" name="nickname" type="text" autocomplete="off" required />
               </div>
-            </div>
-            <div class="partys-boss-filter" id="partysBossFilter">
-              <button type="button" id="partysBossFilterToggle" aria-haspopup="true" aria-expanded="false">Filtrar bosses</button>
-              <div class="partys-boss-filter-panel hidden" id="partysBossFilterPanel">
-                <div class="partys-boss-filter-actions">
-                  <button type="button" id="partysBossFilterAll">Seleccionar todos</button>
-                  <button type="button" id="partysBossFilterNone">Ninguno</button>
-                </div>
-                <div class="partys-boss-filter-list" id="partysBossFilterList"></div>
+              <div class="challenger-form-field">
+                <label for="challengerClass">Class</label>
+                <input id="challengerClass" name="className" type="text" autocomplete="off" />
               </div>
-            </div>
+              <div class="challenger-form-field">
+                <label for="challengerTimezone">Time Zone</label>
+                <select id="challengerTimezone" name="timezone"></select>
+              </div>
+              <div class="challenger-form-field">
+                <label for="challengerPlayingHours">Playing Hours</label>
+                <input id="challengerPlayingHours" name="playingHours" type="text" autocomplete="off" />
+              </div>
+              <div class="challenger-form-field">
+                <label for="challengerExpectedBosses">Expected Bosses</label>
+                <input id="challengerExpectedBosses" name="expectedBosses" type="text" autocomplete="off" />
+              </div>
+              <div class="challenger-form-field">
+                <label for="challengerExpectedLevelGoal">Expected Level Goal</label>
+                <input id="challengerExpectedLevelGoal" name="expectedLevelGoal" type="text" autocomplete="off" />
+              </div>
+              <button type="submit" class="challenger-form-submit">Publicar propuesta</button>
+            </form>
           </div>
+          <p class="character-status" id="challengerFormStatus"></p>
         </div>
 
-        <div class="partys-create-view" id="partysCreateView">
-          <div class="partys-create-layout">
-            <aside class="roster-section partys-roster-panel">
-              <div class="fragments-config-head">
-                <div>
-                  <p class="character-kicker">Roster del gremio</p>
-                  <h3>Personajes disponibles</h3>
-                </div>
-              </div>
-              <div class="character-roster" id="partysRoster"></div>
-            </aside>
-            <section class="partys-slots-panel">
-              <div class="fragments-config-head">
-                <div>
-                  <p class="character-kicker">Party</p>
-                  <h3>Slots (1-6)</h3>
-                </div>
-                <button type="button" id="partysSaveBtn">Guardar party</button>
-              </div>
-              <div class="partys-timezone-row">
-                <label for="partysCreateBossSelect">Boss de la run</label>
-                <select id="partysCreateBossSelect" aria-label="Boss de la run"></select>
-              </div>
-              <div class="partys-timezone-row">
-                <label for="partysDifficultySelect">Dificultad</label>
-                <select id="partysDifficultySelect" aria-label="Dificultad de la run"></select>
-              </div>
-              <div class="partys-timezone-row">
-                <label for="partysTimezoneSelect">Zona horaria del party</label>
-                <select id="partysTimezoneSelect" aria-label="Zona horaria del party"></select>
-              </div>
-              <div class="partys-timezone-row">
-                <label for="partysRunTimeSelect">Hora de la run</label>
-                <select id="partysRunTimeSelect" aria-label="Hora de la run"></select>
-              </div>
-              <div class="partys-timezone-row">
-                <label for="partysDestinationSelect">Destino de la run</label>
-                <select id="partysDestinationSelect" aria-label="Destino de la run">
-                  <option value="imanity">Imanity</option>
-                  <option value="lorien">Lorien</option>
-                  <option value="alianza">Alianza</option>
-                </select>
-              </div>
-              <div class="party-slots-grid" id="partySlotsGrid"></div>
-              <p class="character-status" id="partysStatus"></p>
-            </section>
+        <div class="challenger-view hidden" id="challengerBoardView">
+          <div class="challenger-bg-wrap">
+            <img class="challenger-bg-image" src="assets/challenger-world/Backgroun_partys_creados.png" alt="" />
+            <div class="challenger-board-grid" id="challengerBoardGrid"></div>
           </div>
-        </div>
-
-        <div class="partys-list-view hidden" id="partysListView">
-          <div class="partys-grid" id="partysGrid"></div>
         </div>
       </section>
 
