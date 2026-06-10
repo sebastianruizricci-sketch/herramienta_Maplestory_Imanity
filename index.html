@@ -358,6 +358,19 @@
             <button type="button" class="partys-subnav-item" id="partysListTab">Partys formadas</button>
           </div>
           <div class="partys-boss-select-row hidden" id="partysBossSelectRow">
+            <div class="partys-view-mode" id="partysViewMode">
+              <button type="button" id="partysViewModeToggle" aria-haspopup="true" aria-expanded="false" aria-label="Cambiar vista de partys formadas" title="Cambiar vista">&#9881;</button>
+              <div class="partys-view-mode-panel hidden" id="partysViewModePanel">
+                <div class="partys-view-mode-options">
+                  <button type="button" class="partys-view-mode-option active" data-view-mode="board">Por boss</button>
+                  <button type="button" class="partys-view-mode-option" data-view-mode="player">Por jugador</button>
+                </div>
+                <div class="partys-view-mode-player hidden" id="partysViewModePlayerRow">
+                  <label for="partysViewModePlayerSelect">Jugador</label>
+                  <select id="partysViewModePlayerSelect" aria-label="Seleccionar jugador"></select>
+                </div>
+              </div>
+            </div>
             <div class="partys-boss-filter" id="partysBossFilter">
               <button type="button" id="partysBossFilterToggle" aria-haspopup="true" aria-expanded="false">Filtrar bosses</button>
               <div class="partys-boss-filter-panel hidden" id="partysBossFilterPanel">

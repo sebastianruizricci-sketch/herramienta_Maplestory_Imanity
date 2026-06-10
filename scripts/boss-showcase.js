@@ -295,6 +295,12 @@ const partysBossFilterPanel = document.getElementById("partysBossFilterPanel");
 const partysBossFilterList = document.getElementById("partysBossFilterList");
 const partysBossFilterAll = document.getElementById("partysBossFilterAll");
 const partysBossFilterNone = document.getElementById("partysBossFilterNone");
+const partysViewMode_ = document.getElementById("partysViewMode");
+const partysViewModeToggle = document.getElementById("partysViewModeToggle");
+const partysViewModePanel = document.getElementById("partysViewModePanel");
+const partysViewModeOptions = document.querySelectorAll(".partys-view-mode-option");
+const partysViewModePlayerRow = document.getElementById("partysViewModePlayerRow");
+const partysViewModePlayerSelect = document.getElementById("partysViewModePlayerSelect");
 const partysCreateBossSelect = document.getElementById("partysCreateBossSelect");
 const partysCreateView = document.getElementById("partysCreateView");
 const partysListView = document.getElementById("partysListView");
@@ -1107,6 +1113,8 @@ const PARTY_SLOT_COUNT = 6;
 let partysGuildRoster = [];
 let partysCurrentBossId = null;
 let partysVisibleBossIds = new Set(PARTY_BOSS_OPTIONS.map((boss) => boss.id));
+let partysViewMode = "board";
+let partysSelectedPlayerId = null;
 let partysCurrentParties = [];
 let partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
 let partysInitialized = false;
@@ -1361,6 +1369,34 @@ function syncPartysBossSelects() {
   populatePartysDifficultySelect();
 }
 
+function populatePartysPlayerSelect() {
+  if (!partysViewModePlayerSelect) return;
+
+  const players = new Map();
+  partysGuildRoster.forEach((character) => {
+    if (character.ownerId && character.owner?.username && !players.has(character.ownerId)) {
+      players.set(character.ownerId, character.owner.username);
+    }
+  });
+
+  const currentUserId = getCurrentUserId();
+  if (!players.size) {
+    partysViewModePlayerSelect.innerHTML = `<option value="">Sin jugadores</option>`;
+    partysSelectedPlayerId = null;
+    return;
+  }
+
+  if (!partysSelectedPlayerId || !players.has(partysSelectedPlayerId)) {
+    partysSelectedPlayerId = players.has(currentUserId) ? currentUserId : players.keys().next().value;
+  }
+
+  partysViewModePlayerSelect.innerHTML = Array.from(players.entries())
+    .sort((a, b) => a[1].localeCompare(b[1]))
+    .map(([ownerId, username]) => `<option value="${ownerId}">${username}</option>`)
+    .join("");
+  partysViewModePlayerSelect.value = partysSelectedPlayerId;
+}
+
 function findRosterCharacter(ownerId, region, name) {
   return partysGuildRoster.find((c) => c.ownerId === ownerId && c.region === region && c.name === name) || null;
 }
@@ -1529,21 +1565,7 @@ function renderPartyCard(party, currentUserId) {
   `;
 }
 
-function renderPartysList() {
-  if (!partysGrid) return;
-
-  if (partysOwnSectionBlocked()) {
-    partysGrid.innerHTML = `
-      <div class="roster-empty">
-        <h4>Sin gremio asignado</h4>
-        <p>Un administrador todavía no te asignó a Imanity o Lorien. Cuando lo haga, vas a ver acá las partys de tu gremio.</p>
-      </div>
-    `;
-    return;
-  }
-
-  const currentUserId = getCurrentUserId();
-
+function renderPartysListByBoard(currentUserId) {
   const partiesByBoss = new Map();
   partysCurrentParties.forEach((party) => {
     const bossId = party.bossId || partysCurrentBossId;
@@ -1583,6 +1605,75 @@ function renderPartysList() {
   }).join("");
 }
 
+function renderPartysListByPlayer(currentUserId) {
+  if (!partysSelectedPlayerId) {
+    partysGrid.innerHTML = `
+      <div class="roster-empty">
+        <h4>Sin jugadores</h4>
+        <p>No hay jugadores con personajes registrados en este gremio.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const partiesByBoss = new Map();
+  partysCurrentParties.forEach((party) => {
+    if (party.ownerId !== partysSelectedPlayerId) return;
+    const bossId = party.bossId || partysCurrentBossId;
+    if (!partiesByBoss.has(bossId)) partiesByBoss.set(bossId, []);
+    partiesByBoss.get(bossId).push(party);
+  });
+
+  if (!partiesByBoss.size) {
+    partysGrid.innerHTML = `
+      <div class="roster-empty">
+        <h4>Sin partys</h4>
+        <p>Este jugador todavía no creó partys.</p>
+      </div>
+    `;
+    return;
+  }
+
+  partysGrid.innerHTML = Array.from(partiesByBoss.entries()).map(([bossId, parties]) => {
+    const boss = PARTY_BOSS_OPTIONS.find((option) => option.id === bossId);
+    const cardImage = PARTY_BOSS_CARD_IMAGES[bossId];
+    return `
+      <div class="partys-player-row">
+        <div class="partys-player-row-card">
+          ${cardImage
+        ? `<img src="${cardImage}" alt="${boss?.name || bossId}" />`
+        : `<span>${boss?.name || bossId}</span>`}
+        </div>
+        <div class="partys-player-row-grid">
+          ${parties.map((party) => renderPartyCard(party, currentUserId)).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderPartysList() {
+  if (!partysGrid) return;
+
+  if (partysOwnSectionBlocked()) {
+    partysGrid.innerHTML = `
+      <div class="roster-empty">
+        <h4>Sin gremio asignado</h4>
+        <p>Un administrador todavía no te asignó a Imanity o Lorien. Cuando lo haga, vas a ver acá las partys de tu gremio.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const currentUserId = getCurrentUserId();
+
+  if (partysViewMode === "player") {
+    renderPartysListByPlayer(currentUserId);
+  } else {
+    renderPartysListByBoard(currentUserId);
+  }
+}
+
 function updatePartysSectionLabels() {
   if (partysOwnSectionTab) {
     partysOwnSectionTab.textContent = currentUserGuild
@@ -1602,6 +1693,7 @@ async function initPartysPage() {
     await loadCurrentUserProfile();
     updatePartysSectionLabels();
     await loadGuildRoster();
+    populatePartysPlayerSelect();
     await loadPartiesList();
     renderPartysRoster();
     renderPartySlots();
@@ -1617,6 +1709,7 @@ async function initPartysPage() {
   syncPartyRunTimeOptions();
   updatePartysSectionLabels();
   await loadGuildRoster();
+  populatePartysPlayerSelect();
   await loadPartiesList();
   renderPartysRoster();
   renderPartySlots();
@@ -1674,6 +1767,38 @@ partysBossFilterNone?.addEventListener("click", () => {
   renderPartysList();
 });
 
+partysViewModeToggle?.addEventListener("click", () => {
+  const expanded = partysViewModePanel?.classList.toggle("hidden") === false;
+  partysViewModeToggle.setAttribute("aria-expanded", String(expanded));
+});
+
+document.addEventListener("click", (event) => {
+  if (!partysViewMode_ || partysViewModePanel?.classList.contains("hidden")) return;
+  if (!partysViewMode_.contains(event.target)) {
+    partysViewModePanel.classList.add("hidden");
+    partysViewModeToggle?.setAttribute("aria-expanded", "false");
+  }
+});
+
+partysViewModeOptions.forEach((button) => {
+  button.addEventListener("click", () => {
+    const mode = button.dataset.viewMode;
+    if (mode === partysViewMode) return;
+    partysViewMode = mode;
+    partysViewModeOptions.forEach((option) => {
+      option.classList.toggle("active", option.dataset.viewMode === mode);
+    });
+    partysBossFilter?.classList.toggle("hidden", mode === "player");
+    partysViewModePlayerRow?.classList.toggle("hidden", mode !== "player");
+    renderPartysList();
+  });
+});
+
+partysViewModePlayerSelect?.addEventListener("change", () => {
+  partysSelectedPlayerId = partysViewModePlayerSelect.value || null;
+  renderPartysList();
+});
+
 partysCreateBossSelect?.addEventListener("change", () => {
   changeCreatePartyBoss(partysCreateBossSelect.value);
 });
@@ -1686,6 +1811,7 @@ async function switchPartysSection(section) {
   setPartysStatus("");
   renderPartySlots();
   await loadGuildRoster();
+  populatePartysPlayerSelect();
   await loadPartiesList();
   renderPartysRoster();
   renderPartysList();
