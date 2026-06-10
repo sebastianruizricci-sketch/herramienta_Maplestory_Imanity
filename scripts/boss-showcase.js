@@ -278,6 +278,8 @@ const adminNavGroup = document.getElementById("adminNavGroup");
 const adminPage = document.getElementById("adminPage");
 const adminGuildFilterNav = document.getElementById("adminGuildFilterNav");
 const adminUsersBody = document.getElementById("adminUsersBody");
+const adminStatus = document.getElementById("adminStatus");
+const partysPageKicker = document.getElementById("partysPageKicker");
 const partysOwnSectionTab = document.getElementById("partysOwnSectionTab");
 const partysAllianceSectionTab = document.getElementById("partysAllianceSectionTab");
 const partysCreateTab = document.getElementById("partysCreateTab");
@@ -771,6 +773,7 @@ function hideAllPages() {
   showcase?.classList.remove("chatbot-view");
   showcase?.classList.remove("partys-view");
   showcase?.classList.remove("dashboard-view");
+  showcase?.classList.remove("admin-view");
   dashboardPage?.classList.add("hidden");
   characterPanel?.classList.add("hidden");
   fragmentsPage?.classList.add("hidden");
@@ -825,6 +828,7 @@ async function showPartysPage() {
 
 async function showAdminPage() {
   hideAllPages();
+  showcase?.classList.add("admin-view");
   adminPage?.classList.remove("hidden");
   adminNav?.classList.add("active");
   await loadAdminUsers();
@@ -1101,7 +1105,13 @@ let currentUserTimezone = null;
 let currentUserRole = "usuario";
 
 function partysCurrentCategory() {
-  return partysSection === "alianza" ? "alianza" : (currentUserGuild || "imanity");
+  if (partysSection === "alianza") return "alianza";
+  if (currentUserGuild) return currentUserGuild;
+  return currentUserRole === "admin" ? "imanity" : null;
+}
+
+function partysOwnSectionBlocked() {
+  return partysSection === "own" && !currentUserGuild && currentUserRole !== "admin";
 }
 
 const GUILD_LABELS = { imanity: "Imanity", lorien: "Lorien" };
@@ -1147,6 +1157,7 @@ function applyRoleVisibility() {
 // ── Admin ────────────────────────────────────────────────────────────────
 let adminUsersCache = [];
 let adminGuildFilter = "all";
+const ADMIN_GUILD_OPTIONS = [["", "Sin gremio"], ["imanity", "Imanity"], ["lorien", "Lorien"]];
 
 async function loadAdminUsers() {
   try {
@@ -1174,22 +1185,35 @@ function renderAdminUsers() {
   }
 
   adminUsersBody.innerHTML = users.map((user) => {
+    const userRole = normalizeRole(user.role);
     const roleOptions = Object.entries(ROLE_LABELS).map(([value, label]) => `
-      <option value="${value}" ${user.role === value ? "selected" : ""}>${label}</option>
+      <option value="${value}" ${userRole === value ? "selected" : ""}>${label}</option>
+    `).join("");
+
+    const userGuild = user.guild || "";
+    const guildOptions = ADMIN_GUILD_OPTIONS.map(([value, label]) => `
+      <option value="${value}" ${userGuild === value ? "selected" : ""}>${label}</option>
     `).join("");
 
     return `
       <tr data-user-id="${user.id}">
         <td>${user.displayName || user.username}</td>
-        <td>${guildLabel(user.guild)}</td>
         <td><select class="admin-role-select" data-user-id="${user.id}">${roleOptions}</select></td>
+        <td><select class="admin-guild-select" data-user-id="${user.id}">${guildOptions}</select></td>
         <td><button type="button" class="admin-remove-btn" data-user-id="${user.id}">Sacar del gremio</button></td>
       </tr>
     `;
   }).join("");
 }
 
+function setAdminStatus(message, state = "neutral") {
+  if (!adminStatus) return;
+  adminStatus.textContent = message;
+  adminStatus.dataset.state = state;
+}
+
 async function updateAdminUserRole(userId, role) {
+  setAdminStatus("Guardando rol...", "neutral");
   try {
     await fetchAuthedJson("/api/admin/users/role", {
       method: "POST",
@@ -1197,14 +1221,33 @@ async function updateAdminUserRole(userId, role) {
     });
     const user = adminUsersCache.find((u) => u.id === userId);
     if (user) user.role = role;
+    setAdminStatus("Rol actualizado correctamente.", "success");
   } catch (error) {
-    alert(error.message || "No se pudo actualizar el rol.");
+    setAdminStatus(error.message || "No se pudo actualizar el rol.", "error");
+    renderAdminUsers();
+  }
+}
+
+async function updateAdminUserGuild(userId, guild) {
+  setAdminStatus("Guardando facción...", "neutral");
+  try {
+    await fetchAuthedJson("/api/admin/users/guild", {
+      method: "POST",
+      body: JSON.stringify({ userId, guild: guild || null }),
+    });
+    const user = adminUsersCache.find((u) => u.id === userId);
+    if (user) user.guild = guild || null;
+    renderAdminUsers();
+    setAdminStatus("Facción actualizada correctamente.", "success");
+  } catch (error) {
+    setAdminStatus(error.message || "No se pudo actualizar la facción.", "error");
     renderAdminUsers();
   }
 }
 
 async function removeAdminUserFromGuild(userId) {
   if (!confirm("Sacar a este miembro de su gremio?")) return;
+  setAdminStatus("Actualizando...", "neutral");
   try {
     await fetchAuthedJson("/api/admin/users/guild", {
       method: "POST",
@@ -1213,15 +1256,22 @@ async function removeAdminUserFromGuild(userId) {
     const user = adminUsersCache.find((u) => u.id === userId);
     if (user) user.guild = null;
     renderAdminUsers();
+    setAdminStatus("Miembro sacado del gremio.", "success");
   } catch (error) {
-    alert(error.message || "No se pudo sacar al usuario del gremio.");
+    setAdminStatus(error.message || "No se pudo sacar al usuario del gremio.", "error");
   }
 }
 
 adminUsersBody?.addEventListener("change", (event) => {
-  const select = event.target.closest(".admin-role-select");
-  if (!select) return;
-  updateAdminUserRole(select.dataset.userId, select.value);
+  const roleSelect = event.target.closest(".admin-role-select");
+  if (roleSelect) {
+    updateAdminUserRole(roleSelect.dataset.userId, roleSelect.value);
+    return;
+  }
+  const guildSelect = event.target.closest(".admin-guild-select");
+  if (guildSelect) {
+    updateAdminUserGuild(guildSelect.dataset.userId, guildSelect.value);
+  }
 });
 
 adminUsersBody?.addEventListener("click", (event) => {
@@ -1294,6 +1344,10 @@ function findRosterCharacter(ownerId, region, name) {
 }
 
 async function loadGuildRoster() {
+  if (partysOwnSectionBlocked()) {
+    partysGuildRoster = [];
+    return;
+  }
   try {
     const query = partysSection === "own" && currentUserGuild
       ? `?guild=${encodeURIComponent(currentUserGuild)}`
@@ -1307,8 +1361,13 @@ async function loadGuildRoster() {
 
 async function loadPartiesForCurrentBoss() {
   if (!partysCurrentBossId) return;
+  const category = partysCurrentCategory();
+  if (!category) {
+    partysCurrentParties = [];
+    return;
+  }
   try {
-    const params = new URLSearchParams({ bossId: partysCurrentBossId, category: partysCurrentCategory() });
+    const params = new URLSearchParams({ bossId: partysCurrentBossId, category });
     const data = await fetchAuthedJson(`/api/parties?${params.toString()}`);
     partysCurrentParties = data.parties || [];
   } catch (error) {
@@ -1318,6 +1377,16 @@ async function loadPartiesForCurrentBoss() {
 
 function renderPartysRoster() {
   if (!partysRoster) return;
+
+  if (partysOwnSectionBlocked()) {
+    partysRoster.innerHTML = `
+      <div class="roster-empty">
+        <h4>Sin gremio asignado</h4>
+        <p>Un administrador todavía no te asignó a Imanity o Lorien. Cuando lo haga, vas a ver acá el roster de tu gremio.</p>
+      </div>
+    `;
+    return;
+  }
 
   if (!partysGuildRoster.length) {
     partysRoster.innerHTML = `
@@ -1380,6 +1449,16 @@ function renderPartySlots() {
 function renderPartysList() {
   if (!partysGrid) return;
 
+  if (partysOwnSectionBlocked()) {
+    partysGrid.innerHTML = `
+      <div class="roster-empty">
+        <h4>Sin gremio asignado</h4>
+        <p>Un administrador todavía no te asignó a Imanity o Lorien. Cuando lo haga, vas a ver acá las partys de tu gremio.</p>
+      </div>
+    `;
+    return;
+  }
+
   if (!partysCurrentParties.length) {
     partysGrid.innerHTML = `
       <div class="roster-empty">
@@ -1433,6 +1512,11 @@ function updatePartysSectionLabels() {
     partysOwnSectionTab.textContent = currentUserGuild
       ? `Partys ${guildLabel(currentUserGuild)}`
       : "Partys de mi gremio";
+  }
+  if (partysPageKicker) {
+    partysPageKicker.textContent = currentUserGuild
+      ? `Coordinación de gremio · ${guildLabel(currentUserGuild)}`
+      : "Coordinación de gremio";
   }
 }
 
@@ -1900,7 +1984,7 @@ adminNav?.addEventListener("click", (event) => {
 });
 
 partysOwnSectionTab?.addEventListener("click", () => {
-  if (partysDestinationSelect) partysDestinationSelect.value = "imanity";
+  if (partysDestinationSelect) partysDestinationSelect.value = currentUserGuild || "imanity";
 });
 
 partysAllianceSectionTab?.addEventListener("click", () => {

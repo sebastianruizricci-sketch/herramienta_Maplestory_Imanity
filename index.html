@@ -343,7 +343,7 @@
       <section class="fragments-page hidden" id="partysPage" aria-label="Partys">
         <div class="fragments-page-head">
           <div>
-            <p class="character-kicker">Coordinación de gremio</p>
+            <p class="character-kicker" id="partysPageKicker">Coordinación de gremio</p>
             <h2>Partys</h2>
           </div>
         </div>
@@ -403,6 +403,7 @@
                 <label for="partysDestinationSelect">Destino de la run</label>
                 <select id="partysDestinationSelect" aria-label="Destino de la run">
                   <option value="imanity">Imanity</option>
+                  <option value="lorien">Lorien</option>
                   <option value="alianza">Alianza</option>
                 </select>
               </div>
@@ -432,12 +433,14 @@
           <button type="button" class="partys-section-item" data-guild-filter="lorien">Lorien</button>
         </div>
 
+        <p class="character-status" id="adminStatus"></p>
+
         <table class="admin-users-table">
           <thead>
             <tr>
               <th>Miembro</th>
-              <th>Facción</th>
               <th>Rol</th>
+              <th>Facción</th>
               <th>Acción</th>
             </tr>
           </thead>

@@ -1268,7 +1268,10 @@ body.auth-locked .showcase {
 .showcase.partys-view .boss-selector,
 .showcase.dashboard-view .info-panel,
 .showcase.dashboard-view .boss-stage,
-.showcase.dashboard-view .boss-selector {
+.showcase.dashboard-view .boss-selector,
+.showcase.admin-view .info-panel,
+.showcase.admin-view .boss-stage,
+.showcase.admin-view .boss-selector {
   display: none;
 }
 
@@ -1276,7 +1279,8 @@ body.auth-locked .showcase {
 .showcase.fragments-view .bg-overlay,
 .showcase.chatbot-view .bg-overlay,
 .showcase.partys-view .bg-overlay,
-.showcase.dashboard-view .bg-overlay {
+.showcase.dashboard-view .bg-overlay,
+.showcase.admin-view .bg-overlay {
   background:
     linear-gradient(90deg,
       rgba(5, 4, 11, 1.00) 0%,
@@ -1854,6 +1858,11 @@ body.auth-locked .showcase {
   padding: 6px 10px;
   font: inherit;
   font-weight: 700;
+}
+
+.admin-users-table select option {
+  background: #1a1025;
+  color: #f8f4ff;
 }
 
 .admin-users-table .admin-remove-btn {
