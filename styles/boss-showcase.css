@@ -2071,7 +2071,7 @@ body.auth-locked .showcase {
 .partys-view-mode-panel {
   position: absolute;
   top: calc(100% + 8px);
-  left: 0;
+  right: 0;
   z-index: 20;
   width: 220px;
   display: flex;
@@ -2146,24 +2146,27 @@ body.auth-locked .showcase {
   font-size: 13px;
 }
 
-.partys-player-row {
+.partys-player-board {
   display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: 18px;
-  padding-bottom: 18px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid rgba(192, 132, 252, .18);
 }
 
-.partys-player-row:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
+.partys-player-boss-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(192, 132, 252, .18);
+  border-top: 4px solid var(--boss-accent, #c084fc);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .02);
 }
 
-.partys-player-row-card {
-  flex: 0 0 280px;
-  width: 280px;
-  min-height: 280px;
+.partys-player-boss-card {
+  width: 240px;
+  min-height: 240px;
   border: 1px dashed rgba(192, 132, 252, .35);
   border-radius: 12px;
   background: rgba(255, 255, 255, .02);
@@ -2174,12 +2177,12 @@ body.auth-locked .showcase {
   overflow: hidden;
 }
 
-.partys-player-row-card:has(img) {
+.partys-player-boss-card:has(img) {
   border-style: solid;
   padding: 0;
 }
 
-.partys-player-row-card img {
+.partys-player-boss-card img {
   width: 100%;
   height: 100%;
   aspect-ratio: 0.72;
@@ -2188,19 +2191,31 @@ body.auth-locked .showcase {
   display: block;
 }
 
-.partys-player-row-card span {
+.partys-player-boss-card span {
   color: rgba(248, 244, 255, .55);
   font-size: 12px;
   font-weight: 800;
   text-align: center;
 }
 
-.partys-player-row-grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+.partys-player-boss-name {
+  margin: 0;
+  color: #f8f4ff;
+  font-size: 13px;
+  font-weight: 850;
+  text-align: center;
+}
+
+.partys-player-boss-parties {
+  display: flex;
   gap: 12px;
-  align-content: start;
+}
+
+.partys-player-boss-subcolumn {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 240px;
 }
 
 .partys-create-layout {
