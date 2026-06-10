@@ -6,6 +6,7 @@ const DIST = path.join(ROOT, "dist");
 
 const copyPaths = [
   "index.html",
+  "trades.html",
   "assets",
   "bosses",
   "data",

@@ -18,6 +18,14 @@ const {
   deleteBossParty,
   upsertPartyMember,
   removePartyMember,
+  listTradePosts,
+  createTradePost,
+  updateTradePost,
+  deleteTradePost,
+  archiveTradePost,
+  applyToTrade,
+  updateTradeApplicationStatus,
+  deleteTradeApplication,
   listAppUsers,
   updateUserRole,
   updateUserGuild,
@@ -61,6 +69,7 @@ const CACHE_TTL_MS = 1000 * 60 * 30;
 const FIREBASE_WEB_API_KEY = process.env.FIREBASE_WEB_API_KEY || "AIzaSyCylI-FadSqtTED7fQH6-Z4LWMIkbOfbAI";
 const REGISTER_TOKEN = String(process.env.REGISTER_TOKEN || "").trim();
 const APP_VERSION = process.env.RENDER_GIT_COMMIT || process.env.APP_VERSION || "local";
+const DEV_LIVE_RELOAD = process.env.DEV_LIVE_RELOAD === "1";
 
 function initializeFirebaseAdmin() {
   if (getApps().length) return;
@@ -148,6 +157,66 @@ const send = (res, status, body, headers = {}) => {
   res.writeHead(status, headers);
   res.end(body);
 };
+
+const liveReloadClients = new Set();
+let liveReloadTimer = null;
+
+const LIVE_RELOAD_SNIPPET = `
+<script>
+(() => {
+  const source = new EventSource("/__dev/reload");
+  source.addEventListener("reload", () => window.location.reload());
+})();
+</script>`;
+
+function sendDevReload(res) {
+  for (const client of liveReloadClients) {
+    client.write("event: reload\\ndata: now\\n\\n");
+  }
+}
+
+function scheduleDevReload() {
+  clearTimeout(liveReloadTimer);
+  liveReloadTimer = setTimeout(sendDevReload, 120);
+}
+
+function handleDevReload(req, res) {
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+  });
+  res.write("retry: 500\\n\\n");
+  liveReloadClients.add(res);
+  req.on("close", () => liveReloadClients.delete(res));
+}
+
+function injectLiveReload(filePath, data) {
+  if (!DEV_LIVE_RELOAD || path.extname(filePath) !== ".html") {
+    return data;
+  }
+
+  const html = data.toString("utf8");
+  return html.includes("</body>")
+    ? html.replace("</body>", `${LIVE_RELOAD_SNIPPET}</body>`)
+    : `${html}${LIVE_RELOAD_SNIPPET}`;
+}
+
+function watchDevFiles() {
+  if (!DEV_LIVE_RELOAD) return;
+
+  const targets = [
+    path.join(ROOT, "index.html"),
+    path.join(ROOT, "styles"),
+    path.join(ROOT, "scripts"),
+    path.join(ROOT, "assets"),
+  ];
+
+  for (const target of targets) {
+    if (!fs.existsSync(target)) continue;
+    fs.watch(target, { recursive: true }, scheduleDevReload);
+  }
+}
 
 function setApiCorsHeaders(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -408,7 +477,7 @@ function serveStatic(req, res) {
       return;
     }
 
-    send(res, 200, data, {
+    send(res, 200, injectLiveReload(filePath, data), {
       "Content-Type": MIME_TYPES[path.extname(filePath)] || "application/octet-stream",
     });
   });
@@ -493,6 +562,33 @@ function handleChatBotHealth(req, res) {
 
 const VALID_GUILDS = ["imanity", "lorien"];
 const VALID_PARTY_CATEGORIES = ["imanity", "lorien", "alianza"];
+const VALID_TRADE_TYPES = [
+  "daily",
+  "chaos-tenebris",
+  "chaos-tenebris-luwill",
+  "chaos-tenebris-luwill-slime",
+  "emblem",
+  "badge",
+  "cookies",
+];
+const VALID_TRADE_BOSSES = [
+  "gollux",
+  "chaos-gloom",
+  "verus-hilla",
+  "hard-darknell",
+  "hard-lotus",
+  "hard-damien",
+  "chaos-slime",
+  "hard-seren",
+  "extreme-seren",
+  "black-mage-hard",
+  "black-mage-xtreme",
+  "kaling",
+  "adversary",
+  "kalos",
+  "limbo",
+  "baldrix",
+];
 const VALID_ROLES = ["admin", "lider", "jr", "usuario"];
 
 function normalizeUsername(value) {
@@ -539,6 +635,51 @@ function normalizePartyCategory(value, fallbackGuild) {
   const category = String(value || "").trim().toLowerCase();
   if (VALID_PARTY_CATEGORIES.includes(category)) return category;
   return fallbackGuild || "imanity";
+}
+
+function normalizeTradeType(value) {
+  const tradeType = String(value || "").trim().toLowerCase();
+  return VALID_TRADE_TYPES.includes(tradeType) ? tradeType : "daily";
+}
+
+function normalizeTradeBossIds(value) {
+  const rawValues = Array.isArray(value)
+    ? value
+    : String(value || "").split(",");
+  const bossIds = rawValues
+    .map((bossId) => String(bossId || "").trim().toLowerCase())
+    .filter((bossId, index, values) => VALID_TRADE_BOSSES.includes(bossId) && values.indexOf(bossId) === index);
+  return bossIds.join(",");
+}
+
+function getTradeMaxDesiredTrades(tradeType) {
+  return tradeType === "cookies" ? 2 : 5;
+}
+
+function canAccessCategory(role, userGuild, category) {
+  return role === "admin" || category === "alianza" || category === userGuild;
+}
+
+function normalizeTradeStatus(value) {
+  const status = String(value || "").trim().toLowerCase();
+  return ["open", "paused", "closed", "archived"].includes(status) ? status : "open";
+}
+
+function normalizeTradeApplicationStatus(value) {
+  const status = String(value || "").trim().toLowerCase();
+  return ["pending", "accepted", "rejected"].includes(status) ? status : "pending";
+}
+
+function normalizeOptionalText(value, maxLength) {
+  const text = String(value || "").trim();
+  return text ? text.slice(0, maxLength) : null;
+}
+
+function normalizeOptionalInt(value, min = 0, max = 2147483647) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  if (!Number.isFinite(number)) return null;
+  return Math.min(max, Math.max(min, Math.round(number)));
 }
 
 function normalizeEmail(value) {
@@ -1066,9 +1207,285 @@ async function handleDeleteChallengerProposal(req, res, proposalId) {
   }
 }
 
+async function findTradePostById(tradeId, authClaims) {
+  const categories = VALID_PARTY_CATEGORIES;
+  for (const category of categories) {
+    const result = await listTradePosts({ category }, getImpersonationOptions(authClaims));
+    const trade = (result.data.tradePosts || []).find((item) => String(item.id) === String(tradeId));
+    if (trade) return trade;
+  }
+  return null;
+}
+
+function normalizeTradePayload(body, fallbackCategory) {
+  const title = normalizeOptionalText(body.title, 80);
+  if (!title) return null;
+
+  return {
+    title,
+    tradeType: normalizeTradeType(body.tradeType),
+    bossId: normalizeOptionalText(body.bossId, 40),
+    bossIds: normalizeTradeBossIds(body.bossIds ?? body.bossId),
+    category: normalizePartyCategory(body.category, fallbackCategory),
+    desiredTrades: normalizeOptionalInt(body.desiredTrades ?? body.weeklyRuns, 1, getTradeMaxDesiredTrades(normalizeTradeType(body.tradeType))) || 1,
+    weeklyRuns: null,
+    preferredDay: normalizeOptionalText(body.preferredDay, 32),
+    preferredTime: normalizeRunTime(body.preferredTime),
+    timezone: normalizeTimezone(body.timezone),
+    itemsOffered: normalizeOptionalText(body.itemsOffered, 600),
+    minCombatPower: null,
+    minSacredPower: null,
+    notes: normalizeOptionalText(body.notes, 800),
+    status: normalizeTradeStatus(body.status),
+  };
+}
+
+async function handleListTrades(req, res, category) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const me = await getCurrentUser(getImpersonationOptions(authClaims));
+    const role = normalizeRole(me.data.appUser?.role);
+    const userGuild = me.data.appUser?.guild || null;
+    const normalizedCategory = normalizePartyCategory(category, userGuild);
+    if (!canAccessCategory(role, userGuild, normalizedCategory)) {
+      sendJson(res, 403, { error: "No puedes ver trades de otro gremio." });
+      return;
+    }
+    const result = await listTradePosts(
+      { category: normalizedCategory },
+      getImpersonationOptions(authClaims)
+    );
+    sendJson(res, 200, { trades: result.data.tradePosts || [] });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudieron obtener los trades." });
+  }
+}
+
+async function handleCreateTrade(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const body = await readJsonBody(req);
+    const me = await getCurrentUser(getImpersonationOptions(authClaims));
+    const role = normalizeRole(me.data.appUser?.role);
+    const userGuild = me.data.appUser?.guild || null;
+    const payload = normalizeTradePayload(body, userGuild);
+    if (!payload) {
+      sendJson(res, 400, { error: "El titulo del trade es obligatorio." });
+      return;
+    }
+    if (!canAccessCategory(role, userGuild, payload.category)) {
+      sendJson(res, 403, { error: "Solo podes publicar trades para tu propio gremio o para Alianza." });
+      return;
+    }
+
+    const result = await createTradePost(payload, getImpersonationOptions(authClaims));
+    sendJson(res, 201, { trade: result.data.tradePost_insert });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo crear el trade." });
+  }
+}
+
+async function handleUpdateTrade(req, res, tradeId) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const existing = await findTradePostById(tradeId, authClaims);
+    const currentUserId = authClaims.uid || authClaims.sub;
+    if (!existing) {
+      sendJson(res, 404, { error: "Trade no encontrado." });
+      return;
+    }
+    if (existing.ownerId !== currentUserId) {
+      sendJson(res, 403, { error: "Solo el creador puede editar este trade." });
+      return;
+    }
+
+    const body = await readJsonBody(req);
+    const me = await getCurrentUser(getImpersonationOptions(authClaims));
+    const role = normalizeRole(me.data.appUser?.role);
+    const userGuild = me.data.appUser?.guild || null;
+    const payload = normalizeTradePayload(body, existing.category);
+    if (!payload) {
+      sendJson(res, 400, { error: "El titulo del trade es obligatorio." });
+      return;
+    }
+    if (!canAccessCategory(role, userGuild, payload.category)) {
+      sendJson(res, 403, { error: "Solo podes mover trades a tu propio gremio o a Alianza." });
+      return;
+    }
+
+    await updateTradePost({ id: tradeId, ...payload }, getImpersonationOptions(authClaims));
+    sendJson(res, 200, { ok: true });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo actualizar el trade." });
+  }
+}
+
+async function handleDeleteTrade(req, res, tradeId) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const existing = await findTradePostById(tradeId, authClaims);
+    const currentUserId = authClaims.uid || authClaims.sub;
+    if (!existing) {
+      sendJson(res, 404, { error: "Trade no encontrado." });
+      return;
+    }
+    if (existing.ownerId !== currentUserId) {
+      sendJson(res, 403, { error: "Solo el creador puede eliminar este trade." });
+      return;
+    }
+    await archiveTradePost({ id: tradeId }, getImpersonationOptions(authClaims));
+    sendJson(res, 200, { ok: true });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo eliminar el trade." });
+  }
+}
+
+async function handleApplyToTrade(req, res, tradeId) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const existing = await findTradePostById(tradeId, authClaims);
+    if (!existing) {
+      sendJson(res, 404, { error: "Trade no encontrado." });
+      return;
+    }
+    if (existing.ownerId === (authClaims.uid || authClaims.sub)) {
+      sendJson(res, 400, { error: "No puedes aplicar a tu propio trade." });
+      return;
+    }
+
+    const me = await getCurrentUser(getImpersonationOptions(authClaims));
+    const role = normalizeRole(me.data.appUser?.role);
+    const userGuild = me.data.appUser?.guild || null;
+    if (!canAccessCategory(role, userGuild, existing.category)) {
+      sendJson(res, 403, { error: "No puedes aplicar a trades de otro gremio." });
+      return;
+    }
+
+    if (existing.status && existing.status !== "open") {
+      sendJson(res, 400, { error: "Este trade no esta abierto a aplicaciones." });
+      return;
+    }
+    const desiredTrades = existing.desiredTrades || existing.weeklyRuns || 1;
+    const acceptedCount = (existing.applications || []).filter((application) => application.status === "accepted").length;
+    if (acceptedCount >= desiredTrades) {
+      sendJson(res, 400, { error: "Este trade ya tiene todos los slots aceptados." });
+      return;
+    }
+
+    const body = await readJsonBody(req);
+    const characterOwnerId = normalizeOptionalText(body.characterOwnerId, 128);
+    const characterRegion = normalizeOptionalText(body.characterRegion, 12);
+    const characterName = normalizeOptionalText(body.characterName, 32);
+    if (!characterOwnerId || !characterRegion || !characterName) {
+      sendJson(res, 400, { error: "Selecciona un personaje para aplicar." });
+      return;
+    }
+
+    const result = await applyToTrade(
+      {
+        tradeId,
+        characterOwnerId,
+        characterRegion,
+        characterName,
+        message: normalizeOptionalText(body.message, 500),
+      },
+      getImpersonationOptions(authClaims)
+    );
+    sendJson(res, 201, { application: result.data.tradeApplication_insert });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo aplicar al trade." });
+  }
+}
+
+async function handleUpdateTradeApplication(req, res, applicationId) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const currentUserId = authClaims.uid || authClaims.sub;
+    const body = await readJsonBody(req);
+    const status = normalizeTradeApplicationStatus(body.status);
+    const categories = VALID_PARTY_CATEGORIES;
+    let ownerMatch = false;
+    let matchedTrade = null;
+    for (const category of categories) {
+      const result = await listTradePosts({ category }, getImpersonationOptions(authClaims));
+      matchedTrade = (result.data.tradePosts || []).find((trade) =>
+        trade.ownerId === currentUserId
+        && (trade.applications || []).some((application) => String(application.id) === String(applicationId))
+      ) || null;
+      ownerMatch = Boolean(matchedTrade);
+      if (ownerMatch) break;
+    }
+    if (!ownerMatch) {
+      sendJson(res, 403, { error: "Solo el creador del trade puede actualizar esa aplicacion." });
+      return;
+    }
+    if (status === "accepted" && matchedTrade) {
+      const desiredTrades = matchedTrade.desiredTrades || matchedTrade.weeklyRuns || 1;
+      const acceptedCount = (matchedTrade.applications || []).filter((application) =>
+        application.status === "accepted" && String(application.id) !== String(applicationId)
+      ).length;
+      if (acceptedCount >= desiredTrades) {
+        sendJson(res, 400, { error: "Este trade ya tiene todos los slots aceptados." });
+        return;
+      }
+    }
+
+    await updateTradeApplicationStatus({ id: applicationId, status }, getImpersonationOptions(authClaims));
+    sendJson(res, 200, { ok: true });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo actualizar la aplicacion." });
+  }
+}
+
+async function handleDeleteTradeApplication(req, res, applicationId) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+
+  try {
+    const currentUserId = authClaims.uid || authClaims.sub;
+    const categories = VALID_PARTY_CATEGORIES;
+    let allowed = false;
+    for (const category of categories) {
+      const result = await listTradePosts({ category }, getImpersonationOptions(authClaims));
+      allowed = (result.data.tradePosts || []).some((trade) => {
+        const application = (trade.applications || []).find((item) => String(item.id) === String(applicationId));
+        if (!application) return false;
+        return trade.ownerId === currentUserId || application.applicantId === currentUserId;
+      });
+      if (allowed) break;
+    }
+    if (!allowed) {
+      sendJson(res, 403, { error: "No podes eliminar esa aplicacion." });
+      return;
+    }
+
+    await deleteTradeApplication({ id: applicationId }, getImpersonationOptions(authClaims));
+    sendJson(res, 200, { ok: true });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo eliminar la aplicacion." });
+  }
+}
+
 http.createServer((req, res) => {
   if (req.url.startsWith("/api/")) {
     setApiCorsHeaders(res);
+  }
+
+  if (DEV_LIVE_RELOAD && req.method === "GET" && req.url === "/__dev/reload") {
+    handleDevReload(req, res);
+    return;
   }
 
   if (req.method === "OPTIONS" && req.url.startsWith("/api/")) {
@@ -1138,6 +1555,45 @@ http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === "GET" && req.url.startsWith("/api/trades?")) {
+    const searchParams = new URL(req.url, `http://${req.headers.host || "localhost"}`).searchParams;
+    handleListTrades(req, res, searchParams.get("category"));
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/trades") {
+    handleCreateTrade(req, res);
+    return;
+  }
+
+  {
+    const tradeMatch = req.url.match(/^\/api\/trades\/([^/]+)$/);
+    if (tradeMatch && req.method === "PUT") {
+      handleUpdateTrade(req, res, decodeURIComponent(tradeMatch[1]));
+      return;
+    }
+    if (tradeMatch && req.method === "DELETE") {
+      handleDeleteTrade(req, res, decodeURIComponent(tradeMatch[1]));
+      return;
+    }
+
+    const tradeApplyMatch = req.url.match(/^\/api\/trades\/([^/]+)\/applications$/);
+    if (tradeApplyMatch && req.method === "POST") {
+      handleApplyToTrade(req, res, decodeURIComponent(tradeApplyMatch[1]));
+      return;
+    }
+
+    const applicationMatch = req.url.match(/^\/api\/trade-applications\/([^/]+)$/);
+    if (applicationMatch && req.method === "PATCH") {
+      handleUpdateTradeApplication(req, res, decodeURIComponent(applicationMatch[1]));
+      return;
+    }
+    if (applicationMatch && req.method === "DELETE") {
+      handleDeleteTradeApplication(req, res, decodeURIComponent(applicationMatch[1]));
+      return;
+    }
+  }
+
   {
     const partyMatch = req.url.match(/^\/api\/parties\/([^/]+)$/);
     if (partyMatch && req.method === "DELETE") {
@@ -1195,3 +1651,5 @@ http.createServer((req, res) => {
 }).listen(PORT, HOST, () => {
   console.log(`MapleTools running at http://${HOST}:${PORT}`);
 });
+
+watchDevFiles();

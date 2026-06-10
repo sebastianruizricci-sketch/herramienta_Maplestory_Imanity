@@ -29,6 +29,16 @@ export interface ChallengerProposal_Key {
   __typename?: 'ChallengerProposal_Key';
 }
 
+export interface TradePost_Key {
+  id: UUIDString;
+  __typename?: 'TradePost_Key';
+}
+
+export interface TradeApplication_Key {
+  id: UUIDString;
+  __typename?: 'TradeApplication_Key';
+}
+
 export interface CreateBossPartyData {
   bossParty_insert: BossParty_Key;
 }
@@ -68,6 +78,81 @@ export interface DeleteChallengerProposalData {
 }
 
 export interface DeleteChallengerProposalVariables {
+  id: UUIDString;
+}
+
+export interface CreateTradePostData {
+  tradePost_insert: TradePost_Key;
+}
+
+export interface CreateTradePostVariables {
+  title: string;
+  tradeType?: string | null;
+  bossId?: string | null;
+  bossIds?: string | null;
+  category?: string | null;
+  desiredTrades?: number | null;
+  weeklyRuns?: number | null;
+  preferredDay?: string | null;
+  preferredTime?: string | null;
+  timezone?: string | null;
+  itemsOffered?: string | null;
+  minCombatPower?: number | null;
+  minSacredPower?: number | null;
+  notes?: string | null;
+  status?: string | null;
+}
+
+export interface UpdateTradePostData {
+  tradePost_update?: TradePost_Key | null;
+}
+
+export interface UpdateTradePostVariables extends CreateTradePostVariables {
+  id: UUIDString;
+}
+
+export interface DeleteTradePostData {
+  tradePost_delete?: TradePost_Key | null;
+}
+
+export interface DeleteTradePostVariables {
+  id: UUIDString;
+}
+
+export interface ArchiveTradePostData {
+  tradePost_update?: TradePost_Key | null;
+}
+
+export interface ArchiveTradePostVariables {
+  id: UUIDString;
+}
+
+export interface ApplyToTradeData {
+  tradeApplication_insert: TradeApplication_Key;
+}
+
+export interface ApplyToTradeVariables {
+  tradeId: UUIDString;
+  characterOwnerId: string;
+  characterRegion: string;
+  characterName: string;
+  message?: string | null;
+}
+
+export interface UpdateTradeApplicationStatusData {
+  tradeApplication_update?: TradeApplication_Key | null;
+}
+
+export interface UpdateTradeApplicationStatusVariables {
+  id: UUIDString;
+  status: string;
+}
+
+export interface DeleteTradeApplicationData {
+  tradeApplication_delete?: TradeApplication_Key | null;
+}
+
+export interface DeleteTradeApplicationVariables {
   id: UUIDString;
 }
 
@@ -225,6 +310,53 @@ export interface ListPartiesByCategoryVariables {
   category?: string | null;
 }
 
+export interface ListTradePostsData {
+  tradePosts: ({
+    id: UUIDString;
+    title: string;
+    tradeType?: string | null;
+    bossId?: string | null;
+    bossIds?: string | null;
+    category?: string | null;
+    desiredTrades?: number | null;
+    weeklyRuns?: number | null;
+    preferredDay?: string | null;
+    preferredTime?: string | null;
+    timezone?: string | null;
+    itemsOffered?: string | null;
+    minCombatPower?: number | null;
+    minSacredPower?: number | null;
+    notes?: string | null;
+    status?: string | null;
+    ownerId: string;
+    createdAt: TimestampString;
+    owner?: {
+      username: string;
+      guild?: string | null;
+      timezone?: string | null;
+    } | null;
+    applications: ({
+      id: UUIDString;
+      applicantId: string;
+      characterOwnerId: string;
+      characterRegion: string;
+      characterName: string;
+      message?: string | null;
+      status?: string | null;
+      createdAt: TimestampString;
+      applicant: {
+        username: string;
+        guild?: string | null;
+        timezone?: string | null;
+      };
+    } & TradeApplication_Key)[];
+  } & TradePost_Key)[];
+}
+
+export interface ListTradePostsVariables {
+  category?: string | null;
+}
+
 export interface MapleCharacter_Key {
   ownerId: string;
   region: string;
@@ -313,6 +445,31 @@ export function deleteChallengerProposal(dc: DataConnect, vars: DeleteChallenger
 /** Generated Node Admin SDK operation action function for the 'DeleteChallengerProposal' Mutation. Allow users to pass in custom DataConnect instances. */
 export function deleteChallengerProposal(vars: DeleteChallengerProposalVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<DeleteChallengerProposalData>>;
 
+/** Generated Node Admin SDK operation action function for the 'UpsertCurrentUser' Mutation. Allow users to execute without passing in DataConnect. */
+export function upsertCurrentUser(dc: DataConnect, vars: UpsertCurrentUserVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertCurrentUserData>>;
+/** Generated Node Admin SDK operation action function for the 'UpsertCurrentUser' Mutation. Allow users to pass in custom DataConnect instances. */
+export function upsertCurrentUser(vars: UpsertCurrentUserVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertCurrentUserData>>;
+
+/** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to execute without passing in DataConnect. */
+export function getCurrentUser(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<GetCurrentUserData>>;
+/** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to pass in custom DataConnect instances. */
+export function getCurrentUser(options?: OperationOptions): Promise<ExecuteOperationResponse<GetCurrentUserData>>;
+
+/** Generated Node Admin SDK operation action function for the 'ListAppUsers' Query. Allow users to execute without passing in DataConnect. */
+export function listAppUsers(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<ListAppUsersData>>;
+/** Generated Node Admin SDK operation action function for the 'ListAppUsers' Query. Allow users to pass in custom DataConnect instances. */
+export function listAppUsers(options?: OperationOptions): Promise<ExecuteOperationResponse<ListAppUsersData>>;
+
+/** Generated Node Admin SDK operation action function for the 'UpdateUserRole' Mutation. Allow users to execute without passing in DataConnect. */
+export function updateUserRole(dc: DataConnect, vars: UpdateUserRoleVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserRoleData>>;
+/** Generated Node Admin SDK operation action function for the 'UpdateUserRole' Mutation. Allow users to pass in custom DataConnect instances. */
+export function updateUserRole(vars: UpdateUserRoleVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserRoleData>>;
+
+/** Generated Node Admin SDK operation action function for the 'UpdateUserGuild' Mutation. Allow users to execute without passing in DataConnect. */
+export function updateUserGuild(dc: DataConnect, vars: UpdateUserGuildVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserGuildData>>;
+/** Generated Node Admin SDK operation action function for the 'UpdateUserGuild' Mutation. Allow users to pass in custom DataConnect instances. */
+export function updateUserGuild(vars: UpdateUserGuildVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserGuildData>>;
+
 /** Generated Node Admin SDK operation action function for the 'UpsertMapleCharacter' Mutation. Allow users to execute without passing in DataConnect. */
 export function upsertMapleCharacter(dc: DataConnect, vars: UpsertMapleCharacterVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertMapleCharacterData>>;
 /** Generated Node Admin SDK operation action function for the 'UpsertMapleCharacter' Mutation. Allow users to pass in custom DataConnect instances. */
@@ -363,28 +520,26 @@ export function listPartiesByCategory(dc: DataConnect, vars?: ListPartiesByCateg
 /** Generated Node Admin SDK operation action function for the 'ListPartiesByCategory' Query. Allow users to pass in custom DataConnect instances. */
 export function listPartiesByCategory(vars?: ListPartiesByCategoryVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ListPartiesByCategoryData>>;
 
-/** Generated Node Admin SDK operation action function for the 'UpsertCurrentUser' Mutation. Allow users to execute without passing in DataConnect. */
-export function upsertCurrentUser(dc: DataConnect, vars: UpsertCurrentUserVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertCurrentUserData>>;
-/** Generated Node Admin SDK operation action function for the 'UpsertCurrentUser' Mutation. Allow users to pass in custom DataConnect instances. */
-export function upsertCurrentUser(vars: UpsertCurrentUserVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertCurrentUserData>>;
+export function createTradePost(dc: DataConnect, vars: CreateTradePostVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<CreateTradePostData>>;
+export function createTradePost(vars: CreateTradePostVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<CreateTradePostData>>;
 
-/** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to execute without passing in DataConnect. */
-export function getCurrentUser(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<GetCurrentUserData>>;
-/** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to pass in custom DataConnect instances. */
-export function getCurrentUser(options?: OperationOptions): Promise<ExecuteOperationResponse<GetCurrentUserData>>;
+export function updateTradePost(dc: DataConnect, vars: UpdateTradePostVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateTradePostData>>;
+export function updateTradePost(vars: UpdateTradePostVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateTradePostData>>;
 
-/** Generated Node Admin SDK operation action function for the 'ListAppUsers' Query. Allow users to execute without passing in DataConnect. */
-export function listAppUsers(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<ListAppUsersData>>;
-/** Generated Node Admin SDK operation action function for the 'ListAppUsers' Query. Allow users to pass in custom DataConnect instances. */
-export function listAppUsers(options?: OperationOptions): Promise<ExecuteOperationResponse<ListAppUsersData>>;
+export function deleteTradePost(dc: DataConnect, vars: DeleteTradePostVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<DeleteTradePostData>>;
+export function deleteTradePost(vars: DeleteTradePostVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<DeleteTradePostData>>;
 
-/** Generated Node Admin SDK operation action function for the 'UpdateUserRole' Mutation. Allow users to execute without passing in DataConnect. */
-export function updateUserRole(dc: DataConnect, vars: UpdateUserRoleVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserRoleData>>;
-/** Generated Node Admin SDK operation action function for the 'UpdateUserRole' Mutation. Allow users to pass in custom DataConnect instances. */
-export function updateUserRole(vars: UpdateUserRoleVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserRoleData>>;
+export function archiveTradePost(dc: DataConnect, vars: ArchiveTradePostVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ArchiveTradePostData>>;
+export function archiveTradePost(vars: ArchiveTradePostVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ArchiveTradePostData>>;
 
-/** Generated Node Admin SDK operation action function for the 'UpdateUserGuild' Mutation. Allow users to execute without passing in DataConnect. */
-export function updateUserGuild(dc: DataConnect, vars: UpdateUserGuildVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserGuildData>>;
-/** Generated Node Admin SDK operation action function for the 'UpdateUserGuild' Mutation. Allow users to pass in custom DataConnect instances. */
-export function updateUserGuild(vars: UpdateUserGuildVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserGuildData>>;
+export function applyToTrade(dc: DataConnect, vars: ApplyToTradeVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ApplyToTradeData>>;
+export function applyToTrade(vars: ApplyToTradeVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ApplyToTradeData>>;
 
+export function updateTradeApplicationStatus(dc: DataConnect, vars: UpdateTradeApplicationStatusVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateTradeApplicationStatusData>>;
+export function updateTradeApplicationStatus(vars: UpdateTradeApplicationStatusVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateTradeApplicationStatusData>>;
+
+export function deleteTradeApplication(dc: DataConnect, vars: DeleteTradeApplicationVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<DeleteTradeApplicationData>>;
+export function deleteTradeApplication(vars: DeleteTradeApplicationVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<DeleteTradeApplicationData>>;
+
+export function listTradePosts(dc: DataConnect, vars?: ListTradePostsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ListTradePostsData>>;
+export function listTradePosts(vars?: ListTradePostsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ListTradePostsData>>;

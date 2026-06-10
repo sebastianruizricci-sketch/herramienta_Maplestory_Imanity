@@ -324,6 +324,46 @@ const challengerForm = document.getElementById("challengerForm");
 const challengerFormStatus = document.getElementById("challengerFormStatus");
 const challengerTimezone = document.getElementById("challengerTimezone");
 const challengerBoardGrid = document.getElementById("challengerBoardGrid");
+const tradesNav = document.getElementById("tradesNav");
+const tradesPage = document.getElementById("tradesPage");
+const tradesPageKicker = document.getElementById("tradesPageKicker");
+const tradesTavern = document.getElementById("tradesTavern");
+const tradesRosterTable = document.getElementById("tradesRosterTable");
+const tradesOpenBoardBtn = document.getElementById("tradesOpenBoardBtn");
+const tradesBoard = document.getElementById("tradesBoard");
+const tradesBackToTavernBtn = document.getElementById("tradesBackToTavernBtn");
+const tradesOwnSectionTab = document.getElementById("tradesOwnSectionTab");
+const tradesAllianceSectionTab = document.getElementById("tradesAllianceSectionTab");
+const tradesListTab = document.getElementById("tradesListTab");
+const tradesCreateTab = document.getElementById("tradesCreateTab");
+const tradesListView = document.getElementById("tradesListView");
+const tradesGrid = document.getElementById("tradesGrid");
+const tradesPageInfo = document.getElementById("tradesPageInfo");
+const tradesPaginationLabel = document.getElementById("tradesPaginationLabel");
+const tradesPrevPageBtn = document.getElementById("tradesPrevPageBtn");
+const tradesNextPageBtn = document.getElementById("tradesNextPageBtn");
+const tradesForm = document.getElementById("tradesForm");
+const tradesFormKicker = document.getElementById("tradesFormKicker");
+const tradesFormTitle = document.getElementById("tradesFormTitle");
+const tradesEditId = document.getElementById("tradesEditId");
+const tradesTitleInput = document.getElementById("tradesTitleInput");
+const tradesTypeSelect = document.getElementById("tradesTypeSelect");
+const tradesBossSelect = document.getElementById("tradesBossSelect");
+const tradesBossChoices = document.getElementById("tradesBossChoices");
+const tradesWeeklyRunsInput = document.getElementById("tradesWeeklyRunsInput");
+const tradesDaySelect = document.getElementById("tradesDaySelect");
+const tradesTimezoneSelect = document.getElementById("tradesTimezoneSelect");
+populateTimezoneSelect(tradesTimezoneSelect);
+const tradesRunTimeSelect = document.getElementById("tradesRunTimeSelect");
+populateRunTimeSelect(tradesRunTimeSelect, tradesTimezoneSelect?.value || "");
+const tradesMinCpInput = document.getElementById("tradesMinCpInput");
+const tradesMinSacredInput = document.getElementById("tradesMinSacredInput");
+const tradesStatusSelect = document.getElementById("tradesStatusSelect");
+const tradesDestinationSelect = document.getElementById("tradesDestinationSelect");
+const tradesItemsInput = document.getElementById("tradesItemsInput");
+const tradesNotesInput = document.getElementById("tradesNotesInput");
+const tradesSaveBtn = document.getElementById("tradesSaveBtn");
+const tradesStatus = document.getElementById("tradesStatus");
 const adminNav = document.getElementById("adminNav");
 const adminNavGroup = document.getElementById("adminNavGroup");
 const adminPage = document.getElementById("adminPage");
@@ -543,7 +583,11 @@ function initializeAuthenticatedApp() {
   selectBoss("gloom");
   renderCharacter(null);
   renderRoster([]);
-  showDashboardPage();
+  if (document.body?.dataset.initialPage === "trades") {
+    showTradesPage();
+  } else {
+    showDashboardPage();
+  }
 }
 
 function normalizeRemoteCharacter(character) {
@@ -833,6 +877,7 @@ function hideAllPages() {
   showcase?.classList.remove("fragments-view");
   showcase?.classList.remove("chatbot-view");
   showcase?.classList.remove("partys-view");
+  showcase?.classList.remove("trades-view");
   showcase?.classList.remove("dashboard-view");
   showcase?.classList.remove("admin-view");
   showcase?.classList.remove("challenger-page-view");
@@ -841,6 +886,7 @@ function hideAllPages() {
   fragmentsPage?.classList.add("hidden");
   chatbotPage?.classList.add("hidden");
   partysPage?.classList.add("hidden");
+  tradesPage?.classList.add("hidden");
   adminPage?.classList.add("hidden");
   challengerPage?.classList.add("hidden");
   document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
@@ -887,6 +933,14 @@ async function showPartysPage() {
   partysPage?.classList.remove("hidden");
   partysNav?.classList.add("active");
   await initPartysPage();
+}
+
+async function showTradesPage() {
+  hideAllPages();
+  showcase?.classList.add("trades-view");
+  tradesPage?.classList.remove("hidden");
+  tradesNav?.classList.add("active");
+  await initTradesPage();
 }
 
 async function showAdminPage() {
@@ -1228,6 +1282,573 @@ function applyRoleVisibility() {
   const isAdmin = currentUserRole === "admin";
   adminNav?.classList.toggle("hidden", !isAdmin);
   adminNavGroup?.classList.toggle("hidden", !isAdmin);
+}
+
+// ── Trades ────────────────────────────────────────────────────────────────
+let tradesCurrentTrades = [];
+let tradesInitialized = false;
+let tradesSection = "own";
+let tradesPageIndex = 0;
+const TRADES_PER_PAGE = 6;
+const TRADE_BOSS_LABELS = {
+  "gollux": "Gollux",
+  "chaos-gloom": "Chaos Gloom",
+  "verus-hilla": "Verus Hilla",
+  "hard-darknell": "Hard Darknell",
+  "hard-lotus": "Hard Lotus",
+  "hard-damien": "Hard Damien",
+  "chaos-slime": "Chaos Slime",
+  "hard-seren": "Hard Seren",
+  "extreme-seren": "Extreme Seren",
+  "black-mage-hard": "Black Mage Hard",
+  "black-mage-xtreme": "Black Mage Xtreme",
+  "kaling": "Kaling",
+  "adversary": "Adversary",
+  "kalos": "Kalos",
+  "limbo": "Limbo",
+  "baldrix": "Baldrix",
+};
+const TRADE_BOSS_IMAGES = {
+  "gollux": "assets/bossespixelart/Golluxpixelart.png",
+  "chaos-gloom": "assets/bossespixelart/Gloompixelart.png",
+  "verus-hilla": "assets/bossespixelart/Veruspixelart.png",
+  "hard-darknell": "assets/bossespixelart/Darknellpixelart.png",
+  "hard-lotus": "assets/bossespixelart/Lotuspixelart.png",
+  "hard-damien": "assets/bossespixelart/Damienpixelart.png",
+  "chaos-slime": "assets/bossespixelart/Slimepixelart.png",
+  "hard-seren": "assets/bossespixelart/Serenpixelart.png",
+  "extreme-seren": "assets/bossespixelart/Serenpixelart.png",
+  "black-mage-hard": "assets/bossespixelart/blackmagepixelart.png",
+  "black-mage-xtreme": "assets/bossespixelart/blackmagepixelart.png",
+  "kaling": "assets/bossespixelart/Kalingpixelart.png",
+  "adversary": "assets/bossespixelart/Adversarypixelart.png",
+  "kalos": "assets/bossespixelart/Kalospixelart.png",
+  "limbo": "assets/bossespixelart/Limbopixelart.png",
+  "baldrix": "assets/bossespixelart/Baldrixpixelart.png",
+};
+const TRADE_TYPE_OPTIONS = {
+  daily: {
+    label: "Daily trade",
+    bosses: ["gollux"],
+    defaultBosses: ["gollux"],
+    multi: false,
+    maxTrades: 5,
+  },
+  "chaos-tenebris": {
+    label: "Chaos tenebris",
+    bosses: ["chaos-gloom", "verus-hilla", "hard-darknell"],
+    defaultBosses: ["chaos-gloom", "verus-hilla", "hard-darknell"],
+    multi: true,
+    maxTrades: 5,
+  },
+  "chaos-tenebris-luwill": {
+    label: "Chaos tenebris + Luwill",
+    bosses: ["chaos-gloom", "verus-hilla", "hard-darknell", "hard-lotus", "hard-damien"],
+    defaultBosses: ["chaos-gloom", "verus-hilla", "hard-darknell", "hard-lotus", "hard-damien"],
+    multi: true,
+    maxTrades: 5,
+  },
+  "chaos-tenebris-luwill-slime": {
+    label: "Chaos tenebris + Luwill + Slime",
+    bosses: ["chaos-gloom", "verus-hilla", "hard-darknell", "hard-lotus", "hard-damien", "chaos-slime"],
+    defaultBosses: ["chaos-gloom", "verus-hilla", "hard-darknell", "hard-lotus", "hard-damien", "chaos-slime"],
+    multi: true,
+    maxTrades: 5,
+  },
+  emblem: {
+    label: "Emblema trade",
+    bosses: ["hard-seren", "extreme-seren"],
+    defaultBosses: ["hard-seren"],
+    multi: false,
+    maxTrades: 5,
+  },
+  badge: {
+    label: "Badge trade",
+    bosses: ["black-mage-hard", "black-mage-xtreme"],
+    defaultBosses: ["black-mage-hard"],
+    multi: false,
+    maxTrades: 5,
+  },
+  cookies: {
+    label: "Cookies runs",
+    bosses: ["kaling", "adversary", "kalos", "limbo", "baldrix"],
+    defaultBosses: ["kaling", "adversary", "kalos", "limbo", "baldrix"],
+    multi: true,
+    maxTrades: 2,
+  },
+};
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function tradesCurrentCategory() {
+  if (tradesSection === "alianza") return "alianza";
+  if (currentUserGuild) return currentUserGuild;
+  return currentUserRole === "admin" ? "imanity" : null;
+}
+
+function tradesOwnSectionBlocked() {
+  return tradesSection === "own" && !currentUserGuild && currentUserRole !== "admin";
+}
+
+function setTradesStatus(message, state = "neutral") {
+  if (!tradesStatus) return;
+  tradesStatus.textContent = message;
+  tradesStatus.dataset.state = state;
+}
+
+function syncTradeRunTimeOptions(preferredValue = tradesRunTimeSelect?.value || "") {
+  populateRunTimeSelect(tradesRunTimeSelect, tradesTimezoneSelect?.value || "", preferredValue);
+}
+
+function getTradeTypeConfig(type = tradesTypeSelect?.value || "daily") {
+  return TRADE_TYPE_OPTIONS[type] || TRADE_TYPE_OPTIONS.daily;
+}
+
+function getTradeMaxTrades(type = tradesTypeSelect?.value || "daily") {
+  return getTradeTypeConfig(type).maxTrades || 5;
+}
+
+function clampTradeCount(value, type = tradesTypeSelect?.value || "daily") {
+  const maxTrades = getTradeMaxTrades(type);
+  const count = Number.parseInt(value, 10);
+  if (!Number.isFinite(count)) return 1;
+  return Math.min(Math.max(count, 1), maxTrades);
+}
+
+function syncDesiredTradeLimit() {
+  if (!tradesWeeklyRunsInput) return;
+  const maxTrades = getTradeMaxTrades();
+  tradesWeeklyRunsInput.max = String(maxTrades);
+  tradesWeeklyRunsInput.value = String(clampTradeCount(tradesWeeklyRunsInput.value || 1));
+}
+
+function getTradeBossIds(trade = null) {
+  const source = trade?.bossIds || trade?.bossId || "";
+  return String(source)
+    .split(",")
+    .map((bossId) => bossId.trim())
+    .filter(Boolean);
+}
+
+function getSelectedTradeBossIds() {
+  return [...(tradesBossChoices?.querySelectorAll('input[name="tradeBossIds"]:checked') || [])]
+    .map((input) => input.value);
+}
+
+function syncHiddenTradeBossSelect() {
+  if (!tradesBossSelect) return;
+  const selected = getSelectedTradeBossIds();
+  tradesBossSelect.innerHTML = selected.map((bossId) =>
+    `<option value="${escapeHtml(bossId)}" selected>${escapeHtml(getTradeBossLabel(bossId))}</option>`
+  ).join("");
+}
+
+function renderTradeBossChoices(selectedBossIds = null) {
+  if (!tradesBossChoices) return;
+  const config = getTradeTypeConfig();
+  if (tradesTitleInput && !tradesTitleInput.value.trim()) {
+    tradesTitleInput.placeholder = config.label;
+  }
+  syncDesiredTradeLimit();
+  const selected = selectedBossIds?.length ? selectedBossIds : config.defaultBosses;
+  tradesBossChoices.innerHTML = config.bosses.map((bossId) => {
+    const checked = selected.includes(bossId);
+    const inputType = config.multi ? "checkbox" : "radio";
+    return `
+      <label class="trades-boss-choice">
+        <input type="${inputType}" name="tradeBossIds" value="${escapeHtml(bossId)}" ${checked ? "checked" : ""} />
+        <span>${escapeHtml(getTradeBossLabel(bossId))}</span>
+      </label>
+    `;
+  }).join("");
+  syncHiddenTradeBossSelect();
+}
+
+function populateTradesBossSelect() {
+  renderTradeBossChoices();
+}
+
+function updateTradesSectionLabels() {
+  if (tradesOwnSectionTab) {
+    tradesOwnSectionTab.textContent = currentUserGuild
+      ? `Trades ${guildLabel(currentUserGuild)}`
+      : "Trades de mi gremio";
+  }
+  if (tradesPageKicker) {
+    tradesPageKicker.textContent = "Taberna de trades";
+  }
+}
+
+function updateTradesDestinationOptions(preferredValue = tradesDestinationSelect?.value || "") {
+  if (!tradesDestinationSelect) return;
+  const options = currentUserRole === "admin"
+    ? [["imanity", "Imanity"], ["lorien", "Lorien"], ["alianza", "Alianza"]]
+    : [[currentUserGuild, guildLabel(currentUserGuild)], ["alianza", "Alianza"]].filter(([value]) => value);
+  tradesDestinationSelect.innerHTML = options.map(([value, label]) =>
+    `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`
+  ).join("");
+  const fallback = tradesCurrentCategory() || options[0]?.[0] || "alianza";
+  tradesDestinationSelect.value = options.some(([value]) => value === preferredValue) ? preferredValue : fallback;
+}
+
+async function loadTradesList() {
+  const category = tradesCurrentCategory();
+  if (!category) {
+    tradesCurrentTrades = [];
+    return;
+  }
+  try {
+    const params = new URLSearchParams({ category });
+    const data = await fetchAuthedJson(`/api/trades?${params.toString()}`);
+    tradesCurrentTrades = (data.trades || []).filter((trade) => trade.status !== "archived");
+    tradesPageIndex = Math.min(tradesPageIndex, getTradePageCount() - 1);
+  } catch (error) {
+    setTradesStatus(error.message || "No se pudieron cargar los trades.", "error");
+  }
+}
+
+function renderTradesTavern() {
+  return;
+}
+
+function openTradesBoard() {
+  tradesPageIndex = 0;
+  renderTradesList();
+  tradesTavern?.classList.add("hidden");
+  tradesBoard?.classList.remove("hidden");
+}
+
+function closeTradesBoard() {
+  tradesBoard?.classList.add("hidden");
+  tradesTavern?.classList.remove("hidden");
+}
+
+function showTradesListView() {
+  tradesListTab?.classList.add("active");
+  tradesCreateTab?.classList.remove("active");
+  tradesListView?.classList.remove("hidden");
+  tradesForm?.classList.add("hidden");
+}
+
+function showTradesCreateView(trade = null) {
+  tradesCreateTab?.classList.add("active");
+  tradesListTab?.classList.remove("active");
+  tradesForm?.classList.remove("hidden");
+  tradesListView?.classList.add("hidden");
+  setTradesStatus("");
+
+  if (tradesEditId) tradesEditId.value = trade?.id || "";
+  if (tradesFormKicker) tradesFormKicker.textContent = trade ? "Editar cartel" : "Nuevo cartel";
+  if (tradesFormTitle) tradesFormTitle.textContent = trade ? "Editar trade" : "Publicar trade";
+  if (tradesTitleInput) tradesTitleInput.value = trade?.title || "";
+  if (tradesTypeSelect) tradesTypeSelect.value = trade?.tradeType || "daily";
+  renderTradeBossChoices(getTradeBossIds(trade));
+  if (tradesWeeklyRunsInput) tradesWeeklyRunsInput.value = clampTradeCount(trade?.desiredTrades || trade?.weeklyRuns || 1, trade?.tradeType || "daily");
+  syncDesiredTradeLimit();
+  if (tradesDaySelect) tradesDaySelect.value = trade?.preferredDay || "";
+  if (tradesTimezoneSelect) tradesTimezoneSelect.value = trade?.timezone || currentUserTimezone || "";
+  syncTradeRunTimeOptions(trade?.preferredTime || "");
+  if (tradesRunTimeSelect) tradesRunTimeSelect.value = trade?.preferredTime || "";
+  if (tradesStatusSelect) tradesStatusSelect.value = trade?.status || "open";
+  updateTradesDestinationOptions(trade?.category || tradesCurrentCategory() || "imanity");
+  if (tradesItemsInput) tradesItemsInput.value = trade?.itemsOffered || "";
+  if (tradesNotesInput) tradesNotesInput.value = trade?.notes || "";
+  tradesTitleInput?.focus();
+}
+
+function getTradePayload() {
+  const bossIds = getSelectedTradeBossIds();
+  return {
+    title: tradesTitleInput?.value.trim() || "",
+    tradeType: tradesTypeSelect?.value || "daily",
+    bossId: bossIds[0] || "",
+    bossIds: bossIds.join(","),
+    category: tradesDestinationSelect?.value || tradesCurrentCategory(),
+    desiredTrades: clampTradeCount(tradesWeeklyRunsInput?.value || 1, tradesTypeSelect?.value || "daily"),
+    weeklyRuns: "",
+    preferredDay: tradesDaySelect?.value || "",
+    preferredTime: tradesRunTimeSelect?.value || "",
+    timezone: tradesTimezoneSelect?.value || "",
+    minCombatPower: "",
+    minSacredPower: "",
+    status: tradesStatusSelect?.value || "open",
+    itemsOffered: tradesItemsInput?.value.trim() || "",
+    notes: tradesNotesInput?.value.trim() || "",
+  };
+}
+
+function formatTradeNumber(value) {
+  if (value === null || value === undefined || value === "") return "-";
+  return Number(value).toLocaleString("en-US");
+}
+
+function getTradeTypeLabel(type) {
+  return getTradeTypeConfig(type).label;
+}
+
+function getTradeBossLabel(bossId) {
+  return TRADE_BOSS_LABELS[bossId] || getPartyBossLabel(bossId) || bossId;
+}
+
+function getTradeBossImage(bossId) {
+  return TRADE_BOSS_IMAGES[bossId] || "";
+}
+
+function getTradeBossSummary(trade) {
+  const bossIds = getTradeBossIds(trade);
+  if (!bossIds.length) return "Flexible / varios bosses";
+  return bossIds.map(getTradeBossLabel).join(", ");
+}
+
+function getTradeThumbLabel(trade) {
+  const bossName = getTradeBossLabel(getTradeBossIds(trade)[0] || trade.bossId);
+  if (!bossName || bossName === "undefined") return "TR";
+  return bossName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+}
+
+function renderTradeThumb(trade) {
+  const bossId = getTradeBossIds(trade)[0] || trade.bossId;
+  const image = getTradeBossImage(bossId);
+  if (!image) return `<div class="trade-thumb" aria-hidden="true">${escapeHtml(getTradeThumbLabel(trade))}</div>`;
+  return `
+    <div class="trade-thumb trade-thumb-img" aria-hidden="true">
+      <img src="${escapeHtml(image)}" alt="" loading="lazy" />
+    </div>
+  `;
+}
+
+function renderTradeBossStrip(trade) {
+  const bossIds = getTradeBossIds(trade);
+  if (!bossIds.length) return "";
+  return `
+    <div class="trade-boss-strip" aria-label="Bosses del trade">
+      ${bossIds.map((bossId) => {
+        const image = getTradeBossImage(bossId);
+        const label = getTradeBossLabel(bossId);
+        return `
+          <span class="trade-boss-chip" title="${escapeHtml(label)}">
+            ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(label)}" loading="lazy" />` : `<b>${escapeHtml(label.slice(0, 2).toUpperCase())}</b>`}
+          </span>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function getTradeCreatorLabel(trade) {
+  if (trade.owner?.username) return trade.owner.username;
+  if (trade.ownerId) return `Usuario ${String(trade.ownerId).slice(0, 6)}`;
+  return "Anonimo";
+}
+
+function getTradeDesiredTrades(trade) {
+  return clampTradeCount(trade?.desiredTrades || trade?.weeklyRuns || 1, trade?.tradeType || "daily");
+}
+
+function getAcceptedTradeApplications(trade) {
+  return (trade.applications || []).filter((application) => application.status === "accepted").length;
+}
+
+function isTradeFull(trade) {
+  return getAcceptedTradeApplications(trade) >= getTradeDesiredTrades(trade);
+}
+
+function getTradePageCount() {
+  return Math.max(1, Math.ceil(tradesCurrentTrades.length / TRADES_PER_PAGE));
+}
+
+function updateTradesPagination() {
+  const pageCount = getTradePageCount();
+  tradesPageIndex = Math.min(Math.max(0, tradesPageIndex), pageCount - 1);
+  const label = `${tradesPageIndex + 1} / ${pageCount}`;
+  if (tradesPaginationLabel) tradesPaginationLabel.textContent = label;
+  if (tradesPageInfo) tradesPageInfo.textContent = `Pagina ${label}`;
+  if (tradesPrevPageBtn) tradesPrevPageBtn.disabled = tradesPageIndex <= 0;
+  if (tradesNextPageBtn) tradesNextPageBtn.disabled = tradesPageIndex >= pageCount - 1;
+}
+
+function renderApplySelect(trade) {
+  const currentUserId = getCurrentUserId();
+  const isOwner = trade.ownerId === currentUserId;
+  if (isOwner) {
+    return `<p class="trade-apply-empty">Eres el creador de este trade.</p>`;
+  }
+
+  const myCharacters = charactersCache.map((character) => ({
+    ownerId: currentUserId,
+    region: character.region,
+    name: character.name,
+    label: `${character.name} - ${character.jobName || "Sin clase"} Lv. ${character.level ?? "-"}`,
+  })).filter((character) => character.ownerId && character.name);
+
+  if (!myCharacters.length) {
+    return `<p class="trade-apply-empty">Agrega un personaje en Mi Personaje para aplicar.</p>`;
+  }
+
+  const alreadyApplied = (trade.applications || []).some((application) => application.applicantId === currentUserId);
+  const full = isTradeFull(trade);
+  const disabled = alreadyApplied || full || trade.status !== "open";
+  const buttonLabel = alreadyApplied ? "Aplicado" : full ? "Slots llenos" : "Aplicar";
+  return `
+    <div class="trade-apply-row">
+      <select data-trade-apply-character="${escapeHtml(trade.id)}" ${disabled ? "disabled" : ""}>
+        ${myCharacters.map((character) => `
+          <option value="${escapeHtml(`${character.ownerId}|${character.region}|${character.name}`)}">${escapeHtml(character.label)}</option>
+        `).join("")}
+      </select>
+      <input data-trade-apply-message="${escapeHtml(trade.id)}" type="text" maxlength="500" placeholder="Mensaje corto" ${disabled ? "disabled" : ""} />
+      <button type="button" class="trade-apply-btn" data-trade-id="${escapeHtml(trade.id)}" ${disabled ? "disabled" : ""}>
+        ${buttonLabel}
+      </button>
+    </div>
+  `;
+}
+
+function renderTradeApplications(trade) {
+  const currentUserId = getCurrentUserId();
+  const isOwner = trade.ownerId === currentUserId;
+  const applications = trade.applications || [];
+  if (!applications.length) return `<p class="trade-app-empty">Sin aplicaciones aun.</p>`;
+
+  return `
+    <div class="trade-applications">
+      ${applications.map((application) => `
+        <div class="trade-application">
+          <div>
+            <strong>${escapeHtml(application.characterName)}</strong>
+            <span>${escapeHtml(application.applicant?.username || "Usuario")} ${application.applicant?.guild ? `- ${escapeHtml(guildLabel(application.applicant.guild))}` : ""}</span>
+            ${application.message ? `<p>${escapeHtml(application.message)}</p>` : ""}
+          </div>
+          <div class="trade-application-actions">
+            <span class="trade-status-pill ${escapeHtml(application.status || "pending")}">${escapeHtml(application.status || "pending")}</span>
+            ${isOwner ? `
+              <button type="button" class="trade-application-accept" data-application-status="accepted" data-application-id="${escapeHtml(application.id)}">Aceptar</button>
+              <button type="button" class="trade-application-reject" data-application-status="rejected" data-application-id="${escapeHtml(application.id)}">Rechazar</button>
+            ` : ""}
+            ${(isOwner || application.applicantId === currentUserId) ? `
+              <button type="button" class="trade-delete-application" data-application-id="${escapeHtml(application.id)}">Quitar</button>
+            ` : ""}
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderTradesList() {
+  if (!tradesGrid) return;
+  updateTradesPagination();
+  if (tradesOwnSectionBlocked()) {
+    tradesGrid.innerHTML = `
+      <div class="roster-empty">
+        <h4>Sin gremio asignado</h4>
+        <p>Un administrador todavia no te asigno a Imanity o Lorien.</p>
+      </div>
+    `;
+    return;
+  }
+  if (!tradesCurrentTrades.length) {
+    tradesGrid.innerHTML = `
+      <div class="roster-empty">
+        <h4>No hay trades publicados</h4>
+        <p>Abre "Publicar trade" y deja el primer cartel del tablero.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const currentUserId = getCurrentUserId();
+  const start = tradesPageIndex * TRADES_PER_PAGE;
+  const pageTrades = tradesCurrentTrades.slice(start, start + TRADES_PER_PAGE);
+
+  tradesGrid.innerHTML = pageTrades.map((trade, index) => {
+    const isOwner = trade.ownerId === currentUserId;
+    const tradeTypeLabel = getTradeTypeLabel(trade.tradeType);
+    const bossLabel = getTradeBossSummary(trade);
+    const acceptedCount = getAcceptedTradeApplications(trade);
+    const desiredTrades = getTradeDesiredTrades(trade);
+    return `
+      <article class="trade-card trade-pin trade-pin-${index + 1}">
+        <span class="trade-hook" aria-hidden="true"></span>
+        <header>
+          ${renderTradeThumb(trade)}
+          <div>
+            <span class="trade-status-pill ${escapeHtml(trade.status || "open")}">${escapeHtml(trade.status || "open")}</span>
+            <h4>${escapeHtml(trade.title || "Trade sin titulo")}</h4>
+            <p>${escapeHtml(tradeTypeLabel)}</p>
+            <p>${escapeHtml(bossLabel)}</p>
+            <p class="trade-creator">Por ${escapeHtml(getTradeCreatorLabel(trade))}</p>
+          </div>
+          ${isOwner ? `
+            <div class="trade-card-actions">
+              <button type="button" data-trade-edit="${escapeHtml(trade.id)}">Editar</button>
+              <button type="button" class="trade-delete-btn" data-trade-delete="${escapeHtml(trade.id)}">Eliminar</button>
+            </div>
+          ` : ""}
+        </header>
+        ${renderTradeBossStrip(trade)}
+        <div class="trade-stats">
+          <span><b>${formatTradeNumber(desiredTrades)}</b> trades buscados</span>
+          <span><b>${formatTradeNumber(acceptedCount)} / ${formatTradeNumber(desiredTrades)}</b> slots aceptados</span>
+          <span><b>${escapeHtml(trade.preferredDay || "Flexible")}</b> dia</span>
+        </div>
+        ${(trade.preferredTime || trade.timezone) ? `
+          <p class="trade-time">${escapeHtml([trade.preferredTime, trade.timezone].filter(Boolean).join(" - "))}</p>
+        ` : ""}
+        ${trade.itemsOffered ? `<div class="trade-copy"><strong>Items</strong><p>${escapeHtml(trade.itemsOffered)}</p></div>` : ""}
+        ${trade.notes ? `<div class="trade-copy"><strong>Detalles</strong><p>${escapeHtml(trade.notes)}</p></div>` : ""}
+        ${renderApplySelect(trade)}
+        ${renderTradeApplications(trade)}
+      </article>
+    `;
+  }).join("");
+  updateTradesPagination();
+}
+
+async function initTradesPage() {
+  populateTradesBossSelect();
+  await loadCurrentUserProfile();
+  updateTradesSectionLabels();
+  updateTradesDestinationOptions(tradesCurrentCategory() || "imanity");
+  if (tradesTimezoneSelect && currentUserTimezone && !tradesTimezoneSelect.value) {
+    tradesTimezoneSelect.value = currentUserTimezone;
+    syncTradeRunTimeOptions();
+  }
+  updateTradesDestinationOptions(tradesCurrentCategory() || "imanity");
+
+  if (!tradesInitialized) {
+    tradesInitialized = true;
+    closeTradesBoard();
+  }
+
+  await loadTradesList();
+  renderTradesTavern();
+  renderTradesList();
+}
+
+async function switchTradesSection(section) {
+  tradesSection = section;
+  tradesPageIndex = 0;
+  tradesOwnSectionTab?.classList.toggle("active", section === "own");
+  tradesAllianceSectionTab?.classList.toggle("active", section === "alianza");
+  updateTradesDestinationOptions(tradesCurrentCategory() || "imanity");
+  setTradesStatus("");
+  await loadTradesList();
+  renderTradesTavern();
+  renderTradesList();
 }
 
 // ── Admin ────────────────────────────────────────────────────────────────
@@ -2097,6 +2718,153 @@ challengerNav?.addEventListener("click", (event) => {
   showChallengerPage();
 });
 
+tradesOpenBoardBtn?.addEventListener("click", openTradesBoard);
+tradesBackToTavernBtn?.addEventListener("click", closeTradesBoard);
+tradesOwnSectionTab?.addEventListener("click", () => switchTradesSection("own"));
+tradesAllianceSectionTab?.addEventListener("click", () => switchTradesSection("alianza"));
+tradesTimezoneSelect?.addEventListener("change", () => syncTradeRunTimeOptions());
+tradesTypeSelect?.addEventListener("change", () => renderTradeBossChoices());
+tradesBossChoices?.addEventListener("change", syncHiddenTradeBossSelect);
+tradesWeeklyRunsInput?.addEventListener("change", syncDesiredTradeLimit);
+tradesListTab?.addEventListener("click", showTradesListView);
+tradesCreateTab?.addEventListener("click", () => showTradesCreateView());
+tradesPrevPageBtn?.addEventListener("click", () => {
+  tradesPageIndex = Math.max(0, tradesPageIndex - 1);
+  renderTradesList();
+});
+tradesNextPageBtn?.addEventListener("click", () => {
+  tradesPageIndex = Math.min(getTradePageCount() - 1, tradesPageIndex + 1);
+  renderTradesList();
+});
+
+tradesForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const payload = getTradePayload();
+  if (!payload.title) {
+    setTradesStatus("Escribe un titulo para el trade.", "error");
+    return;
+  }
+  if (!payload.bossIds) {
+    setTradesStatus("Selecciona al menos un boss para el trade.", "error");
+    return;
+  }
+  if (payload.preferredTime && !payload.timezone) {
+    setTradesStatus("Selecciona zona horaria para guardar una hora preferida.", "error");
+    return;
+  }
+
+  const editId = tradesEditId?.value || "";
+  setTradesStatus(editId ? "Actualizando trade..." : "Publicando trade...", "neutral");
+  if (tradesSaveBtn) tradesSaveBtn.disabled = true;
+
+  try {
+    await fetchAuthedJson(editId ? `/api/trades/${encodeURIComponent(editId)}` : "/api/trades", {
+      method: editId ? "PUT" : "POST",
+      body: JSON.stringify(payload),
+    });
+    setTradesStatus(editId ? "Trade actualizado." : "Trade publicado.", "success");
+    await loadTradesList();
+    renderTradesList();
+    showTradesListView();
+  } catch (error) {
+    setTradesStatus(error.message || "No se pudo guardar el trade.", "error");
+  } finally {
+    if (tradesSaveBtn) tradesSaveBtn.disabled = false;
+  }
+});
+
+tradesGrid?.addEventListener("click", async (event) => {
+  const editBtn = event.target.closest("[data-trade-edit]");
+  if (editBtn) {
+    const trade = tradesCurrentTrades.find((item) => String(item.id) === String(editBtn.dataset.tradeEdit));
+    if (trade) showTradesCreateView(trade);
+    return;
+  }
+
+  const deleteBtn = event.target.closest("[data-trade-delete]");
+  if (deleteBtn) {
+    if (!confirm("Archivar este trade? Quedara guardado en el historico.")) return;
+    try {
+      await fetchAuthedJson(`/api/trades/${encodeURIComponent(deleteBtn.dataset.tradeDelete)}`, { method: "DELETE" });
+      await loadTradesList();
+      renderTradesList();
+    } catch (error) {
+      setTradesStatus(error.message || "No se pudo eliminar el trade.", "error");
+    }
+    return;
+  }
+
+  const applyBtn = event.target.closest(".trade-apply-btn");
+  if (applyBtn) {
+    const tradeId = applyBtn.dataset.tradeId;
+    const select = tradesGrid.querySelector(`[data-trade-apply-character="${CSS.escape(tradeId)}"]`);
+    const messageInput = tradesGrid.querySelector(`[data-trade-apply-message="${CSS.escape(tradeId)}"]`);
+    const [characterOwnerId, characterRegion, characterName] = String(select?.value || "").split("|");
+    if (!characterOwnerId || !characterRegion || !characterName) {
+      setTradesStatus("Selecciona un personaje para aplicar.", "error");
+      return;
+    }
+
+    applyBtn.disabled = true;
+    try {
+      await fetchAuthedJson(`/api/trades/${encodeURIComponent(tradeId)}/applications`, {
+        method: "POST",
+        body: JSON.stringify({
+          characterOwnerId,
+          characterRegion,
+          characterName,
+          message: messageInput?.value || "",
+        }),
+      });
+      await loadTradesList();
+      renderTradesList();
+      setTradesStatus("Aplicacion enviada.", "success");
+    } catch (error) {
+      setTradesStatus(error.message || "No se pudo aplicar al trade.", "error");
+    } finally {
+      applyBtn.disabled = false;
+    }
+    return;
+  }
+
+  const applicationStatusBtn = event.target.closest("[data-application-status]");
+  if (applicationStatusBtn) {
+    if (applicationStatusBtn.dataset.applicationStatus === "accepted") {
+      const trade = tradesCurrentTrades.find((item) =>
+        (item.applications || []).some((application) => String(application.id) === String(applicationStatusBtn.dataset.applicationId))
+      );
+      if (trade && isTradeFull(trade)) {
+        setTradesStatus("Este trade ya tiene todos los slots aceptados.", "error");
+        return;
+      }
+    }
+    try {
+      await fetchAuthedJson(`/api/trade-applications/${encodeURIComponent(applicationStatusBtn.dataset.applicationId)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: applicationStatusBtn.dataset.applicationStatus }),
+      });
+      await loadTradesList();
+      renderTradesList();
+    } catch (error) {
+      setTradesStatus(error.message || "No se pudo actualizar la aplicacion.", "error");
+    }
+    return;
+  }
+
+  const deleteApplicationBtn = event.target.closest(".trade-delete-application");
+  if (deleteApplicationBtn) {
+    try {
+      await fetchAuthedJson(`/api/trade-applications/${encodeURIComponent(deleteApplicationBtn.dataset.applicationId)}`, {
+        method: "DELETE",
+      });
+      await loadTradesList();
+      renderTradesList();
+    } catch (error) {
+      setTradesStatus(error.message || "No se pudo quitar la aplicacion.", "error");
+    }
+  }
+});
+
 function normalizeSkillName(name) {
   return name.trim().replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "");
 }
@@ -2357,6 +3125,11 @@ partysNav?.addEventListener("click", (event) => {
   showPartysPage();
 });
 
+tradesNav?.addEventListener("click", (event) => {
+  event.preventDefault();
+  showTradesPage();
+});
+
 adminNav?.addEventListener("click", (event) => {
   event.preventDefault();
   showAdminPage();
@@ -2539,12 +3312,16 @@ if (auth) {
   auth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL).catch((error) => {
     console.warn("Firebase Auth persistence error:", error);
   });
-  auth.onAuthStateChanged((user) => {
+  auth.onAuthStateChanged(async (user) => {
     if (user) {
       const username = user.displayName || user.email?.split("@")[0] || "usuario";
       showAppSession(username);
       initializeAuthenticatedApp();
-      hydrateAuthenticatedData(user);
+      await hydrateAuthenticatedData(user);
+      if (document.body?.dataset.initialPage === "trades") {
+        await initTradesPage();
+        renderTradesList();
+      }
     } else {
       charactersCache = [];
       showLoginSession("Inicia sesion para entrar.");

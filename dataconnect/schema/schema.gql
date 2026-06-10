@@ -59,6 +59,41 @@ type ChallengerProposal @table(name: "challenger_proposal", key: "id") {
   updatedAt: Timestamp! @default(expr: "request.time")
 }
 
+type TradePost @table(name: "trade_post", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  title: String! @col(dataType: "varchar(80)")
+  tradeType: String @col(dataType: "varchar(40)")
+  bossId: String @col(dataType: "varchar(40)")
+  bossIds: String @col(dataType: "varchar(600)")
+  category: String @col(dataType: "varchar(20)")
+  desiredTrades: Int
+  weeklyRuns: Int
+  preferredDay: String @col(dataType: "varchar(32)")
+  preferredTime: String @col(dataType: "varchar(64)")
+  timezone: String @col(dataType: "varchar(48)")
+  itemsOffered: String @col(dataType: "varchar(600)")
+  minCombatPower: Int
+  minSacredPower: Int
+  notes: String @col(dataType: "varchar(800)")
+  status: String @col(dataType: "varchar(20)") @default(expr: "\"open\"")
+  owner: AppUser!
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type TradeApplication @table(name: "trade_application", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  trade: TradePost!
+  applicant: AppUser!
+  characterOwnerId: String! @col(dataType: "varchar(128)")
+  characterRegion: String! @col(dataType: "varchar(12)")
+  characterName: String! @col(dataType: "varchar(32)")
+  message: String @col(dataType: "varchar(500)")
+  status: String @col(dataType: "varchar(20)") @default(expr: "\"pending\"")
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
 type LegacyUser @table(name: "user", key: "id") {
   id: UUID! @default(expr: "uuidV4()")
   createdAt: Timestamp! @col(name: "created_at")

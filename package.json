@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "node --watch scripts/dev-server.js",
     "build:firebase": "node scripts/build-firebase.js",
     "deploy:firebase": "npm run build:firebase && npx firebase-tools deploy --only hosting",
     "deploy:dataconnect": "npx firebase-tools deploy --only dataconnect",
