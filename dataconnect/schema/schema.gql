@@ -4,6 +4,7 @@ type AppUser @table(name: "app_user", key: "id") {
   displayName: String @col(dataType: "varchar(80)")
   email: String @col(dataType: "varchar(160)")
   guild: String @col(dataType: "varchar(20)")
+  role: String @col(dataType: "varchar(20)") @default(expr: "\"usuario\"")
   timezone: String @col(dataType: "varchar(48)")
   createdAt: Timestamp! @default(expr: "request.time")
   updatedAt: Timestamp! @default(expr: "request.time")

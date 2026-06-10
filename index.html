@@ -100,7 +100,10 @@
         <button class="sidebar-char" id="sidebarChar" type="button">
           <div class="sidebar-char-avatar" id="sidebarCharAvatar">?</div>
           <div class="sidebar-char-info">
-            <span class="sidebar-char-name" id="sidebarCharName">Sin personaje</span>
+            <span class="sidebar-char-name-row">
+              <span class="sidebar-char-name" id="sidebarCharName">Sin personaje</span>
+              <span class="role-badge hidden" id="sidebarCharRole"></span>
+            </span>
             <span class="sidebar-char-sub">Crear perfil →</span>
           </div>
         </button>
@@ -154,6 +157,12 @@
             <span class="sidebar-icon">◈</span>
             <span>Estadísticas</span>
             <span class="sidebar-badge soon-badge">v2</span>
+          </a>
+
+          <span class="sidebar-group hidden" id="adminNavGroup">Administración</span>
+          <a class="sidebar-item hidden" href="#" id="adminNav">
+            <span class="sidebar-icon">⚙</span>
+            <span>Admin</span>
           </a>
 
         </nav>
@@ -406,6 +415,34 @@
         <div class="partys-list-view hidden" id="partysListView">
           <div class="partys-grid" id="partysGrid"></div>
         </div>
+      </section>
+
+      <!-- Pagina: admin -->
+      <section class="fragments-page hidden" id="adminPage" aria-label="Admin">
+        <div class="fragments-page-head">
+          <div>
+            <p class="character-kicker">Administración</p>
+            <h2>Miembros</h2>
+          </div>
+        </div>
+
+        <div class="partys-section-nav" id="adminGuildFilterNav">
+          <button type="button" class="partys-section-item active" data-guild-filter="all">Todos los miembros</button>
+          <button type="button" class="partys-section-item" data-guild-filter="imanity">Imanity</button>
+          <button type="button" class="partys-section-item" data-guild-filter="lorien">Lorien</button>
+        </div>
+
+        <table class="admin-users-table">
+          <thead>
+            <tr>
+              <th>Miembro</th>
+              <th>Facción</th>
+              <th>Rol</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="adminUsersBody"></tbody>
+        </table>
       </section>
 
     </div>

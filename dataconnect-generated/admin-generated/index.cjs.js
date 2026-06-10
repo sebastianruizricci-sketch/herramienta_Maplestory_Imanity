@@ -84,3 +84,24 @@ function getCurrentUser(dcOrOptions, options) {
 }
 exports.getCurrentUser = getCurrentUser;
 
+function listAppUsers(dcOrOptions, options) {
+  const { dc: dcInstance, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrOptions, options, undefined);
+  dcInstance.useGen(true);
+  return dcInstance.executeQuery('ListAppUsers', undefined, inputOpts);
+}
+exports.listAppUsers = listAppUsers;
+
+function updateUserRole(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('UpdateUserRole', inputVars, inputOpts);
+}
+exports.updateUserRole = updateUserRole;
+
+function updateUserGuild(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('UpdateUserGuild', inputVars, inputOpts);
+}
+exports.updateUserGuild = updateUserGuild;
+

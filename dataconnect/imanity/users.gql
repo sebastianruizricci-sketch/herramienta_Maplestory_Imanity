@@ -23,8 +23,34 @@ query GetCurrentUser @auth(level: USER) {
     displayName
     email
     guild
+    role
     timezone
     createdAt
     updatedAt
   }
+}
+
+query ListAppUsers @auth(level: USER) {
+  appUsers(orderBy: [{ guild: ASC }, { username: ASC }]) {
+    id
+    username
+    displayName
+    email
+    guild
+    role
+  }
+}
+
+mutation UpdateUserRole($userId: String!, $role: String!) @auth(level: USER) {
+  appUser_update(key: { id: $userId }, data: {
+    role: $role
+    updatedAt_expr: "request.time"
+  })
+}
+
+mutation UpdateUserGuild($userId: String!, $guild: String) @auth(level: USER) {
+  appUser_update(key: { id: $userId }, data: {
+    guild: $guild
+    updatedAt_expr: "request.time"
+  })
 }

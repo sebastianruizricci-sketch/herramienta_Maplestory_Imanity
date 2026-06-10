@@ -52,6 +52,7 @@ export interface GetCurrentUserData {
     displayName?: string | null;
     email?: string | null;
     guild?: string | null;
+    role?: string | null;
     timezone?: string | null;
     createdAt: TimestampString;
     updatedAt: TimestampString;
@@ -83,6 +84,17 @@ export interface ListAllianceRosterData {
       timezone?: string | null;
     };
   } & MapleCharacter_Key)[];
+}
+
+export interface ListAppUsersData {
+  appUsers: ({
+    id: string;
+    username: string;
+    displayName?: string | null;
+    email?: string | null;
+    guild?: string | null;
+    role?: string | null;
+  } & AppUser_Key)[];
 }
 
 export interface ListGuildRosterData {
@@ -159,6 +171,24 @@ export interface RemovePartyMemberData {
 export interface RemovePartyMemberVariables {
   partyId: UUIDString;
   slotIndex: number;
+}
+
+export interface UpdateUserGuildData {
+  appUser_update?: AppUser_Key | null;
+}
+
+export interface UpdateUserGuildVariables {
+  userId: string;
+  guild?: string | null;
+}
+
+export interface UpdateUserRoleData {
+  appUser_update?: AppUser_Key | null;
+}
+
+export interface UpdateUserRoleVariables {
+  userId: string;
+  role: string;
 }
 
 export interface UpsertCurrentUserData {
@@ -254,4 +284,19 @@ export function upsertCurrentUser(vars: UpsertCurrentUserVariables, options?: Op
 export function getCurrentUser(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<GetCurrentUserData>>;
 /** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to pass in custom DataConnect instances. */
 export function getCurrentUser(options?: OperationOptions): Promise<ExecuteOperationResponse<GetCurrentUserData>>;
+
+/** Generated Node Admin SDK operation action function for the 'ListAppUsers' Query. Allow users to execute without passing in DataConnect. */
+export function listAppUsers(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<ListAppUsersData>>;
+/** Generated Node Admin SDK operation action function for the 'ListAppUsers' Query. Allow users to pass in custom DataConnect instances. */
+export function listAppUsers(options?: OperationOptions): Promise<ExecuteOperationResponse<ListAppUsersData>>;
+
+/** Generated Node Admin SDK operation action function for the 'UpdateUserRole' Mutation. Allow users to execute without passing in DataConnect. */
+export function updateUserRole(dc: DataConnect, vars: UpdateUserRoleVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserRoleData>>;
+/** Generated Node Admin SDK operation action function for the 'UpdateUserRole' Mutation. Allow users to pass in custom DataConnect instances. */
+export function updateUserRole(vars: UpdateUserRoleVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserRoleData>>;
+
+/** Generated Node Admin SDK operation action function for the 'UpdateUserGuild' Mutation. Allow users to execute without passing in DataConnect. */
+export function updateUserGuild(dc: DataConnect, vars: UpdateUserGuildVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserGuildData>>;
+/** Generated Node Admin SDK operation action function for the 'UpdateUserGuild' Mutation. Allow users to pass in custom DataConnect instances. */
+export function updateUserGuild(vars: UpdateUserGuildVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserGuildData>>;
 

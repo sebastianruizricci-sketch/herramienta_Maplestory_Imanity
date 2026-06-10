@@ -246,67 +246,73 @@ const PARTY_BOSS_DIFFICULTIES = {
 };
 
 // ── DOM refs ──────────────────────────────────────────────────────────────
-const bgLayer         = document.getElementById("bgLayer");
-const showcase        = document.getElementById("showcase");
-const infoPanel       = document.getElementById("infoPanel");
-const infoRegion      = document.getElementById("infoRegion");
-const infoName        = document.getElementById("infoName");
-const infoTags        = document.getElementById("infoTags");
-const infoStats       = document.getElementById("infoStats");
-const bossSprite      = document.getElementById("bossSprite");
+const bgLayer = document.getElementById("bgLayer");
+const showcase = document.getElementById("showcase");
+const infoPanel = document.getElementById("infoPanel");
+const infoRegion = document.getElementById("infoRegion");
+const infoName = document.getElementById("infoName");
+const infoTags = document.getElementById("infoTags");
+const infoStats = document.getElementById("infoStats");
+const bossSprite = document.getElementById("bossSprite");
 const bossAccessories = document.getElementById("bossAccessories");
-const bossWrap        = document.querySelector(".boss-wrap");
-const selector        = document.getElementById("bossSelector");
-const sidebarChar     = document.getElementById("sidebarChar");
+const bossWrap = document.querySelector(".boss-wrap");
+const selector = document.getElementById("bossSelector");
+const sidebarChar = document.getElementById("sidebarChar");
 const sidebarCharName = document.getElementById("sidebarCharName");
-const sidebarCharSub  = document.querySelector(".sidebar-char-sub");
+const sidebarCharRole = document.getElementById("sidebarCharRole");
+const sidebarCharSub = document.querySelector(".sidebar-char-sub");
 const sidebarCharAvatar = document.getElementById("sidebarCharAvatar");
-const dashboardNav    = document.getElementById("dashboardNav");
-const dashboardPage   = document.getElementById("dashboardPage");
-const characterNav    = document.getElementById("characterNav");
-const bossNav         = document.getElementById("bossNav");
-const fragmentsNav    = document.getElementById("fragmentsNav");
-const chatbotNav      = document.getElementById("chatbotNav");
-const characterPanel  = document.getElementById("characterPanel");
-const fragmentsPage   = document.getElementById("fragmentsPage");
-const chatbotPage     = document.getElementById("chatbotPage");
-const partysNav       = document.getElementById("partysNav");
-const partysPage      = document.getElementById("partysPage");
+const dashboardNav = document.getElementById("dashboardNav");
+const dashboardPage = document.getElementById("dashboardPage");
+const characterNav = document.getElementById("characterNav");
+const bossNav = document.getElementById("bossNav");
+const fragmentsNav = document.getElementById("fragmentsNav");
+const chatbotNav = document.getElementById("chatbotNav");
+const characterPanel = document.getElementById("characterPanel");
+const fragmentsPage = document.getElementById("fragmentsPage");
+const chatbotPage = document.getElementById("chatbotPage");
+const partysNav = document.getElementById("partysNav");
+const partysPage = document.getElementById("partysPage");
+const adminNav = document.getElementById("adminNav");
+const adminNavGroup = document.getElementById("adminNavGroup");
+const adminPage = document.getElementById("adminPage");
+const adminGuildFilterNav = document.getElementById("adminGuildFilterNav");
+const adminUsersBody = document.getElementById("adminUsersBody");
 const partysOwnSectionTab = document.getElementById("partysOwnSectionTab");
 const partysAllianceSectionTab = document.getElementById("partysAllianceSectionTab");
 const partysCreateTab = document.getElementById("partysCreateTab");
-const partysListTab   = document.getElementById("partysListTab");
+const partysListTab = document.getElementById("partysListTab");
 const partysBossSelect = document.getElementById("partysBossSelect");
 const partysCreateBossSelect = document.getElementById("partysCreateBossSelect");
 const partysCreateView = document.getElementById("partysCreateView");
-const partysListView  = document.getElementById("partysListView");
-const partysRoster    = document.getElementById("partysRoster");
-const partySlotsGrid  = document.getElementById("partySlotsGrid");
-const partysSaveBtn   = document.getElementById("partysSaveBtn");
+const partysListView = document.getElementById("partysListView");
+const partysRoster = document.getElementById("partysRoster");
+const partySlotsGrid = document.getElementById("partySlotsGrid");
+const partysSaveBtn = document.getElementById("partysSaveBtn");
 const partysDifficultySelect = document.getElementById("partysDifficultySelect");
 const partysTimezoneSelect = document.getElementById("partysTimezoneSelect");
 populateTimezoneSelect(partysTimezoneSelect);
 const partysRunTimeSelect = document.getElementById("partysRunTimeSelect");
 syncPartyRunTimeOptions();
 const partysDestinationSelect = document.getElementById("partysDestinationSelect");
-const partysStatus    = document.getElementById("partysStatus");
-const partysGrid      = document.getElementById("partysGrid");
+const partysStatus = document.getElementById("partysStatus");
+const partysGrid = document.getElementById("partysGrid");
 const closeCharacterPanel = document.getElementById("closeCharacterPanel");
 const characterSearchForm = document.getElementById("characterSearchForm");
-const characterIgn    = document.getElementById("characterIgn");
+const characterIgn = document.getElementById("characterIgn");
 const characterRegion = document.getElementById("characterRegion");
 const fetchCharacterBtn = document.getElementById("fetchCharacterBtn");
 const characterStatus = document.getElementById("characterStatus");
 const characterPortrait = document.getElementById("characterPortrait");
 const characterPortraitEmpty = document.getElementById("characterPortraitEmpty");
-const characterWorld  = document.getElementById("characterWorld");
-const characterName   = document.getElementById("characterName");
-const characterJob    = document.getElementById("characterJob");
-const characterLevel  = document.getElementById("characterLevel");
-const characterRank   = document.getElementById("characterRank");
+const characterWorld = document.getElementById("characterWorld");
+const characterName = document.getElementById("characterName");
+const characterJob = document.getElementById("characterJob");
+const characterLevel = document.getElementById("characterLevel");
+const characterRank = document.getElementById("characterRank");
 const characterJobRank = document.getElementById("characterJobRank");
 const characterGlobalRank = document.getElementById("characterGlobalRank");
-const characterCount  = document.getElementById("characterCount");
+const characterCount = document.getElementById("characterCount");
 const characterRoster = document.getElementById("characterRoster");
 const fragmentsCharacterAvatar = document.getElementById("fragmentsCharacterAvatar");
 const fragmentsCharacterClass = document.getElementById("fragmentsCharacterClass");
@@ -389,7 +395,13 @@ function setRegisterStatus(message, state = "neutral") {
 }
 
 function normalizeUsername(value) {
-  return String(value || "").trim().toLowerCase();
+  // Trim, lower-case, remove spaces and strip characters that could
+  // break email-based auth (keeps letters, numbers, dot, underscore, hyphen).
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[^a-z0-9._-]/g, "");
 }
 
 function normalizeEmail(value) {
@@ -529,6 +541,9 @@ async function saveRemoteCharacter(character) {
 async function hydrateAuthenticatedData(firebaseUser) {
   try {
     await syncCurrentUserProfile(firebaseUser);
+    await loadCurrentUserProfile();
+    applyRoleVisibility();
+    updateSidebarRoleBadge();
     await loadRemoteCharacters();
   } catch (error) {
     console.error("Data Connect sync error:", error);
@@ -761,6 +776,7 @@ function hideAllPages() {
   fragmentsPage?.classList.add("hidden");
   chatbotPage?.classList.add("hidden");
   partysPage?.classList.add("hidden");
+  adminPage?.classList.add("hidden");
   document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
 }
 
@@ -805,6 +821,13 @@ async function showPartysPage() {
   partysPage?.classList.remove("hidden");
   partysNav?.classList.add("active");
   await initPartysPage();
+}
+
+async function showAdminPage() {
+  hideAllPages();
+  adminPage?.classList.remove("hidden");
+  adminNav?.classList.add("active");
+  await loadAdminUsers();
 }
 
 function setCharacterStatus(message, state = "neutral") {
@@ -1075,15 +1098,21 @@ let partysInitialized = false;
 let partysSection = "own"; // "own" | "alianza"
 let currentUserGuild = null;
 let currentUserTimezone = null;
+let currentUserRole = "usuario";
 
 function partysCurrentCategory() {
   return partysSection === "alianza" ? "alianza" : (currentUserGuild || "imanity");
 }
 
 const GUILD_LABELS = { imanity: "Imanity", lorien: "Lorien" };
+const ROLE_LABELS = { admin: "Admin", lider: "Líder", jr: "Jr", usuario: "Usuario" };
 
 function guildLabel(guild) {
   return GUILD_LABELS[guild] || "Sin gremio";
+}
+
+function normalizeRole(value) {
+  return ROLE_LABELS[value] ? value : "usuario";
 }
 
 async function loadCurrentUserProfile() {
@@ -1091,10 +1120,125 @@ async function loadCurrentUserProfile() {
     const data = await fetchAuthedJson("/api/me");
     currentUserGuild = data.user?.guild || null;
     currentUserTimezone = data.user?.timezone || null;
+    currentUserRole = normalizeRole(data.user?.role);
   } catch (error) {
     setPartysStatus(error.message || "No se pudo cargar tu perfil de gremio.", "error");
   }
 }
+
+function updateSidebarRoleBadge() {
+  if (!sidebarCharRole) return;
+  let label = "";
+  if (currentUserRole === "admin") {
+    label = ROLE_LABELS.admin;
+  } else {
+    label = `${ROLE_LABELS[currentUserRole]} ${guildLabel(currentUserGuild)}`.trim();
+  }
+  sidebarCharRole.textContent = label;
+  sidebarCharRole.classList.toggle("hidden", !label);
+}
+
+function applyRoleVisibility() {
+  const isAdmin = currentUserRole === "admin";
+  adminNav?.classList.toggle("hidden", !isAdmin);
+  adminNavGroup?.classList.toggle("hidden", !isAdmin);
+}
+
+// ── Admin ────────────────────────────────────────────────────────────────
+let adminUsersCache = [];
+let adminGuildFilter = "all";
+
+async function loadAdminUsers() {
+  try {
+    const data = await fetchAuthedJson("/api/admin/users");
+    adminUsersCache = data.users || [];
+    renderAdminUsers();
+  } catch (error) {
+    if (adminUsersBody) {
+      adminUsersBody.innerHTML = `<tr><td colspan="4">${error.message || "No se pudo cargar la lista de miembros."}</td></tr>`;
+    }
+  }
+}
+
+function renderAdminUsers() {
+  if (!adminUsersBody) return;
+
+  const users = adminUsersCache.filter((user) => {
+    if (adminGuildFilter === "all") return true;
+    return user.guild === adminGuildFilter;
+  });
+
+  if (!users.length) {
+    adminUsersBody.innerHTML = `<tr><td colspan="4">Sin miembros para mostrar.</td></tr>`;
+    return;
+  }
+
+  adminUsersBody.innerHTML = users.map((user) => {
+    const roleOptions = Object.entries(ROLE_LABELS).map(([value, label]) => `
+      <option value="${value}" ${user.role === value ? "selected" : ""}>${label}</option>
+    `).join("");
+
+    return `
+      <tr data-user-id="${user.id}">
+        <td>${user.displayName || user.username}</td>
+        <td>${guildLabel(user.guild)}</td>
+        <td><select class="admin-role-select" data-user-id="${user.id}">${roleOptions}</select></td>
+        <td><button type="button" class="admin-remove-btn" data-user-id="${user.id}">Sacar del gremio</button></td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function updateAdminUserRole(userId, role) {
+  try {
+    await fetchAuthedJson("/api/admin/users/role", {
+      method: "POST",
+      body: JSON.stringify({ userId, role }),
+    });
+    const user = adminUsersCache.find((u) => u.id === userId);
+    if (user) user.role = role;
+  } catch (error) {
+    alert(error.message || "No se pudo actualizar el rol.");
+    renderAdminUsers();
+  }
+}
+
+async function removeAdminUserFromGuild(userId) {
+  if (!confirm("Sacar a este miembro de su gremio?")) return;
+  try {
+    await fetchAuthedJson("/api/admin/users/guild", {
+      method: "POST",
+      body: JSON.stringify({ userId }),
+    });
+    const user = adminUsersCache.find((u) => u.id === userId);
+    if (user) user.guild = null;
+    renderAdminUsers();
+  } catch (error) {
+    alert(error.message || "No se pudo sacar al usuario del gremio.");
+  }
+}
+
+adminUsersBody?.addEventListener("change", (event) => {
+  const select = event.target.closest(".admin-role-select");
+  if (!select) return;
+  updateAdminUserRole(select.dataset.userId, select.value);
+});
+
+adminUsersBody?.addEventListener("click", (event) => {
+  const button = event.target.closest(".admin-remove-btn");
+  if (!button) return;
+  removeAdminUserFromGuild(button.dataset.userId);
+});
+
+adminGuildFilterNav?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-guild-filter]");
+  if (!button) return;
+  adminGuildFilter = button.dataset.guildFilter;
+  adminGuildFilterNav.querySelectorAll("[data-guild-filter]").forEach((item) => {
+    item.classList.toggle("active", item === button);
+  });
+  renderAdminUsers();
+});
 
 function setPartysStatus(message, state = "neutral") {
   if (!partysStatus) return;
@@ -1221,14 +1365,14 @@ function renderPartySlots() {
     <div class="party-slot ${slot ? "filled" : "empty"}">
       <span class="party-slot-index">${index + 1}</span>
       ${slot
-        ? `
+      ? `
           <div class="party-slot-member">
             <strong>${slot.name}</strong>
             <span>${slot.jobName || "Sin clase"} · Lv. ${slot.level ?? "-"}</span>
           </div>
           <button type="button" class="party-slot-remove" data-slot-index="${index}" aria-label="Quitar de la party">✕</button>
         `
-        : `<div class="party-slot-placeholder">Vacío — clic en un personaje del roster</div>`}
+      : `<div class="party-slot-placeholder">Vacío — clic en un personaje del roster</div>`}
     </div>
   `).join("");
 }
@@ -1268,8 +1412,8 @@ function renderPartysList() {
       </header>
       <ul class="party-members-list">
         ${(party.members || []).map((member) => {
-          const character = findRosterCharacter(member.characterOwnerId, member.characterRegion, member.characterName);
-          return `
+    const character = findRosterCharacter(member.characterOwnerId, member.characterRegion, member.characterName);
+    return `
             <li>
               <span class="party-member-slot">#${member.slotIndex + 1}</span>
               <strong>${member.characterName}</strong>
@@ -1278,7 +1422,7 @@ function renderPartysList() {
               ${character?.owner?.timezone ? `<span class="party-member-timezone-badge">${character.owner.timezone}</span>` : ""}
             </li>
           `;
-        }).join("") || "<li>Sin miembros aún</li>"}
+  }).join("") || "<li>Sin miembros aún</li>"}
       </ul>
     </article>
   `).join("");
@@ -1748,6 +1892,11 @@ chatbotNav?.addEventListener("click", (event) => {
 partysNav?.addEventListener("click", (event) => {
   event.preventDefault();
   showPartysPage();
+});
+
+adminNav?.addEventListener("click", (event) => {
+  event.preventDefault();
+  showAdminPage();
 });
 
 partysOwnSectionTab?.addEventListener("click", () => {

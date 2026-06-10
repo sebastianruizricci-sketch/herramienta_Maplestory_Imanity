@@ -17,6 +17,9 @@ const {
   deleteBossParty,
   upsertPartyMember,
   removePartyMember,
+  listAppUsers,
+  updateUserRole,
+  updateUserGuild,
 } = require("@dataconnect/admin-generated");
 
 const ROOT = __dirname;
@@ -134,6 +137,8 @@ const classNames = [
 ];
 
 const docCache = new Map();
+// In-memory local storage for characters when running without Data Connect / Firebase Admin.
+const LOCAL_CHARACTERS = new Map();
 
 const send = (res, status, body, headers = {}) => {
   res.writeHead(status, headers);
@@ -484,14 +489,26 @@ function handleChatBotHealth(req, res) {
 
 const VALID_GUILDS = ["imanity", "lorien"];
 const VALID_PARTY_CATEGORIES = ["imanity", "lorien", "alianza"];
+const VALID_ROLES = ["admin", "lider", "jr", "usuario"];
 
 function normalizeUsername(value) {
-  return String(value || "").trim().toLowerCase();
+  // Trim, lower-case, remove spaces and strip characters that are invalid
+  // for an email local-part to avoid Firebase validation errors.
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[^a-z0-9._-]/g, "");
 }
 
 function normalizeGuild(value) {
   const guild = String(value || "").trim().toLowerCase();
   return VALID_GUILDS.includes(guild) ? guild : null;
+}
+
+function normalizeRole(value) {
+  const role = String(value || "").trim().toLowerCase();
+  return VALID_ROLES.includes(role) ? role : "usuario";
 }
 
 function normalizeTimezone(value) {
@@ -552,6 +569,20 @@ function getRegisterErrorMessage(error) {
 async function getAuthClaimsFromRequest(req) {
   const token = req.headers.authorization?.replace(/^bearer\s+/i, "");
   if (!token) return null;
+  // Allow a local bypass for testing when Firebase Admin credentials are not available.
+  // Set LOCAL_AUTH_BYPASS=true in the environment to enable. This will decode the
+  // JWT payload without verification — use only for local development.
+  if (process.env.LOCAL_AUTH_BYPASS === "true") {
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2) return null;
+      const payload = Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+      return JSON.parse(payload);
+    } catch (err) {
+      return null;
+    }
+  }
+
   return getAuth().verifyIdToken(token);
 }
 
@@ -575,6 +606,21 @@ async function requireAuth(req, res) {
     return authClaims;
   } catch {
     sendJson(res, 401, { error: "Unauthorized" });
+    return null;
+  }
+}
+
+async function requireAdmin(authClaims, res) {
+  try {
+    const result = await getCurrentUser(getImpersonationOptions(authClaims));
+    const user = result.data.appUser || null;
+    if (!user || normalizeRole(user.role) !== "admin") {
+      sendJson(res, 403, { error: "Solo un admin puede realizar esta accion." });
+      return null;
+    }
+    return user;
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo verificar el rol del usuario." });
     return null;
   }
 }
@@ -739,6 +785,20 @@ async function handleSaveCharacter(req, res) {
       sendJson(res, 400, { error: "Character name is required." });
       return;
     }
+    // If running locally without Data Connect credentials, store characters in memory.
+    if (process.env.LOCAL_AUTH_BYPASS === "true") {
+      try {
+        const userKey = authClaims?.sub || authClaims?.user_id || authClaims?.localId || authClaims?.email || "local";
+        const list = LOCAL_CHARACTERS.get(userKey) || [];
+        list.push(character);
+        LOCAL_CHARACTERS.set(userKey, list);
+        sendJson(res, 200, { character, characters: list });
+        return;
+      } catch (err) {
+        sendJson(res, 500, { error: "Local character storage failed." });
+        return;
+      }
+    }
 
     await upsertMapleCharacter(character, getImpersonationOptions(authClaims));
     const result = await listMyMapleCharacters(getImpersonationOptions(authClaims));
@@ -757,9 +817,70 @@ async function handleListGuildRoster(req, res, guild) {
     const result = normalizedGuild
       ? await listGuildRoster({ guild: normalizedGuild }, getImpersonationOptions(authClaims))
       : await listAllianceRoster(getImpersonationOptions(authClaims));
-    sendJson(res, 200, { characters: result.data.mapleCharacters || [] });
+    let characters = result.data.mapleCharacters || [];
+
+    const me = await getCurrentUser(getImpersonationOptions(authClaims));
+    const role = normalizeRole(me.data.appUser?.role);
+    if (role === "usuario") {
+      const userId = authClaims.uid || authClaims.sub;
+      characters = characters.filter((character) => character.ownerId === userId);
+    }
+
+    sendJson(res, 200, { characters });
   } catch (error) {
     sendJson(res, 500, { error: error.message || "No se pudo obtener el roster del gremio." });
+  }
+}
+
+async function handleListAppUsers(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+  if (!(await requireAdmin(authClaims, res))) return;
+
+  try {
+    const result = await listAppUsers(getImpersonationOptions(authClaims));
+    sendJson(res, 200, { users: result.data.appUsers || [] });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo obtener la lista de usuarios." });
+  }
+}
+
+async function handleUpdateUserRole(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+  if (!(await requireAdmin(authClaims, res))) return;
+
+  try {
+    const body = await readJsonBody(req);
+    const userId = String(body.userId || "").trim();
+    if (!userId) {
+      sendJson(res, 400, { error: "userId es obligatorio." });
+      return;
+    }
+    const role = normalizeRole(body.role);
+    await updateUserRole({ userId, role }, getImpersonationOptions(authClaims));
+    sendJson(res, 200, { ok: true, userId, role });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo actualizar el rol del usuario." });
+  }
+}
+
+async function handleRemoveUserFromGuild(req, res) {
+  const authClaims = await requireAuth(req, res);
+  if (!authClaims) return;
+  if (!(await requireAdmin(authClaims, res))) return;
+
+  try {
+    const body = await readJsonBody(req);
+    const userId = String(body.userId || "").trim();
+    if (!userId) {
+      sendJson(res, 400, { error: "userId es obligatorio." });
+      return;
+    }
+    await updateUserGuild({ userId, guild: null }, getImpersonationOptions(authClaims));
+    sendJson(res, 200, { ok: true, userId });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || "No se pudo sacar al usuario del gremio." });
   }
 }
 
@@ -910,6 +1031,21 @@ http.createServer((req, res) => {
   if (req.method === "GET" && req.url.startsWith("/api/roster")) {
     const guild = new URL(req.url, `http://${req.headers.host || "localhost"}`).searchParams.get("guild");
     handleListGuildRoster(req, res, guild);
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/api/admin/users") {
+    handleListAppUsers(req, res);
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/admin/users/role") {
+    handleUpdateUserRole(req, res);
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/api/admin/users/guild") {
+    handleRemoveUserFromGuild(req, res);
     return;
   }
 
