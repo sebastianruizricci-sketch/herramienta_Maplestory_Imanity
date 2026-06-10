@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trades - MapleTools</title>
+    <script>
+      window.tailwind = window.tailwind || {};
+      window.tailwind.config = { corePlugins: { preflight: false } };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles/boss-showcase.css" />
+  </head>
+  <body class="auth-locked" data-initial-page="trades">
+    <section class="login-screen" id="loginScreen" aria-label="Entrada de usuario">
+      <div class="login-ambient" aria-hidden="true"></div>
+      <form class="login-panel" id="loginForm" autocomplete="on">
+        <div class="login-brand">
+          <span class="login-brand-title">imanity</span>
+          <span class="login-brand-subtitle">MapleStory Guild</span>
+        </div>
+        <div class="login-fields">
+          <label for="loginUsername">Username</label>
+          <input id="loginUsername" name="username" type="text" autocomplete="username" placeholder="Enter your username" required />
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required />
+        </div>
+        <p class="login-status" id="loginStatus"></p>
+        <div class="login-actions">
+          <button class="login-primary" id="loginSubmit" type="submit">Login</button>
+          <div class="login-secondary-row">
+            <button type="button" id="registerUserBtn">Register</button>
+            <button type="button" id="clearLoginBtn">Quit</button>
+          </div>
+        </div>
+      </form>
+
+      <form class="register-panel hidden" id="registerForm" autocomplete="on" aria-label="Registro de usuario">
+        <div class="register-head">
+          <p>Nuevo miembro</p>
+          <h2>Crear cuenta</h2>
+        </div>
+        <div class="register-fields">
+          <label for="registerUsername">Usuario</label>
+          <input id="registerUsername" name="username" type="text" autocomplete="username" placeholder="jhon-devu" required />
+          <label for="registerEmail">Email opcional</label>
+          <input id="registerEmail" name="email" type="email" autocomplete="email" placeholder="tu@email.com" />
+          <label for="registerPassword">Password</label>
+          <input id="registerPassword" name="password" type="password" autocomplete="new-password" placeholder="Minimo 6 caracteres" required />
+          <label for="registerConfirmPassword">Confirmar password</label>
+          <input id="registerConfirmPassword" name="confirmPassword" type="password" autocomplete="new-password" placeholder="Repite tu password" required />
+          <label for="registerToken">Token de invitacion</label>
+          <input id="registerToken" name="inviteToken" type="password" autocomplete="off" placeholder="Token entregado por Imanity" required />
+          <label>Gremio</label>
+          <div class="register-guild-options" role="radiogroup" aria-label="Selecciona tu gremio">
+            <label class="register-guild-option">
+              <input type="radio" name="guild" value="imanity" required />
+              <span>Imanity</span>
+            </label>
+            <label class="register-guild-option">
+              <input type="radio" name="guild" value="lorien" required />
+              <span>Lorien</span>
+            </label>
+          </div>
+          <label for="registerTimezone">Zona horaria</label>
+          <select id="registerTimezone" name="timezone"></select>
+        </div>
+        <p class="register-status" id="registerStatus"></p>
+        <div class="register-actions">
+          <button class="register-primary" type="submit">Crear cuenta</button>
+          <button type="button" id="backToLoginBtn">Volver al login</button>
+        </div>
+      </form>
+    </section>
+
+    <div class="showcase trades-view" id="showcase">
+      <div class="bg-layer" id="bgLayer"></div>
+      <div class="bg-overlay"></div>
+
+      <aside class="site-sidebar">
+        <div class="sidebar-brand">
+          <span class="sidebar-brand-icon">*</span>
+          <span class="sidebar-brand-text">MapleTools</span>
+        </div>
+
+        <button class="sidebar-char" type="button">
+          <div class="sidebar-char-avatar" id="sidebarCharAvatar">?</div>
+          <div class="sidebar-char-info">
+            <span class="sidebar-char-name-row">
+              <span class="sidebar-char-name" id="sidebarCharName">Sin personaje</span>
+              <span class="role-badge hidden" id="sidebarCharRole"></span>
+            </span>
+            <span class="sidebar-char-sub">Crear perfil -></span>
+          </div>
+        </button>
+
+        <nav class="sidebar-nav">
+          <span class="sidebar-group">Principal</span>
+          <a class="sidebar-item" href="index.html">
+            <span class="sidebar-icon">D</span>
+            <span>Dashboard</span>
+          </a>
+          <a class="sidebar-item" href="index.html">
+            <span class="sidebar-icon">M</span>
+            <span>Mi Personaje</span>
+          </a>
+
+          <span class="sidebar-group">Progreso</span>
+          <a class="sidebar-item" href="index.html">
+            <span class="sidebar-icon">B</span>
+            <span>Bosses</span>
+          </a>
+          <a class="sidebar-item" href="index.html">
+            <span class="sidebar-icon">F</span>
+            <span>Fragmentos</span>
+          </a>
+          <a class="sidebar-item" href="index.html">
+            <span class="sidebar-icon">P</span>
+            <span>Partys</span>
+          </a>
+          <a class="sidebar-item active" href="trades.html" id="tradesNav">
+            <span class="sidebar-icon">T</span>
+            <span>Trades</span>
+          </a>
+          <a class="sidebar-item" href="index.html">
+            <span class="sidebar-icon">C</span>
+            <span>ChatBot</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <button class="sidebar-logout" id="logoutBtn" type="button">Salir</button>
+          <span class="sidebar-version">trades</span>
+        </div>
+      </aside>
+
+      <aside class="info-panel hidden" id="infoPanel">
+        <p class="region" id="infoRegion"></p>
+        <h1 class="boss-name" id="infoName"></h1>
+        <div class="divider"></div>
+        <div class="tags" id="infoTags"></div>
+        <dl class="stats" id="infoStats"></dl>
+        <div class="actions">
+          <a href="#" id="linkDrops">Drops</a>
+          <a href="#" id="linkStrat">Estrategia</a>
+        </div>
+      </aside>
+
+      <div class="boss-stage hidden">
+        <div class="boss-wrap">
+          <img class="boss-accessories" id="bossAccessories" src="" alt="" />
+          <img class="boss-sprite" id="bossSprite" src="" alt="" />
+        </div>
+      </div>
+      <nav class="boss-selector hidden" id="bossSelector" aria-label="Seleccion de boss"></nav>
+
+      <section class="fragments-page trades-page" id="tradesPage" aria-label="Trades">
+        <div class="fragments-page-head">
+          <div>
+            <p class="character-kicker" id="tradesPageKicker">Taberna de trades</p>
+          </div>
+        </div>
+
+        <div class="trades-tavern" id="tradesTavern">
+          <div class="trades-tavern-rail">
+            <img class="trades-scene-img" src="assets/trades-tavern-scene.png" alt="Taberna de trades" />
+            <button type="button" class="trades-scene-hotspot" id="tradesOpenBoardBtn" aria-label="Abrir tablero de trades"></button>
+          </div>
+        </div>
+
+        <div class="trades-board hidden" id="tradesBoard">
+          <div class="trades-board-head">
+            <div>
+              <p class="character-kicker">Cartel ampliado</p>
+              <h3>Trade Board</h3>
+            </div>
+            <span id="tradesPageInfo">Pagina 1 / 1</span>
+          </div>
+
+          <div class="partys-section-nav" id="tradesSectionNav">
+            <button type="button" class="partys-section-item active" id="tradesOwnSectionTab">Trades de mi gremio</button>
+            <button type="button" class="partys-section-item" id="tradesAllianceSectionTab">Alianza</button>
+          </div>
+
+          <div class="partys-toolbar">
+            <div class="partys-subnav">
+              <button type="button" class="partys-subnav-item active" id="tradesListTab">Aplicar a trades</button>
+              <button type="button" class="partys-subnav-item" id="tradesCreateTab">Publicar trade</button>
+            </div>
+            <button type="button" class="trades-back-btn" id="tradesBackToTavernBtn">Volver a la taberna</button>
+          </div>
+
+          <div class="trades-list-view" id="tradesListView">
+            <div class="trades-grid" id="tradesGrid"></div>
+            <div class="trades-pagination" id="tradesPagination">
+              <button type="button" id="tradesPrevPageBtn">Anterior</button>
+              <span id="tradesPaginationLabel">1 / 1</span>
+              <button type="button" id="tradesNextPageBtn">Siguiente</button>
+            </div>
+          </div>
+
+          <form class="trades-form hidden" id="tradesForm">
+            <div class="fragments-config-head">
+              <div>
+                <p class="character-kicker" id="tradesFormKicker">Nuevo cartel</p>
+                <h3 id="tradesFormTitle">Publicar trade</h3>
+              </div>
+              <button type="submit" id="tradesSaveBtn">Guardar trade</button>
+            </div>
+            <input type="hidden" id="tradesEditId" />
+            <div class="trades-form-grid">
+              <label>Titulo
+                <input id="tradesTitleInput" type="text" maxlength="80" placeholder="Trade Ctene semanal" required />
+              </label>
+              <label>Tipo de trade
+                <select id="tradesTypeSelect">
+                  <option value="daily">Daily trade</option>
+                  <option value="chaos-tenebris">Chaos tenebris</option>
+                  <option value="chaos-tenebris-luwill">Chaos tenebris + Luwill</option>
+                  <option value="chaos-tenebris-luwill-slime">Chaos tenebris + Luwill + Slime</option>
+                  <option value="emblem">Emblema trade</option>
+                  <option value="badge">Badge trade</option>
+                  <option value="cookies">Cookies runs</option>
+                </select>
+              </label>
+              <label class="trades-wide">Bosses
+                <div class="trades-boss-choice-grid" id="tradesBossChoices"></div>
+                <select class="hidden" id="tradesBossSelect"></select>
+              </label>
+              <label>Cantidad de trades
+                <input id="tradesWeeklyRunsInput" type="number" min="1" max="5" value="1" />
+              </label>
+              <label>Dia preferido
+                <select id="tradesDaySelect">
+                  <option value="">Flexible</option>
+                  <option>Lunes</option>
+                  <option>Martes</option>
+                  <option>Miercoles</option>
+                  <option>Jueves</option>
+                  <option>Viernes</option>
+                  <option>Sabado</option>
+                  <option>Domingo</option>
+                </select>
+              </label>
+              <label>Zona horaria
+                <select id="tradesTimezoneSelect"></select>
+              </label>
+              <label>Hora preferida
+                <select id="tradesRunTimeSelect"></select>
+              </label>
+              <label>Estado
+                <select id="tradesStatusSelect">
+                  <option value="open">Abierto</option>
+                  <option value="paused">Pausado</option>
+                  <option value="closed">Cerrado</option>
+                </select>
+              </label>
+              <label>Destino
+                <select id="tradesDestinationSelect">
+                  <option value="imanity">Imanity</option>
+                  <option value="lorien">Lorien</option>
+                  <option value="alianza">Alianza</option>
+                </select>
+              </label>
+              <label class="trades-wide">Items que puedes dejar
+                <textarea id="tradesItemsInput" maxlength="600" rows="3" placeholder="Ej: pitched priority libre, Twilight Mark, slime ring..."></textarea>
+              </label>
+              <label class="trades-wide">Detalles y reglas
+                <textarea id="tradesNotesInput" maxlength="800" rows="4" placeholder="Rotacion, requisitos extra, disponibilidad, loot rules..."></textarea>
+              </label>
+            </div>
+            <p class="character-status" id="tradesStatus"></p>
+          </form>
+        </div>
+      </section>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js"></script>
+    <script src="scripts/firebase-config.js"></script>
+    <script src="scripts/runtime-config.js"></script>
+    <script src="scripts/boss-showcase.js"></script>
+  </body>
+</html>

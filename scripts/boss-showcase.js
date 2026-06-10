@@ -522,7 +522,11 @@ function initializeAuthenticatedApp() {
   selectBoss("gloom");
   renderCharacter(null);
   renderRoster([]);
-  showDashboardPage();
+  if (document.body?.dataset.initialPage === "trades") {
+    showTradesPage();
+  } else {
+    showDashboardPage();
+  }
 }
 
 function normalizeRemoteCharacter(character) {
@@ -2955,12 +2959,16 @@ if (auth) {
   auth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL).catch((error) => {
     console.warn("Firebase Auth persistence error:", error);
   });
-  auth.onAuthStateChanged((user) => {
+  auth.onAuthStateChanged(async (user) => {
     if (user) {
       const username = user.displayName || user.email?.split("@")[0] || "usuario";
       showAppSession(username);
       initializeAuthenticatedApp();
-      hydrateAuthenticatedData(user);
+      await hydrateAuthenticatedData(user);
+      if (document.body?.dataset.initialPage === "trades") {
+        await initTradesPage();
+        renderTradesList();
+      }
     } else {
       charactersCache = [];
       showLoginSession("Inicia sesion para entrar.");
