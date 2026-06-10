@@ -1989,6 +1989,19 @@ body.auth-locked .showcase {
   padding: 14px;
 }
 
+.partys-roster-panel {
+  max-height: 78vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.partys-roster-panel .character-roster {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
 .partys-slots-panel .fragments-config-head button {
   min-height: 36px;
   padding: 0 16px;
@@ -2027,8 +2040,8 @@ body.auth-locked .showcase {
 
 .party-slots-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
   margin-bottom: 12px;
 }
 
@@ -2038,10 +2051,10 @@ body.auth-locked .showcase {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   aspect-ratio: 1 / 1;
-  padding: 12px;
-  border-radius: 14px;
+  padding: 8px;
+  border-radius: 12px;
   text-align: center;
   overflow: hidden;
 }
@@ -2059,23 +2072,23 @@ body.auth-locked .showcase {
 
 .party-slot-index {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 5px;
+  left: 5px;
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
-  border-radius: 7px;
+  border-radius: 6px;
   background: rgba(139, 92, 246, .25);
   color: #fff;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 900;
 }
 
 .party-slot-silhouette {
-  width: 52px;
-  height: 52px;
+  width: 32px;
+  height: 32px;
   color: rgba(192, 132, 252, .35);
   filter: drop-shadow(0 0 10px rgba(192, 132, 252, .35));
   animation: party-slot-glow 2.6s ease-in-out infinite;
@@ -2088,19 +2101,19 @@ body.auth-locked .showcase {
 
 .party-slot-placeholder {
   color: rgba(248, 244, 255, .42);
-  font-size: 11px;
+  font-size: 9px;
 }
 
 .party-slot-avatar {
-  width: 64px;
-  height: 64px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
 }
 
 .party-slot-avatar img {
-  max-width: 64px;
-  max-height: 64px;
+  max-width: 40px;
+  max-height: 40px;
   object-fit: contain;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .35));
 }
@@ -2110,35 +2123,35 @@ body.auth-locked .showcase {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
 }
 
 .party-slot-member strong {
   color: #fff;
-  font-size: 13px;
+  font-size: 10px;
   overflow-wrap: anywhere;
 }
 
 .party-slot-member span {
   color: rgba(248, 244, 255, .58);
-  font-size: 10px;
+  font-size: 8px;
 }
 
 .party-slot-remove {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 24px;
-  height: 24px;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border-radius: 7px;
+  border-radius: 6px;
   border: 1px solid rgba(252, 165, 165, .3);
   background: rgba(248, 113, 113, .12);
   color: #fca5a5;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 9px;
 }
 
 .party-slot-remove:hover {
@@ -2146,7 +2159,13 @@ body.auth-locked .showcase {
   background: rgba(248, 113, 113, .22);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
+  .party-slots-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
   .party-slots-grid {
     grid-template-columns: repeat(2, 1fr);
   }
