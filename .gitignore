@@ -5,6 +5,8 @@ screenshots/
 dist/
 .firebase/
 firebase-debug.log
+*firebase-adminsdk*.json
+serviceAccountKey.json
 
 .DS_Store
 Thumbs.db
