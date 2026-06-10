@@ -284,7 +284,6 @@ const adminPage = document.getElementById("adminPage");
 const adminGuildFilterNav = document.getElementById("adminGuildFilterNav");
 const adminUsersBody = document.getElementById("adminUsersBody");
 const adminStatus = document.getElementById("adminStatus");
-const partysPageKicker = document.getElementById("partysPageKicker");
 const partysOwnSectionTab = document.getElementById("partysOwnSectionTab");
 const partysAllianceSectionTab = document.getElementById("partysAllianceSectionTab");
 const partysCreateTab = document.getElementById("partysCreateTab");
@@ -1317,6 +1316,11 @@ function rosterCharacterKey(character) {
   return `${character.ownerId || ""}:${(character.region || "").toLowerCase()}:${(character.name || "").toLowerCase()}`;
 }
 
+function findOwnerUsername(ownerId) {
+  const character = partysGuildRoster.find((c) => c.ownerId === ownerId);
+  return character?.owner?.username || null;
+}
+
 function getPartyBossLabel(bossId) {
   return PARTY_BOSS_OPTIONS.find((boss) => boss.id === bossId)?.name
     || BOSSES.find((boss) => boss.id === bossId)?.name
@@ -1505,6 +1509,9 @@ function renderPartyCard(party, currentUserId) {
           <p class="party-card-subtitle">
             Boss: ${getPartyBossLabel(party.bossId || partysCurrentBossId)}
           </p>
+          <p class="party-card-leader">
+            Líder: ${findOwnerUsername(party.ownerId) || "Desconocido"}
+          </p>
         </div>
         <div class="party-card-header-actions">
           ${party.ownerId === currentUserId ? `<button type="button" class="party-delete" data-party-id="${party.id}">Eliminar</button>` : ""}
@@ -1601,11 +1608,6 @@ function updatePartysSectionLabels() {
     partysOwnSectionTab.textContent = currentUserGuild
       ? `Partys ${guildLabel(currentUserGuild)}`
       : "Partys de mi gremio";
-  }
-  if (partysPageKicker) {
-    partysPageKicker.textContent = currentUserGuild
-      ? `Coordinación de gremio · ${guildLabel(currentUserGuild)}`
-      : "Coordinación de gremio";
   }
 }
 
