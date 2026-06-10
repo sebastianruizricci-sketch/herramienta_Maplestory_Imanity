@@ -585,6 +585,8 @@ function initializeAuthenticatedApp() {
   renderRoster([]);
   if (document.body?.dataset.initialPage === "trades") {
     showTradesPage();
+  } else if (document.body?.dataset.initialPage === "partys") {
+    showPartysPage();
   } else {
     showDashboardPage();
   }

@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Partys - MapleTools</title>
+    <script>
+      window.tailwind = window.tailwind || {};
+      window.tailwind.config = { corePlugins: { preflight: false } };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles/boss-showcase.css" />
+  </head>
+  <body class="auth-locked" data-initial-page="partys">
+
+    <section class="login-screen" id="loginScreen" aria-label="Entrada de usuario">
+      <div class="login-ambient" aria-hidden="true"></div>
+      <form class="login-panel" id="loginForm" autocomplete="on">
+        <div class="login-brand">
+          <span class="login-brand-title">imanity</span>
+          <span class="login-brand-subtitle">MapleStory Guild</span>
+        </div>
+
+        <div class="login-fields">
+          <label for="loginUsername">Username</label>
+          <input id="loginUsername" name="username" type="text" autocomplete="username" placeholder="Enter your username" required />
+
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required />
+        </div>
+
+        <p class="login-status" id="loginStatus"></p>
+
+        <div class="login-actions">
+          <button class="login-primary" id="loginSubmit" type="submit">Login</button>
+          <div class="login-secondary-row">
+            <button type="button" id="registerUserBtn">Register</button>
+            <button type="button" id="clearLoginBtn">Quit</button>
+          </div>
+        </div>
+      </form>
+
+      <form class="register-panel hidden" id="registerForm" autocomplete="on" aria-label="Registro de usuario">
+        <div class="register-head">
+          <p>Nuevo miembro</p>
+          <h2>Crear cuenta</h2>
+        </div>
+
+        <div class="register-fields">
+          <label for="registerUsername">Usuario</label>
+          <input id="registerUsername" name="username" type="text" autocomplete="username" placeholder="jhon-devu" required />
+
+          <label for="registerEmail">Email opcional</label>
+          <input id="registerEmail" name="email" type="email" autocomplete="email" placeholder="tu@email.com" />
+
+          <label for="registerPassword">Password</label>
+          <input id="registerPassword" name="password" type="password" autocomplete="new-password" placeholder="Minimo 6 caracteres" required />
+
+          <label for="registerConfirmPassword">Confirmar password</label>
+          <input id="registerConfirmPassword" name="confirmPassword" type="password" autocomplete="new-password" placeholder="Repite tu password" required />
+
+          <label for="registerToken">Token de invitacion</label>
+          <input id="registerToken" name="inviteToken" type="password" autocomplete="off" placeholder="Token entregado por Imanity" required />
+
+          <label>Gremio</label>
+          <div class="register-guild-options" role="radiogroup" aria-label="Selecciona tu gremio">
+            <label class="register-guild-option">
+              <input type="radio" name="guild" value="imanity" required />
+              <span>Imanity</span>
+            </label>
+            <label class="register-guild-option">
+              <input type="radio" name="guild" value="lorien" required />
+              <span>Lorien</span>
+            </label>
+          </div>
+
+          <label for="registerTimezone">Zona horaria</label>
+          <select id="registerTimezone" name="timezone"></select>
+        </div>
+
+        <p class="register-status" id="registerStatus"></p>
+
+        <div class="register-actions">
+          <button class="register-primary" type="submit">Crear cuenta</button>
+          <button type="button" id="backToLoginBtn">Volver al login</button>
+        </div>
+      </form>
+    </section>
+
+    <div class="showcase partys-view" id="showcase">
+
+      <!-- Fondo dinámico -->
+      <div class="bg-layer" id="bgLayer"></div>
+      <div class="bg-overlay"></div>
+
+      <!-- Sidebar izquierda -->
+      <aside class="site-sidebar">
+
+        <div class="sidebar-brand">
+          <span class="sidebar-brand-icon">✦</span>
+          <span class="sidebar-brand-text">MapleTools</span>
+        </div>
+
+        <!-- Mini-card personaje activo -->
+        <button class="sidebar-char" id="sidebarChar" type="button">
+          <div class="sidebar-char-avatar" id="sidebarCharAvatar">?</div>
+          <div class="sidebar-char-info">
+            <span class="sidebar-char-name-row">
+              <span class="sidebar-char-name" id="sidebarCharName">Sin personaje</span>
+              <span class="role-badge hidden" id="sidebarCharRole"></span>
+            </span>
+            <span class="sidebar-char-sub">Crear perfil →</span>
+          </div>
+        </button>
+
+        <nav class="sidebar-nav">
+
+          <span class="sidebar-group">Principal</span>
+          <a class="sidebar-item" href="index.html">
+            <span class="sidebar-icon">⬡</span>
+            <span>Dashboard</span>
+          </a>
+          <a class="sidebar-item" href="index.html">
+            <span class="sidebar-icon">◈</span>
+            <span>Mi Personaje</span>
+          </a>
+
+          <span class="sidebar-group">Progreso</span>
+          <a class="sidebar-item" href="index.html">
+            <span class="sidebar-icon">⚔</span>
+            <span>Bosses</span>
+          </a>
+          <a class="sidebar-item" href="#">
+            <span class="sidebar-icon">◎</span>
+            <span>Mesos</span>
+          </a>
+          <a class="sidebar-item" href="index.html">
+            <span class="sidebar-icon">◇</span>
+            <span>Fragmentos</span>
+          </a>
+          <a class="sidebar-item active" href="partys.html" id="partysNav">
+            <span class="sidebar-icon">♕</span>
+            <span>Partys</span>
+          </a>
+          <a class="sidebar-item" href="index.html">
+            <span class="sidebar-icon">📜</span>
+            <span>Challenger World</span>
+          </a>
+          <a class="sidebar-item" href="trades.html">
+            <span class="sidebar-icon">T</span>
+            <span>Trades</span>
+          </a>
+          <a class="sidebar-item" href="index.html">
+            <span class="sidebar-icon">💬</span>
+            <span>ChatBot</span>
+          </a>
+          <a class="sidebar-item" href="#">
+            <span class="sidebar-icon">↗</span>
+            <span>Exportar</span>
+            <span class="sidebar-badge">Excel</span>
+          </a>
+
+          <span class="sidebar-group">Próximamente</span>
+          <a class="sidebar-item soon" href="#">
+            <span class="sidebar-icon">⊞</span>
+            <span>Farmeo</span>
+            <span class="sidebar-badge soon-badge">v2</span>
+          </a>
+          <a class="sidebar-item soon" href="#">
+            <span class="sidebar-icon">◈</span>
+            <span>Estadísticas</span>
+            <span class="sidebar-badge soon-badge">v2</span>
+          </a>
+
+          <span class="sidebar-group hidden" id="adminNavGroup">Administración</span>
+          <a class="sidebar-item hidden" href="index.html" id="adminNav">
+            <span class="sidebar-icon">⚙</span>
+            <span>Admin</span>
+          </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+          <button class="sidebar-logout" id="logoutBtn" type="button">Salir</button>
+          <span class="sidebar-version">partys</span>
+        </div>
+
+      </aside>
+
+      <!-- Info del boss -->
+      <aside class="info-panel hidden" id="infoPanel">
+        <p class="region" id="infoRegion"></p>
+        <h1 class="boss-name" id="infoName"></h1>
+        <div class="divider"></div>
+        <div class="tags" id="infoTags"></div>
+        <dl class="stats" id="infoStats"></dl>
+        <div class="actions">
+          <a href="#" id="linkDrops">Ver drops ↗</a>
+          <a href="#" id="linkStrat">Estrategia ↗</a>
+        </div>
+      </aside>
+
+      <!-- Centro: boss flotando -->
+      <div class="boss-stage hidden">
+        <div class="boss-wrap">
+          <img class="boss-accessories" id="bossAccessories" src="" alt="" />
+          <img class="boss-sprite" id="bossSprite" src="" alt="" />
+        </div>
+      </div>
+
+      <!-- Derecha: selector de bosses -->
+      <nav class="boss-selector hidden" id="bossSelector" aria-label="Selección de boss"></nav>
+
+      <!-- Pagina: partys -->
+      <section class="fragments-page" id="partysPage" aria-label="Partys">
+        <div class="fragments-page-head">
+          <div>
+            <h2>Partys</h2>
+          </div>
+        </div>
+
+        <div class="partys-section-nav" id="partysSectionNav">
+          <button type="button" class="partys-section-item active" id="partysOwnSectionTab" data-section="imanity">Imanity</button>
+          <button type="button" class="partys-section-item" id="partysAllianceSectionTab" data-section="alianza">Alianza</button>
+        </div>
+
+        <div class="partys-toolbar">
+          <div class="partys-subnav">
+            <button type="button" class="partys-subnav-item active" id="partysCreateTab">Crear party</button>
+            <button type="button" class="partys-subnav-item" id="partysListTab">Partys formadas</button>
+          </div>
+          <div class="partys-boss-select-row hidden" id="partysBossSelectRow">
+            <div class="partys-view-mode" id="partysViewMode">
+              <button type="button" id="partysViewModeToggle" aria-haspopup="true" aria-expanded="false" aria-label="Filtrar partys por jugador" title="Filtrar por jugador">&#9881;</button>
+              <div class="partys-view-mode-panel hidden" id="partysViewModePanel">
+                <div class="partys-view-mode-player" id="partysViewModePlayerRow">
+                  <label for="partysViewModePlayerSelect">Filtrar por jugador</label>
+                  <select id="partysViewModePlayerSelect" aria-label="Filtrar por jugador"></select>
+                </div>
+              </div>
+            </div>
+            <div class="partys-boss-filter" id="partysBossFilter">
+              <button type="button" id="partysBossFilterToggle" aria-haspopup="true" aria-expanded="false">Filtrar bosses</button>
+              <div class="partys-boss-filter-panel hidden" id="partysBossFilterPanel">
+                <div class="partys-boss-filter-actions">
+                  <button type="button" id="partysBossFilterAll">Seleccionar todos</button>
+                  <button type="button" id="partysBossFilterNone">Ninguno</button>
+                </div>
+                <div class="partys-boss-filter-list" id="partysBossFilterList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="partys-create-view" id="partysCreateView">
+          <div class="partys-create-layout">
+            <aside class="roster-section partys-roster-panel">
+              <div class="fragments-config-head">
+                <div>
+                  <p class="character-kicker">Roster del gremio</p>
+                  <h3>Personajes disponibles</h3>
+                </div>
+              </div>
+              <div class="character-roster" id="partysRoster"></div>
+            </aside>
+            <section class="partys-slots-panel">
+              <div class="fragments-config-head">
+                <div>
+                  <p class="character-kicker">Party</p>
+                  <h3>Slots (1-6)</h3>
+                </div>
+                <button type="button" id="partysSaveBtn">Guardar party</button>
+              </div>
+              <div class="partys-timezone-row">
+                <label for="partysCreateBossSelect">Boss de la run</label>
+                <select id="partysCreateBossSelect" aria-label="Boss de la run"></select>
+              </div>
+              <div class="partys-timezone-row">
+                <label for="partysDifficultySelect">Dificultad</label>
+                <select id="partysDifficultySelect" aria-label="Dificultad de la run"></select>
+              </div>
+              <div class="partys-timezone-row">
+                <label for="partysTimezoneSelect">Zona horaria del party</label>
+                <select id="partysTimezoneSelect" aria-label="Zona horaria del party"></select>
+              </div>
+              <div class="partys-timezone-row">
+                <label for="partysRunTimeSelect">Hora de la run</label>
+                <select id="partysRunTimeSelect" aria-label="Hora de la run"></select>
+              </div>
+              <div class="partys-timezone-row">
+                <label for="partysDestinationSelect">Destino de la run</label>
+                <select id="partysDestinationSelect" aria-label="Destino de la run">
+                  <option value="imanity">Imanity</option>
+                  <option value="lorien">Lorien</option>
+                  <option value="alianza">Alianza</option>
+                </select>
+              </div>
+              <div class="party-slots-grid" id="partySlotsGrid"></div>
+              <p class="character-status" id="partysStatus"></p>
+            </section>
+          </div>
+        </div>
+
+        <div class="partys-list-view hidden" id="partysListView">
+          <div class="partys-grid" id="partysGrid"></div>
+        </div>
+      </section>
+
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js"></script>
+    <script src="scripts/firebase-config.js"></script>
+    <script src="scripts/runtime-config.js"></script>
+    <script src="scripts/boss-showcase.js"></script>
+  </body>
+</html>
