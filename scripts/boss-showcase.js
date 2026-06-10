@@ -284,12 +284,11 @@ const adminPage = document.getElementById("adminPage");
 const adminGuildFilterNav = document.getElementById("adminGuildFilterNav");
 const adminUsersBody = document.getElementById("adminUsersBody");
 const adminStatus = document.getElementById("adminStatus");
-const partysPageKicker = document.getElementById("partysPageKicker");
 const partysOwnSectionTab = document.getElementById("partysOwnSectionTab");
 const partysAllianceSectionTab = document.getElementById("partysAllianceSectionTab");
 const partysCreateTab = document.getElementById("partysCreateTab");
 const partysListTab = document.getElementById("partysListTab");
-const partysBossSelect = document.getElementById("partysBossSelect");
+const partysBossSelectRow = document.getElementById("partysBossSelectRow");
 const partysBossFilter = document.getElementById("partysBossFilter");
 const partysBossFilterToggle = document.getElementById("partysBossFilterToggle");
 const partysBossFilterPanel = document.getElementById("partysBossFilterPanel");
@@ -1107,7 +1106,6 @@ function renderRoster(characters = loadCharacters(), activeCharacterId = getActi
 const PARTY_SLOT_COUNT = 6;
 let partysGuildRoster = [];
 let partysCurrentBossId = null;
-let partysListBossFilter = "all";
 let partysVisibleBossIds = new Set(PARTY_BOSS_OPTIONS.map((boss) => boss.id));
 let partysCurrentParties = [];
 let partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
@@ -1317,6 +1315,11 @@ function rosterCharacterKey(character) {
   return `${character.ownerId || ""}:${(character.region || "").toLowerCase()}:${(character.name || "").toLowerCase()}`;
 }
 
+function findOwnerUsername(ownerId) {
+  const character = partysGuildRoster.find((c) => c.ownerId === ownerId);
+  return character?.owner?.username || null;
+}
+
 function getPartyBossLabel(bossId) {
   return PARTY_BOSS_OPTIONS.find((boss) => boss.id === bossId)?.name
     || BOSSES.find((boss) => boss.id === bossId)?.name
@@ -1340,9 +1343,6 @@ function populatePartysDifficultySelect(preferredValue = partysDifficultySelect?
 
 function populatePartysBossSelect() {
   const optionsMarkup = PARTY_BOSS_OPTIONS.map((boss) => `<option value="${boss.id}">${boss.name}</option>`).join("");
-  if (partysBossSelect && !partysBossSelect.options.length) {
-    partysBossSelect.innerHTML = `<option value="all">Todos los bosses</option>${optionsMarkup}`;
-  }
   if (partysCreateBossSelect && !partysCreateBossSelect.options.length) {
     partysCreateBossSelect.innerHTML = optionsMarkup;
   }
@@ -1356,20 +1356,9 @@ function populatePartysBossSelect() {
   }
 }
 
-function updatePartysBossFilterVisibility() {
-  if (!partysBossFilter) return;
-  partysBossFilter.classList.toggle("hidden", partysListBossFilter !== "all");
-  if (partysListBossFilter !== "all") {
-    partysBossFilterPanel?.classList.add("hidden");
-    partysBossFilterToggle?.setAttribute("aria-expanded", "false");
-  }
-}
-
 function syncPartysBossSelects() {
-  if (partysBossSelect) partysBossSelect.value = partysListBossFilter || "all";
   if (partysCreateBossSelect) partysCreateBossSelect.value = partysCurrentBossId || "";
   populatePartysDifficultySelect();
-  updatePartysBossFilterVisibility();
 }
 
 function findRosterCharacter(ownerId, region, name) {
@@ -1400,9 +1389,6 @@ async function loadPartiesList() {
   }
   try {
     const params = new URLSearchParams({ category });
-    if (partysListBossFilter && partysListBossFilter !== "all") {
-      params.set("bossId", partysListBossFilter);
-    }
     const data = await fetchAuthedJson(`/api/parties?${params.toString()}`);
     partysCurrentParties = data.parties || [];
   } catch (error) {
@@ -1505,6 +1491,9 @@ function renderPartyCard(party, currentUserId) {
           <p class="party-card-subtitle">
             Boss: ${getPartyBossLabel(party.bossId || partysCurrentBossId)}
           </p>
+          <p class="party-card-leader">
+            Líder: ${findOwnerUsername(party.ownerId) || "Desconocido"}
+          </p>
         </div>
         <div class="party-card-header-actions">
           ${party.ownerId === currentUserId ? `<button type="button" class="party-delete" data-party-id="${party.id}">Eliminar</button>` : ""}
@@ -1562,9 +1551,7 @@ function renderPartysList() {
     partiesByBoss.get(bossId).push(party);
   });
 
-  const bossesToRender = partysListBossFilter && partysListBossFilter !== "all"
-    ? PARTY_BOSS_OPTIONS.filter((boss) => boss.id === partysListBossFilter)
-    : PARTY_BOSS_OPTIONS.filter((boss) => partysVisibleBossIds.has(boss.id));
+  const bossesToRender = PARTY_BOSS_OPTIONS.filter((boss) => partysVisibleBossIds.has(boss.id));
 
   if (!bossesToRender.length) {
     partysGrid.innerHTML = `
@@ -1601,11 +1588,6 @@ function updatePartysSectionLabels() {
     partysOwnSectionTab.textContent = currentUserGuild
       ? `Partys ${guildLabel(currentUserGuild)}`
       : "Partys de mi gremio";
-  }
-  if (partysPageKicker) {
-    partysPageKicker.textContent = currentUserGuild
-      ? `Coordinación de gremio · ${guildLabel(currentUserGuild)}`
-      : "Coordinación de gremio";
   }
 }
 
@@ -1650,18 +1632,6 @@ async function changeCreatePartyBoss(bossId) {
   renderPartySlots();
   renderPartysRoster();
 }
-
-async function changePartysListFilter(bossId) {
-  partysListBossFilter = bossId || "all";
-  if (partysBossSelect) partysBossSelect.value = partysListBossFilter;
-  updatePartysBossFilterVisibility();
-  await loadPartiesList();
-  renderPartysList();
-}
-
-partysBossSelect?.addEventListener("change", () => {
-  changePartysListFilter(partysBossSelect.value);
-});
 
 partysBossFilterToggle?.addEventListener("click", () => {
   const expanded = partysBossFilterPanel?.classList.toggle("hidden") === false;
@@ -1733,6 +1703,7 @@ partysCreateTab?.addEventListener("click", () => {
   partysListTab?.classList.remove("active");
   partysCreateView?.classList.remove("hidden");
   partysListView?.classList.add("hidden");
+  partysBossSelectRow?.classList.add("hidden");
 });
 
 partysListTab?.addEventListener("click", () => {
@@ -1740,6 +1711,7 @@ partysListTab?.addEventListener("click", () => {
   partysCreateTab?.classList.remove("active");
   partysListView?.classList.remove("hidden");
   partysCreateView?.classList.add("hidden");
+  partysBossSelectRow?.classList.remove("hidden");
 });
 
 partysRoster?.addEventListener("click", (event) => {
