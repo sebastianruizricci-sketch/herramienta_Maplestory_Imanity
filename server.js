@@ -865,7 +865,7 @@ async function handleUpdateUserRole(req, res) {
   }
 }
 
-async function handleRemoveUserFromGuild(req, res) {
+async function handleUpdateUserGuild(req, res) {
   const authClaims = await requireAuth(req, res);
   if (!authClaims) return;
   if (!(await requireAdmin(authClaims, res))) return;
@@ -877,10 +877,17 @@ async function handleRemoveUserFromGuild(req, res) {
       sendJson(res, 400, { error: "userId es obligatorio." });
       return;
     }
-    await updateUserGuild({ userId, guild: null }, getImpersonationOptions(authClaims));
-    sendJson(res, 200, { ok: true, userId });
+    const guild = body.guild === null || body.guild === undefined || body.guild === ""
+      ? null
+      : normalizeGuild(body.guild);
+    if (body.guild && !guild) {
+      sendJson(res, 400, { error: "Gremio invalido." });
+      return;
+    }
+    await updateUserGuild({ userId, guild }, getImpersonationOptions(authClaims));
+    sendJson(res, 200, { ok: true, userId, guild });
   } catch (error) {
-    sendJson(res, 500, { error: error.message || "No se pudo sacar al usuario del gremio." });
+    sendJson(res, 500, { error: error.message || "No se pudo actualizar el gremio del usuario." });
   }
 }
 
@@ -916,11 +923,20 @@ async function handleCreateParty(req, res) {
       return;
     }
 
+    const me = await getCurrentUser(getImpersonationOptions(authClaims));
+    const role = normalizeRole(me.data.appUser?.role);
+    const userGuild = me.data.appUser?.guild || null;
+    let category = normalizePartyCategory(body.category, userGuild);
+    if (role !== "admin" && category !== "alianza" && category !== userGuild) {
+      sendJson(res, 403, { error: "Solo podes crear partys para tu propio gremio o para Alianza." });
+      return;
+    }
+
     const result = await createBossParty(
       {
         bossId,
         label: body.label || null,
-        category: normalizePartyCategory(body.category),
+        category,
         difficulty: normalizeDifficulty(body.difficulty),
         timezone: normalizeTimezone(body.timezone),
         runTime: normalizeRunTime(body.runTime),
@@ -1045,7 +1061,7 @@ http.createServer((req, res) => {
   }
 
   if (req.method === "POST" && req.url === "/api/admin/users/guild") {
-    handleRemoveUserFromGuild(req, res);
+    handleUpdateUserGuild(req, res);
     return;
   }
 
