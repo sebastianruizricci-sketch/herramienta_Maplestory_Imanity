@@ -2114,8 +2114,8 @@ body.auth-locked .showcase {
 }
 
 .party-slot-avatar img {
-  width: 100%;
-  height: 100%;
+  width: 75%;
+  height: 75%;
   object-fit: contain;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .35));
 }
@@ -2137,13 +2137,13 @@ body.auth-locked .showcase {
 
 .party-slot-member strong {
   color: #fff;
-  font-size: 10px;
+  font-size: 11px;
   overflow-wrap: anywhere;
 }
 
 .party-slot-member span {
   color: rgba(248, 244, 255, .58);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .party-slot-remove {
