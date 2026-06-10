@@ -1096,6 +1096,7 @@ function renderRoster(characters = loadCharacters(), activeCharacterId = getActi
 const PARTY_SLOT_COUNT = 6;
 let partysGuildRoster = [];
 let partysCurrentBossId = null;
+let partysListBossFilter = "all";
 let partysCurrentParties = [];
 let partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
 let partysInitialized = false;
@@ -1327,15 +1328,17 @@ function populatePartysDifficultySelect(preferredValue = partysDifficultySelect?
 
 function populatePartysBossSelect() {
   const optionsMarkup = PARTY_BOSS_OPTIONS.map((boss) => `<option value="${boss.id}">${boss.name}</option>`).join("");
-  [partysBossSelect, partysCreateBossSelect].forEach((select) => {
-    if (!select || select.options.length) return;
-    select.innerHTML = optionsMarkup;
-  });
+  if (partysBossSelect && !partysBossSelect.options.length) {
+    partysBossSelect.innerHTML = `<option value="all">Todos los bosses</option>${optionsMarkup}`;
+  }
+  if (partysCreateBossSelect && !partysCreateBossSelect.options.length) {
+    partysCreateBossSelect.innerHTML = optionsMarkup;
+  }
 }
 
-function syncPartysBossSelects(value = partysCurrentBossId) {
-  if (partysBossSelect) partysBossSelect.value = value || "";
-  if (partysCreateBossSelect) partysCreateBossSelect.value = value || "";
+function syncPartysBossSelects() {
+  if (partysBossSelect) partysBossSelect.value = partysListBossFilter || "all";
+  if (partysCreateBossSelect) partysCreateBossSelect.value = partysCurrentBossId || "";
   populatePartysDifficultySelect();
 }
 
@@ -1359,15 +1362,17 @@ async function loadGuildRoster() {
   }
 }
 
-async function loadPartiesForCurrentBoss() {
-  if (!partysCurrentBossId) return;
+async function loadPartiesList() {
   const category = partysCurrentCategory();
   if (!category) {
     partysCurrentParties = [];
     return;
   }
   try {
-    const params = new URLSearchParams({ bossId: partysCurrentBossId, category });
+    const params = new URLSearchParams({ category });
+    if (partysListBossFilter && partysListBossFilter !== "all") {
+      params.set("bossId", partysListBossFilter);
+    }
     const data = await fetchAuthedJson(`/api/parties?${params.toString()}`);
     partysCurrentParties = data.parties || [];
   } catch (error) {
@@ -1427,6 +1432,13 @@ function renderPartysRoster() {
   }).join("");
 }
 
+const PARTY_SLOT_SILHOUETTE = `
+  <svg class="party-slot-silhouette" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <circle cx="12" cy="7.5" r="4.5" />
+    <path d="M3.5 21c0-4.7 3.8-8.5 8.5-8.5s8.5 3.8 8.5 8.5v.5h-17v-.5z" />
+  </svg>
+`;
+
 function renderPartySlots() {
   if (!partySlotsGrid) return;
 
@@ -1435,13 +1447,21 @@ function renderPartySlots() {
       <span class="party-slot-index">${index + 1}</span>
       ${slot
       ? `
+          <button type="button" class="party-slot-remove" data-slot-index="${index}" aria-label="Quitar de la party">✕</button>
+          <div class="party-slot-avatar">
+            ${slot.characterImgURL
+        ? `<img src="${slot.characterImgURL}" alt="${slot.name}" />`
+        : PARTY_SLOT_SILHOUETTE}
+          </div>
           <div class="party-slot-member">
             <strong>${slot.name}</strong>
             <span>${slot.jobName || "Sin clase"} · Lv. ${slot.level ?? "-"}</span>
           </div>
-          <button type="button" class="party-slot-remove" data-slot-index="${index}" aria-label="Quitar de la party">✕</button>
         `
-      : `<div class="party-slot-placeholder">Vacío — clic en un personaje del roster</div>`}
+      : `
+          ${PARTY_SLOT_SILHOUETTE}
+          <div class="party-slot-placeholder">Vacío</div>
+        `}
     </div>
   `).join("");
 }
@@ -1523,15 +1543,15 @@ function updatePartysSectionLabels() {
 async function initPartysPage() {
   populatePartysBossSelect();
   if (!partysCurrentBossId) {
-    partysCurrentBossId = partysBossSelect?.value || PARTY_BOSS_OPTIONS[0]?.id || null;
+    partysCurrentBossId = PARTY_BOSS_OPTIONS[0]?.id || null;
   }
-  syncPartysBossSelects(partysCurrentBossId);
+  syncPartysBossSelects();
 
   if (partysInitialized) {
     await loadCurrentUserProfile();
     updatePartysSectionLabels();
     await loadGuildRoster();
-    await loadPartiesForCurrentBoss();
+    await loadPartiesList();
     renderPartysRoster();
     renderPartySlots();
     renderPartysList();
@@ -1546,29 +1566,35 @@ async function initPartysPage() {
   syncPartyRunTimeOptions();
   updatePartysSectionLabels();
   await loadGuildRoster();
-  await loadPartiesForCurrentBoss();
+  await loadPartiesList();
   renderPartysRoster();
   renderPartySlots();
   renderPartysList();
 }
 
-async function changePartysBoss(bossId) {
+async function changeCreatePartyBoss(bossId) {
   partysCurrentBossId = bossId;
-  syncPartysBossSelects(partysCurrentBossId);
+  if (partysCreateBossSelect) partysCreateBossSelect.value = bossId || "";
+  populatePartysDifficultySelect();
   partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
   setPartysStatus("");
   renderPartySlots();
   renderPartysRoster();
-  await loadPartiesForCurrentBoss();
+}
+
+async function changePartysListFilter(bossId) {
+  partysListBossFilter = bossId || "all";
+  if (partysBossSelect) partysBossSelect.value = partysListBossFilter;
+  await loadPartiesList();
   renderPartysList();
 }
 
 partysBossSelect?.addEventListener("change", () => {
-  changePartysBoss(partysBossSelect.value);
+  changePartysListFilter(partysBossSelect.value);
 });
 
 partysCreateBossSelect?.addEventListener("change", () => {
-  changePartysBoss(partysCreateBossSelect.value);
+  changeCreatePartyBoss(partysCreateBossSelect.value);
 });
 
 async function switchPartysSection(section) {
@@ -1579,7 +1605,7 @@ async function switchPartysSection(section) {
   setPartysStatus("");
   renderPartySlots();
   await loadGuildRoster();
-  await loadPartiesForCurrentBoss();
+  await loadPartiesList();
   renderPartysRoster();
   renderPartysList();
 }
@@ -1695,7 +1721,7 @@ partysSaveBtn?.addEventListener("click", async () => {
     } else {
       partysOwnSectionTab?.click();
     }
-    await loadPartiesForCurrentBoss();
+    await loadPartiesList();
     renderPartysList();
   } catch (error) {
     setPartysStatus(error.message || "No se pudo guardar la party.", "error");
@@ -1711,7 +1737,7 @@ partysGrid?.addEventListener("click", async (event) => {
 
   try {
     await fetchAuthedJson(`/api/parties/${deleteBtn.dataset.partyId}`, { method: "DELETE" });
-    await loadPartiesForCurrentBoss();
+    await loadPartiesList();
     renderPartysList();
   } catch (error) {
     setPartysStatus(error.message || "No se pudo eliminar la party.", "error");

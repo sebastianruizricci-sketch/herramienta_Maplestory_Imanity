@@ -13,6 +13,7 @@ const {
   listGuildRoster,
   listAllianceRoster,
   listPartiesByBoss,
+  listPartiesByCategory,
   createBossParty,
   deleteBossParty,
   upsertPartyMember,
@@ -895,16 +896,16 @@ async function handleListParties(req, res, bossId, category) {
   const authClaims = await requireAuth(req, res);
   if (!authClaims) return;
 
-  if (!bossId) {
-    sendJson(res, 400, { error: "bossId es requerido." });
-    return;
-  }
-
   try {
-    const result = await listPartiesByBoss(
-      { bossId, category: normalizePartyCategory(category) },
-      getImpersonationOptions(authClaims)
-    );
+    const result = bossId && bossId !== "all"
+      ? await listPartiesByBoss(
+        { bossId, category: normalizePartyCategory(category) },
+        getImpersonationOptions(authClaims)
+      )
+      : await listPartiesByCategory(
+        { category: normalizePartyCategory(category) },
+        getImpersonationOptions(authClaims)
+      );
     sendJson(res, 200, { parties: result.data.bossParties || [] });
   } catch (error) {
     sendJson(res, 500, { error: error.message || "No se pudieron obtener las partys." });

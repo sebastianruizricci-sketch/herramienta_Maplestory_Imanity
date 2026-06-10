@@ -157,6 +157,30 @@ export interface ListPartiesByBossVariables {
   category?: string | null;
 }
 
+export interface ListPartiesByCategoryData {
+  bossParties: ({
+    id: UUIDString;
+    bossId: string;
+    label?: string | null;
+    category?: string | null;
+    difficulty?: string | null;
+    timezone?: string | null;
+    runTime?: string | null;
+    ownerId: string;
+    createdAt: TimestampString;
+    members: ({
+      slotIndex: number;
+      characterOwnerId: string;
+      characterRegion: string;
+      characterName: string;
+    })[];
+  } & BossParty_Key)[];
+}
+
+export interface ListPartiesByCategoryVariables {
+  category?: string | null;
+}
+
 export interface MapleCharacter_Key {
   ownerId: string;
   region: string;
@@ -230,6 +254,31 @@ export interface UpsertPartyMemberVariables {
   characterName: string;
 }
 
+/** Generated Node Admin SDK operation action function for the 'UpsertCurrentUser' Mutation. Allow users to execute without passing in DataConnect. */
+export function upsertCurrentUser(dc: DataConnect, vars: UpsertCurrentUserVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertCurrentUserData>>;
+/** Generated Node Admin SDK operation action function for the 'UpsertCurrentUser' Mutation. Allow users to pass in custom DataConnect instances. */
+export function upsertCurrentUser(vars: UpsertCurrentUserVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertCurrentUserData>>;
+
+/** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to execute without passing in DataConnect. */
+export function getCurrentUser(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<GetCurrentUserData>>;
+/** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to pass in custom DataConnect instances. */
+export function getCurrentUser(options?: OperationOptions): Promise<ExecuteOperationResponse<GetCurrentUserData>>;
+
+/** Generated Node Admin SDK operation action function for the 'ListAppUsers' Query. Allow users to execute without passing in DataConnect. */
+export function listAppUsers(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<ListAppUsersData>>;
+/** Generated Node Admin SDK operation action function for the 'ListAppUsers' Query. Allow users to pass in custom DataConnect instances. */
+export function listAppUsers(options?: OperationOptions): Promise<ExecuteOperationResponse<ListAppUsersData>>;
+
+/** Generated Node Admin SDK operation action function for the 'UpdateUserRole' Mutation. Allow users to execute without passing in DataConnect. */
+export function updateUserRole(dc: DataConnect, vars: UpdateUserRoleVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserRoleData>>;
+/** Generated Node Admin SDK operation action function for the 'UpdateUserRole' Mutation. Allow users to pass in custom DataConnect instances. */
+export function updateUserRole(vars: UpdateUserRoleVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserRoleData>>;
+
+/** Generated Node Admin SDK operation action function for the 'UpdateUserGuild' Mutation. Allow users to execute without passing in DataConnect. */
+export function updateUserGuild(dc: DataConnect, vars: UpdateUserGuildVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserGuildData>>;
+/** Generated Node Admin SDK operation action function for the 'UpdateUserGuild' Mutation. Allow users to pass in custom DataConnect instances. */
+export function updateUserGuild(vars: UpdateUserGuildVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserGuildData>>;
+
 /** Generated Node Admin SDK operation action function for the 'UpsertMapleCharacter' Mutation. Allow users to execute without passing in DataConnect. */
 export function upsertMapleCharacter(dc: DataConnect, vars: UpsertMapleCharacterVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertMapleCharacterData>>;
 /** Generated Node Admin SDK operation action function for the 'UpsertMapleCharacter' Mutation. Allow users to pass in custom DataConnect instances. */
@@ -275,28 +324,8 @@ export function listPartiesByBoss(dc: DataConnect, vars: ListPartiesByBossVariab
 /** Generated Node Admin SDK operation action function for the 'ListPartiesByBoss' Query. Allow users to pass in custom DataConnect instances. */
 export function listPartiesByBoss(vars: ListPartiesByBossVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ListPartiesByBossData>>;
 
-/** Generated Node Admin SDK operation action function for the 'UpsertCurrentUser' Mutation. Allow users to execute without passing in DataConnect. */
-export function upsertCurrentUser(dc: DataConnect, vars: UpsertCurrentUserVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertCurrentUserData>>;
-/** Generated Node Admin SDK operation action function for the 'UpsertCurrentUser' Mutation. Allow users to pass in custom DataConnect instances. */
-export function upsertCurrentUser(vars: UpsertCurrentUserVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpsertCurrentUserData>>;
-
-/** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to execute without passing in DataConnect. */
-export function getCurrentUser(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<GetCurrentUserData>>;
-/** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to pass in custom DataConnect instances. */
-export function getCurrentUser(options?: OperationOptions): Promise<ExecuteOperationResponse<GetCurrentUserData>>;
-
-/** Generated Node Admin SDK operation action function for the 'ListAppUsers' Query. Allow users to execute without passing in DataConnect. */
-export function listAppUsers(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<ListAppUsersData>>;
-/** Generated Node Admin SDK operation action function for the 'ListAppUsers' Query. Allow users to pass in custom DataConnect instances. */
-export function listAppUsers(options?: OperationOptions): Promise<ExecuteOperationResponse<ListAppUsersData>>;
-
-/** Generated Node Admin SDK operation action function for the 'UpdateUserRole' Mutation. Allow users to execute without passing in DataConnect. */
-export function updateUserRole(dc: DataConnect, vars: UpdateUserRoleVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserRoleData>>;
-/** Generated Node Admin SDK operation action function for the 'UpdateUserRole' Mutation. Allow users to pass in custom DataConnect instances. */
-export function updateUserRole(vars: UpdateUserRoleVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserRoleData>>;
-
-/** Generated Node Admin SDK operation action function for the 'UpdateUserGuild' Mutation. Allow users to execute without passing in DataConnect. */
-export function updateUserGuild(dc: DataConnect, vars: UpdateUserGuildVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserGuildData>>;
-/** Generated Node Admin SDK operation action function for the 'UpdateUserGuild' Mutation. Allow users to pass in custom DataConnect instances. */
-export function updateUserGuild(vars: UpdateUserGuildVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateUserGuildData>>;
+/** Generated Node Admin SDK operation action function for the 'ListPartiesByCategory' Query. Allow users to execute without passing in DataConnect. */
+export function listPartiesByCategory(dc: DataConnect, vars?: ListPartiesByCategoryVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ListPartiesByCategoryData>>;
+/** Generated Node Admin SDK operation action function for the 'ListPartiesByCategory' Query. Allow users to pass in custom DataConnect instances. */
+export function listPartiesByCategory(vars?: ListPartiesByCategoryVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ListPartiesByCategoryData>>;
 

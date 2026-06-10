@@ -94,3 +94,26 @@ query ListPartiesByBoss($bossId: String!, $category: String) @auth(level: USER) 
     }
   }
 }
+
+query ListPartiesByCategory($category: String) @auth(level: USER) {
+  bossParties(
+    where: { category: { eq: $category } }
+    orderBy: [{ createdAt: DESC }]
+  ) {
+    id
+    bossId
+    label
+    category
+    difficulty
+    timezone
+    runTime
+    ownerId
+    createdAt
+    members: bossPartyMembers_on_party(orderBy: [{ slotIndex: ASC }]) {
+      slotIndex
+      characterOwnerId
+      characterRegion
+      characterName
+    }
+  }
+}
