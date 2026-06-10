@@ -1160,6 +1160,7 @@ let partysVisibleBossIds = new Set(
   PARTY_BOSS_OPTIONS.filter((boss) => !PARTY_BOSS_DEFAULT_HIDDEN_IDS.has(boss.id)).map((boss) => boss.id)
 );
 let partysViewMode = "board";
+let partysExpandedBossId = null;
 let partysSelectedPlayerId = null;
 let partysCurrentParties = [];
 let partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
@@ -1631,24 +1632,46 @@ function renderPartysListByBoard(currentUserId) {
     return;
   }
 
-  partysGrid.innerHTML = bossesToRender.map((boss) => {
-    const parties = partiesByBoss.get(boss.id) || [];
+  const renderBossCard = (boss, extraClass = "") => {
     const cardImage = PARTY_BOSS_CARD_IMAGES[boss.id];
     return `
-      <div class="partys-board-column">
-        <div class="party-boss-card-slot">
-          ${cardImage
+      <button type="button" class="partys-boss-card ${extraClass}" data-boss-id="${boss.id}" aria-label="${boss.name}">
+        ${cardImage
         ? `<img src="${cardImage}" alt="${boss.name}" />`
         : `<span>${boss.name}</span>`}
-        </div>
-        <div class="partys-board-column-parties">
+      </button>
+    `;
+  };
+
+  const expandedBoss = bossesToRender.find((boss) => boss.id === partysExpandedBossId);
+
+  if (expandedBoss) {
+    const parties = partiesByBoss.get(expandedBoss.id) || [];
+    const otherBosses = bossesToRender.filter((boss) => boss.id !== expandedBoss.id);
+
+    partysGrid.innerHTML = `
+      <div class="partys-expanded">
+        ${renderBossCard(expandedBoss, "partys-boss-card-expanded")}
+        <div class="partys-expanded-parties">
           ${parties.length
         ? parties.map((party) => renderPartyCard(party, currentUserId)).join("")
         : `<p class="partys-board-empty">Sin partys formadas</p>`}
         </div>
       </div>
+      ${otherBosses.length ? `
+        <div class="partys-boss-grid partys-boss-grid-secondary">
+          ${otherBosses.map((boss) => renderBossCard(boss)).join("")}
+        </div>
+      ` : ""}
     `;
-  }).join("");
+    return;
+  }
+
+  partysGrid.innerHTML = `
+    <div class="partys-boss-grid">
+      ${bossesToRender.map((boss) => renderBossCard(boss)).join("")}
+    </div>
+  `;
 }
 
 function renderPartysListByPlayer(currentUserId) {
@@ -1808,6 +1831,7 @@ partysBossFilterList?.addEventListener("change", (event) => {
     partysVisibleBossIds.add(bossId);
   } else {
     partysVisibleBossIds.delete(bossId);
+    if (partysExpandedBossId === bossId) partysExpandedBossId = null;
   }
   renderPartysList();
 });
@@ -1822,6 +1846,7 @@ partysBossFilterAll?.addEventListener("click", () => {
 
 partysBossFilterNone?.addEventListener("click", () => {
   partysVisibleBossIds.clear();
+  partysExpandedBossId = null;
   partysBossFilterList?.querySelectorAll("input[data-boss-filter-id]").forEach((input) => {
     input.checked = false;
   });
@@ -1846,6 +1871,7 @@ partysViewModeOptions.forEach((button) => {
     const mode = button.dataset.viewMode;
     if (mode === partysViewMode) return;
     partysViewMode = mode;
+    partysExpandedBossId = null;
     partysViewModeOptions.forEach((option) => {
       option.classList.toggle("active", option.dataset.viewMode === mode);
     });
@@ -1866,6 +1892,7 @@ partysCreateBossSelect?.addEventListener("change", () => {
 
 async function switchPartysSection(section) {
   partysSection = section;
+  partysExpandedBossId = null;
   partysOwnSectionTab?.classList.toggle("active", section === "own");
   partysAllianceSectionTab?.classList.toggle("active", section === "alianza");
   partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
@@ -2001,6 +2028,14 @@ partysSaveBtn?.addEventListener("click", async () => {
 });
 
 partysGrid?.addEventListener("click", async (event) => {
+  const bossCard = event.target.closest(".partys-boss-card");
+  if (bossCard) {
+    const bossId = bossCard.dataset.bossId;
+    partysExpandedBossId = partysExpandedBossId === bossId ? null : bossId;
+    renderPartysList();
+    return;
+  }
+
   const deleteBtn = event.target.closest(".party-delete");
   if (deleteBtn) {
     if (!confirm("¿Eliminar esta party?")) return;

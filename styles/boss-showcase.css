@@ -2435,68 +2435,92 @@ body.auth-locked .showcase {
 
 .partys-grid {
   display: flex;
-  align-items: flex-start;
-  gap: 0;
-  overflow-x: auto;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
   padding-bottom: 10px;
 }
 
-.partys-board-column {
-  flex: 0 0 260px;
-  width: 260px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 0 14px;
-  border-right: 1px solid rgba(192, 132, 252, .18);
+.partys-boss-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
 }
 
-.partys-board-column:first-child {
-  padding-left: 0;
+.partys-boss-grid-secondary {
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
 }
 
-.partys-board-column:last-child {
-  border-right: none;
-  padding-right: 0;
-}
-
-.party-boss-card-slot {
-  min-height: 260px;
-  border: 1px dashed rgba(192, 132, 252, .35);
+.partys-boss-card {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(192, 132, 252, .25);
   border-radius: 12px;
   background: rgba(255, 255, 255, .02);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 10px;
   overflow: hidden;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: center;
+  transition: transform .15s ease, border-color .15s ease;
 }
 
-.party-boss-card-slot:has(img) {
-  border-style: solid;
-  padding: 0;
+.partys-boss-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(192, 132, 252, .55);
 }
 
-.party-boss-card-slot img {
+.partys-boss-card img {
   width: 100%;
-  height: 100%;
   aspect-ratio: 0.72;
   object-fit: cover;
-  border-radius: 11px;
   display: block;
 }
 
-.party-boss-card-slot span {
+.partys-boss-card span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 0.72;
+  padding: 10px;
   color: rgba(248, 244, 255, .55);
   font-size: 12px;
   font-weight: 800;
-  text-align: center;
 }
 
-.partys-board-column-parties {
+.partys-expanded {
+  width: 100%;
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.partys-boss-card-expanded {
+  flex: 0 0 240px;
+  width: 240px;
+  cursor: pointer;
+}
+
+.partys-expanded-parties {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 12px;
+  align-content: start;
+}
+
+@media (max-width: 720px) {
+  .partys-expanded {
+    flex-direction: column;
+  }
+
+  .partys-boss-card-expanded {
+    width: 180px;
+  }
 }
 
 .partys-board-empty {
