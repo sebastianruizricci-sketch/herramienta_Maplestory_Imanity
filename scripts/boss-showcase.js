@@ -258,6 +258,11 @@ const PARTY_BOSS_CARD_IMAGES = {
   "chosen-seren": "assets/party-boss-cards/seren.png",
   "verus-hilla": "assets/party-boss-cards/verus_hilla.png",
   "hard-radiant-malefic-star": "assets/party-boss-cards/Hard_Radiant_Malefic_Star.png",
+  "baldrix": "assets/party-boss-cards/baldrix.png",
+  "gloom": "assets/party-boss-cards/gloom.png",
+  "kaling": "assets/party-boss-cards/kaling.png",
+  "limbo": "assets/party-boss-cards/limbo.png",
+  "will": "assets/party-boss-cards/will.png",
 };
 
 const PARTY_BOSS_ACCENT_COLORS = [
