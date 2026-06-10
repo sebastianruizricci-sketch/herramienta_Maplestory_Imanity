@@ -1,0 +1,40 @@
+query ListChallengerProposals @auth(level: USER) {
+  challengerProposals(orderBy: [{ createdAt: DESC }]) {
+    id
+    nickname
+    className
+    timezone
+    playingHours
+    expectedBosses
+    expectedLevelGoal
+    ownerId
+    createdAt
+    owner {
+      username
+      guild
+    }
+  }
+}
+
+mutation CreateChallengerProposal(
+  $nickname: String!
+  $className: String
+  $timezone: String
+  $playingHours: String
+  $expectedBosses: String
+  $expectedLevelGoal: String
+) @auth(level: USER) {
+  challengerProposal_insert(data: {
+    nickname: $nickname
+    className: $className
+    timezone: $timezone
+    playingHours: $playingHours
+    expectedBosses: $expectedBosses
+    expectedLevelGoal: $expectedLevelGoal
+    ownerId_expr: "auth.uid"
+  })
+}
+
+mutation DeleteChallengerProposal($id: UUID!) @auth(level: USER) {
+  challengerProposal_delete(key: { id: $id })
+}

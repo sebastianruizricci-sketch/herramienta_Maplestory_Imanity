@@ -137,6 +137,10 @@
             <span class="sidebar-icon">♕</span>
             <span>Partys</span>
           </a>
+          <a class="sidebar-item" href="#" id="challengerNav">
+            <span class="sidebar-icon">📜</span>
+            <span>Challenger World</span>
+          </a>
           <a class="sidebar-item" href="#" id="chatbotNav">
             <span class="sidebar-icon">💬</span>
             <span>ChatBot</span>
@@ -431,6 +435,61 @@
 
         <div class="partys-list-view hidden" id="partysListView">
           <div class="partys-grid" id="partysGrid"></div>
+        </div>
+      </section>
+
+      <!-- Pagina: challenger world -->
+      <section class="fragments-page hidden challenger-page" id="challengerPage" aria-label="Challenger World">
+        <div class="challenger-toolbar">
+          <button type="button" class="challenger-tab active" id="challengerCoverTab">Challenger World</button>
+          <button type="button" class="challenger-tab" id="challengerBoardTab">Partys formadas</button>
+        </div>
+
+        <div class="challenger-view" id="challengerCoverView">
+          <button type="button" class="challenger-bg-btn" id="challengerCoverBtn" aria-label="Crear propuesta de party">
+            <img class="challenger-bg-image" src="assets/challenger-world/portada al entrar en seccion_Challenger.png" alt="Se busca partner para Challenger World" />
+          </button>
+        </div>
+
+        <div class="challenger-view hidden" id="challengerFormView">
+          <div class="challenger-bg-wrap">
+            <img class="challenger-bg-image" src="assets/challenger-world/background_de_formulario.png" alt="" />
+            <form class="challenger-form" id="challengerForm">
+              <div class="challenger-form-field">
+                <label for="challengerNickname">Nick name in Maple</label>
+                <input id="challengerNickname" name="nickname" type="text" autocomplete="off" required />
+              </div>
+              <div class="challenger-form-field">
+                <label for="challengerClass">Class</label>
+                <input id="challengerClass" name="className" type="text" autocomplete="off" />
+              </div>
+              <div class="challenger-form-field">
+                <label for="challengerTimezone">Time Zone</label>
+                <select id="challengerTimezone" name="timezone"></select>
+              </div>
+              <div class="challenger-form-field">
+                <label for="challengerPlayingHours">Playing Hours</label>
+                <input id="challengerPlayingHours" name="playingHours" type="text" autocomplete="off" />
+              </div>
+              <div class="challenger-form-field">
+                <label for="challengerExpectedBosses">Expected Bosses</label>
+                <input id="challengerExpectedBosses" name="expectedBosses" type="text" autocomplete="off" />
+              </div>
+              <div class="challenger-form-field">
+                <label for="challengerExpectedLevelGoal">Expected Level Goal</label>
+                <input id="challengerExpectedLevelGoal" name="expectedLevelGoal" type="text" autocomplete="off" />
+              </div>
+              <button type="submit" class="challenger-form-submit">Publicar propuesta</button>
+            </form>
+          </div>
+          <p class="character-status" id="challengerFormStatus"></p>
+        </div>
+
+        <div class="challenger-view hidden" id="challengerBoardView">
+          <div class="challenger-bg-wrap">
+            <img class="challenger-bg-image" src="assets/challenger-world/Backgroun_partys_creados.png" alt="" />
+            <div class="challenger-board-grid" id="challengerBoardGrid"></div>
+          </div>
         </div>
       </section>
 

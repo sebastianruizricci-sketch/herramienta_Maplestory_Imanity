@@ -46,6 +46,19 @@ type BossPartyMember @table(name: "boss_party_member", key: ["party", "slotIndex
   assignedAt: Timestamp! @default(expr: "request.time")
 }
 
+type ChallengerProposal @table(name: "challenger_proposal", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  owner: AppUser!
+  nickname: String! @col(dataType: "varchar(32)")
+  className: String @col(dataType: "varchar(60)")
+  timezone: String @col(dataType: "varchar(48)")
+  playingHours: String @col(dataType: "varchar(120)")
+  expectedBosses: String @col(dataType: "varchar(200)")
+  expectedLevelGoal: String @col(dataType: "varchar(40)")
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
 type LegacyUser @table(name: "user", key: "id") {
   id: UUID! @default(expr: "uuidV4()")
   createdAt: Timestamp! @col(name: "created_at")

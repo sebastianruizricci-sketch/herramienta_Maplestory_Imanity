@@ -312,6 +312,18 @@ const fragmentsPage = document.getElementById("fragmentsPage");
 const chatbotPage = document.getElementById("chatbotPage");
 const partysNav = document.getElementById("partysNav");
 const partysPage = document.getElementById("partysPage");
+const challengerNav = document.getElementById("challengerNav");
+const challengerPage = document.getElementById("challengerPage");
+const challengerCoverTab = document.getElementById("challengerCoverTab");
+const challengerBoardTab = document.getElementById("challengerBoardTab");
+const challengerCoverView = document.getElementById("challengerCoverView");
+const challengerFormView = document.getElementById("challengerFormView");
+const challengerBoardView = document.getElementById("challengerBoardView");
+const challengerCoverBtn = document.getElementById("challengerCoverBtn");
+const challengerForm = document.getElementById("challengerForm");
+const challengerFormStatus = document.getElementById("challengerFormStatus");
+const challengerTimezone = document.getElementById("challengerTimezone");
+const challengerBoardGrid = document.getElementById("challengerBoardGrid");
 const adminNav = document.getElementById("adminNav");
 const adminNavGroup = document.getElementById("adminNavGroup");
 const adminPage = document.getElementById("adminPage");
@@ -342,6 +354,7 @@ const partysSaveBtn = document.getElementById("partysSaveBtn");
 const partysDifficultySelect = document.getElementById("partysDifficultySelect");
 const partysTimezoneSelect = document.getElementById("partysTimezoneSelect");
 populateTimezoneSelect(partysTimezoneSelect);
+populateTimezoneSelect(challengerTimezone);
 const partysRunTimeSelect = document.getElementById("partysRunTimeSelect");
 syncPartyRunTimeOptions();
 const partysDestinationSelect = document.getElementById("partysDestinationSelect");
@@ -822,12 +835,14 @@ function hideAllPages() {
   showcase?.classList.remove("partys-view");
   showcase?.classList.remove("dashboard-view");
   showcase?.classList.remove("admin-view");
+  showcase?.classList.remove("challenger-page-view");
   dashboardPage?.classList.add("hidden");
   characterPanel?.classList.add("hidden");
   fragmentsPage?.classList.add("hidden");
   chatbotPage?.classList.add("hidden");
   partysPage?.classList.add("hidden");
   adminPage?.classList.add("hidden");
+  challengerPage?.classList.add("hidden");
   document.querySelectorAll(".sidebar-item").forEach((item) => item.classList.remove("active"));
 }
 
@@ -880,6 +895,14 @@ async function showAdminPage() {
   adminPage?.classList.remove("hidden");
   adminNav?.classList.add("active");
   await loadAdminUsers();
+}
+
+async function showChallengerPage() {
+  hideAllPages();
+  showcase?.classList.add("challenger-page-view");
+  challengerPage?.classList.remove("hidden");
+  challengerNav?.classList.add("active");
+  setChallengerView("cover");
 }
 
 function setCharacterStatus(message, state = "neutral") {
@@ -1957,6 +1980,121 @@ partysGrid?.addEventListener("click", async (event) => {
     const expanded = card.classList.toggle("expanded");
     header.querySelector(".party-card-toggle")?.setAttribute("aria-expanded", String(expanded));
   }
+});
+
+// ── Challenger World ─────────────────────────────────────────────────────
+let challengerProposals = [];
+
+function setChallengerStatus(message, state = "neutral") {
+  if (!challengerFormStatus) return;
+  challengerFormStatus.textContent = message;
+  challengerFormStatus.dataset.state = state;
+}
+
+function setChallengerView(view) {
+  challengerCoverView?.classList.toggle("hidden", view !== "cover");
+  challengerFormView?.classList.toggle("hidden", view !== "form");
+  challengerBoardView?.classList.toggle("hidden", view !== "board");
+  challengerCoverTab?.classList.toggle("active", view !== "board");
+  challengerBoardTab?.classList.toggle("active", view === "board");
+
+  if (view === "board") {
+    loadChallengerProposals().then(renderChallengerBoard);
+  }
+}
+
+async function loadChallengerProposals() {
+  try {
+    const data = await fetchAuthedJson("/api/challenger-proposals");
+    challengerProposals = data.proposals || [];
+  } catch (error) {
+    setChallengerStatus(error.message || "No se pudieron cargar las propuestas.", "error");
+  }
+}
+
+function renderChallengerBoard() {
+  if (!challengerBoardGrid) return;
+
+  if (!challengerProposals.length) {
+    challengerBoardGrid.innerHTML = `<p class="challenger-board-empty">Todavía no hay propuestas. ¡Sé el primero en buscar partner!</p>`;
+    return;
+  }
+
+  const currentUserId = getCurrentUserId();
+  challengerBoardGrid.innerHTML = challengerProposals.map((proposal) => `
+    <article class="challenger-proposal-card" data-proposal-id="${proposal.id}">
+      <h4>${proposal.nickname}</h4>
+      ${proposal.className ? `<p><strong>Clase:</strong> ${proposal.className}</p>` : ""}
+      ${proposal.timezone ? `<p><strong>Time Zone:</strong> ${proposal.timezone}</p>` : ""}
+      ${proposal.playingHours ? `<p><strong>Playing Hours:</strong> ${proposal.playingHours}</p>` : ""}
+      ${proposal.expectedBosses ? `<p><strong>Expected Bosses:</strong> ${proposal.expectedBosses}</p>` : ""}
+      ${proposal.expectedLevelGoal ? `<p><strong>Level Goal:</strong> ${proposal.expectedLevelGoal}</p>` : ""}
+      ${proposal.ownerId === currentUserId ? `<button type="button" class="challenger-proposal-delete" data-proposal-id="${proposal.id}">Eliminar</button>` : ""}
+    </article>
+  `).join("");
+}
+
+challengerCoverBtn?.addEventListener("click", () => {
+  setChallengerView("form");
+});
+
+challengerCoverTab?.addEventListener("click", () => {
+  setChallengerView("cover");
+});
+
+challengerBoardTab?.addEventListener("click", () => {
+  setChallengerView("board");
+});
+
+challengerForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const formData = new FormData(challengerForm);
+  const nickname = String(formData.get("nickname") || "").trim();
+  if (!nickname) {
+    setChallengerStatus("El nombre del personaje es requerido.", "error");
+    return;
+  }
+
+  setChallengerStatus("Publicando propuesta...", "loading");
+  try {
+    await fetchAuthedJson("/api/challenger-proposals", {
+      method: "POST",
+      body: JSON.stringify({
+        nickname,
+        className: String(formData.get("className") || "").trim(),
+        timezone: String(formData.get("timezone") || "").trim(),
+        playingHours: String(formData.get("playingHours") || "").trim(),
+        expectedBosses: String(formData.get("expectedBosses") || "").trim(),
+        expectedLevelGoal: String(formData.get("expectedLevelGoal") || "").trim(),
+      }),
+    });
+    setChallengerStatus("", "neutral");
+    challengerForm.reset();
+    setChallengerView("board");
+  } catch (error) {
+    setChallengerStatus(error.message || "No se pudo publicar la propuesta.", "error");
+  }
+});
+
+challengerBoardGrid?.addEventListener("click", async (event) => {
+  const deleteBtn = event.target.closest(".challenger-proposal-delete");
+  if (!deleteBtn) return;
+
+  if (!confirm("¿Eliminar esta propuesta?")) return;
+
+  try {
+    await fetchAuthedJson(`/api/challenger-proposals/${deleteBtn.dataset.proposalId}`, { method: "DELETE" });
+    await loadChallengerProposals();
+    renderChallengerBoard();
+  } catch (error) {
+    setChallengerStatus(error.message || "No se pudo eliminar la propuesta.", "error");
+  }
+});
+
+challengerNav?.addEventListener("click", (event) => {
+  event.preventDefault();
+  showChallengerPage();
 });
 
 function normalizeSkillName(name) {
