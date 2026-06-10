@@ -221,16 +221,43 @@ const PARTY_BOSS_OPTIONS = [
   "Akechi Mitsuhide",
   "Baldrix",
   "First Adversary",
+  "Hard Radiant Malefic Star",
 ].map((name) => ({
   id: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
   name,
 }));
+
+// Bosses que no se muestran en "Partys formadas" hasta marcarlos en "Filtrar bosses".
+const PARTY_BOSS_DEFAULT_HIDDEN_IDS = new Set([
+  "balrog",
+  "monster-park-extreme",
+  "zakum",
+  "magnus",
+  "hilla",
+  "omni-cln",
+  "papulatus",
+  "pierre",
+  "von-bon",
+  "crimson-queen",
+  "vellum",
+  "von-leon",
+  "horntail",
+  "arkarium",
+  "pink-bean",
+]);
 
 const PARTY_BOSS_CARD_IMAGES = {
   "lucid": "assets/party-boss-cards/lucid.png",
   "guardian-angel-slime": "assets/party-boss-cards/guardian-angel-slime.png",
   "lotus": "assets/party-boss-cards/lotus.png",
   "damien": "assets/party-boss-cards/Damien.png",
+  "first-adversary": "assets/party-boss-cards/adversary.png",
+  "black-mage": "assets/party-boss-cards/black_mage.png",
+  "darknell": "assets/party-boss-cards/darknell.png",
+  "kalos-the-guardian": "assets/party-boss-cards/kalos.png",
+  "chosen-seren": "assets/party-boss-cards/seren.png",
+  "verus-hilla": "assets/party-boss-cards/verus_hilla.png",
+  "hard-radiant-malefic-star": "assets/party-boss-cards/Hard_Radiant_Malefic_Star.png",
 };
 
 const PARTY_BOSS_ACCENT_COLORS = [
@@ -1129,7 +1156,9 @@ function renderRoster(characters = loadCharacters(), activeCharacterId = getActi
 const PARTY_SLOT_COUNT = 6;
 let partysGuildRoster = [];
 let partysCurrentBossId = null;
-let partysVisibleBossIds = new Set(PARTY_BOSS_OPTIONS.map((boss) => boss.id));
+let partysVisibleBossIds = new Set(
+  PARTY_BOSS_OPTIONS.filter((boss) => !PARTY_BOSS_DEFAULT_HIDDEN_IDS.has(boss.id)).map((boss) => boss.id)
+);
 let partysViewMode = "board";
 let partysSelectedPlayerId = null;
 let partysCurrentParties = [];
@@ -1374,7 +1403,7 @@ function populatePartysBossSelect() {
   if (partysBossFilterList && !partysBossFilterList.children.length) {
     partysBossFilterList.innerHTML = PARTY_BOSS_OPTIONS.map((boss) => `
       <label>
-        <input type="checkbox" data-boss-filter-id="${boss.id}" checked />
+        <input type="checkbox" data-boss-filter-id="${boss.id}" ${partysVisibleBossIds.has(boss.id) ? "checked" : ""} />
         ${boss.name}
       </label>
     `).join("");
