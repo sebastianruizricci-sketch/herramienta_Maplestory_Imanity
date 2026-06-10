@@ -229,6 +229,8 @@ const PARTY_BOSS_OPTIONS = [
 const PARTY_BOSS_CARD_IMAGES = {
   "lucid": "assets/party-boss-cards/lucid.png",
   "guardian-angel-slime": "assets/party-boss-cards/guardian-angel-slime.png",
+  "lotus": "assets/party-boss-cards/lotus.png",
+  "damien": "assets/party-boss-cards/Damien.png",
 };
 
 const PARTY_BOSS_ACCENT_COLORS = [
@@ -1665,9 +1667,9 @@ function renderPartysListByPlayer(currentUserId) {
     return `
         <div class="partys-player-boss-column" style="--boss-accent: ${accentColor}">
           ${cardImage
-        ? `<div class="partys-player-boss-card"><img src="${cardImage}" alt="${bossName}" /></div>
-             <h4 class="partys-player-boss-name">${bossName}</h4>`
+        ? `<div class="partys-player-boss-card"><img src="${cardImage}" alt="${bossName}" /></div>`
         : `<div class="partys-player-boss-card"><span>${bossName}</span></div>`}
+          <h4 class="partys-player-boss-name">${bossName}</h4>
           <div class="partys-player-boss-parties">
             ${columns.map((columnParties) => `
               <div class="partys-player-boss-subcolumn">
