@@ -265,21 +265,6 @@ const PARTY_BOSS_CARD_IMAGES = {
   "will": "assets/party-boss-cards/will.png",
 };
 
-const PARTY_BOSS_ACCENT_COLORS = [
-  "#facc15", "#34d399", "#38bdf8", "#fb923c", "#f472b6",
-  "#a78bfa", "#f87171", "#2dd4bf", "#a3e635", "#60a5fa",
-];
-
-function getBossAccentColor(bossId) {
-  let hash = 0;
-  for (let i = 0; i < bossId.length; i += 1) {
-    hash = (hash * 31 + bossId.charCodeAt(i)) >>> 0;
-  }
-  return PARTY_BOSS_ACCENT_COLORS[hash % PARTY_BOSS_ACCENT_COLORS.length];
-}
-
-const PARTYS_PLAYER_COLUMN_MAX = 6;
-
 const DEFAULT_PARTY_DIFFICULTIES = ["Easy", "Normal", "Hard", "Chaos", "Extreme"];
 const PARTY_BOSS_DIFFICULTIES = {
   "baldrix": ["Normal", "Hard"],
@@ -347,8 +332,6 @@ const partysBossFilterNone = document.getElementById("partysBossFilterNone");
 const partysViewMode_ = document.getElementById("partysViewMode");
 const partysViewModeToggle = document.getElementById("partysViewModeToggle");
 const partysViewModePanel = document.getElementById("partysViewModePanel");
-const partysViewModeOptions = document.querySelectorAll(".partys-view-mode-option");
-const partysViewModePlayerRow = document.getElementById("partysViewModePlayerRow");
 const partysViewModePlayerSelect = document.getElementById("partysViewModePlayerSelect");
 const partysCreateBossSelect = document.getElementById("partysCreateBossSelect");
 const partysCreateView = document.getElementById("partysCreateView");
@@ -1164,7 +1147,6 @@ let partysCurrentBossId = null;
 let partysVisibleBossIds = new Set(
   PARTY_BOSS_OPTIONS.filter((boss) => !PARTY_BOSS_DEFAULT_HIDDEN_IDS.has(boss.id)).map((boss) => boss.id)
 );
-let partysViewMode = "board";
 let partysExpandedBossId = null;
 let partysSelectedPlayerId = null;
 let partysCurrentParties = [];
@@ -1431,22 +1413,18 @@ function populatePartysPlayerSelect() {
     }
   });
 
-  const currentUserId = getCurrentUserId();
-  if (!players.size) {
-    partysViewModePlayerSelect.innerHTML = `<option value="">Sin jugadores</option>`;
+  if (partysSelectedPlayerId && !players.has(partysSelectedPlayerId)) {
     partysSelectedPlayerId = null;
-    return;
   }
 
-  if (!partysSelectedPlayerId || !players.has(partysSelectedPlayerId)) {
-    partysSelectedPlayerId = players.has(currentUserId) ? currentUserId : players.keys().next().value;
-  }
-
-  partysViewModePlayerSelect.innerHTML = Array.from(players.entries())
-    .sort((a, b) => a[1].localeCompare(b[1]))
-    .map(([ownerId, username]) => `<option value="${ownerId}">${username}</option>`)
-    .join("");
-  partysViewModePlayerSelect.value = partysSelectedPlayerId;
+  const options = [`<option value="">Todos</option>`]
+    .concat(
+      Array.from(players.entries())
+        .sort((a, b) => a[1].localeCompare(b[1]))
+        .map(([ownerId, username]) => `<option value="${ownerId}">${username}</option>`)
+    );
+  partysViewModePlayerSelect.innerHTML = options.join("");
+  partysViewModePlayerSelect.value = partysSelectedPlayerId || "";
 }
 
 function findRosterCharacter(ownerId, region, name) {
@@ -1620,6 +1598,7 @@ function renderPartyCard(party, currentUserId) {
 function renderPartysListByBoard(currentUserId) {
   const partiesByBoss = new Map();
   partysCurrentParties.forEach((party) => {
+    if (partysSelectedPlayerId && party.ownerId !== partysSelectedPlayerId) return;
     const bossId = party.bossId || partysCurrentBossId;
     if (!partiesByBoss.has(bossId)) partiesByBoss.set(bossId, []);
     partiesByBoss.get(bossId).push(party);
@@ -1679,68 +1658,6 @@ function renderPartysListByBoard(currentUserId) {
   `;
 }
 
-function renderPartysListByPlayer(currentUserId) {
-  if (!partysSelectedPlayerId) {
-    partysGrid.innerHTML = `
-      <div class="roster-empty">
-        <h4>Sin jugadores</h4>
-        <p>No hay jugadores con personajes registrados en este gremio.</p>
-      </div>
-    `;
-    return;
-  }
-
-  const partiesByBoss = new Map();
-  partysCurrentParties.forEach((party) => {
-    if (party.ownerId !== partysSelectedPlayerId) return;
-    const bossId = party.bossId || partysCurrentBossId;
-    if (!partiesByBoss.has(bossId)) partiesByBoss.set(bossId, []);
-    partiesByBoss.get(bossId).push(party);
-  });
-
-  if (!partiesByBoss.size) {
-    partysGrid.innerHTML = `
-      <div class="roster-empty">
-        <h4>Sin partys</h4>
-        <p>Este jugador todavía no creó partys.</p>
-      </div>
-    `;
-    return;
-  }
-
-  partysGrid.innerHTML = `
-    <div class="partys-player-board">
-      ${Array.from(partiesByBoss.entries()).map(([bossId, parties]) => {
-    const boss = PARTY_BOSS_OPTIONS.find((option) => option.id === bossId);
-    const cardImage = PARTY_BOSS_CARD_IMAGES[bossId];
-    const bossName = boss?.name || bossId;
-    const accentColor = getBossAccentColor(bossId);
-
-    const columns = [];
-    for (let i = 0; i < parties.length; i += PARTYS_PLAYER_COLUMN_MAX) {
-      columns.push(parties.slice(i, i + PARTYS_PLAYER_COLUMN_MAX));
-    }
-
-    return `
-        <div class="partys-player-boss-column" style="--boss-accent: ${accentColor}">
-          ${cardImage
-        ? `<div class="partys-player-boss-card"><img src="${cardImage}" alt="${bossName}" /></div>`
-        : `<div class="partys-player-boss-card"><span>${bossName}</span></div>`}
-          <h4 class="partys-player-boss-name">${bossName}</h4>
-          <div class="partys-player-boss-parties">
-            ${columns.map((columnParties) => `
-              <div class="partys-player-boss-subcolumn">
-                ${columnParties.map((party) => renderPartyCard(party, currentUserId)).join("")}
-              </div>
-            `).join("")}
-          </div>
-        </div>
-      `;
-  }).join("")}
-    </div>
-  `;
-}
-
 function renderPartysList() {
   if (!partysGrid) return;
 
@@ -1754,13 +1671,7 @@ function renderPartysList() {
     return;
   }
 
-  const currentUserId = getCurrentUserId();
-
-  if (partysViewMode === "player") {
-    renderPartysListByPlayer(currentUserId);
-  } else {
-    renderPartysListByBoard(currentUserId);
-  }
+  renderPartysListByBoard(getCurrentUserId());
 }
 
 function updatePartysSectionLabels() {
@@ -1869,21 +1780,6 @@ document.addEventListener("click", (event) => {
     partysViewModePanel.classList.add("hidden");
     partysViewModeToggle?.setAttribute("aria-expanded", "false");
   }
-});
-
-partysViewModeOptions.forEach((button) => {
-  button.addEventListener("click", () => {
-    const mode = button.dataset.viewMode;
-    if (mode === partysViewMode) return;
-    partysViewMode = mode;
-    partysExpandedBossId = null;
-    partysViewModeOptions.forEach((option) => {
-      option.classList.toggle("active", option.dataset.viewMode === mode);
-    });
-    partysBossFilter?.classList.toggle("hidden", mode === "player");
-    partysViewModePlayerRow?.classList.toggle("hidden", mode !== "player");
-    renderPartysList();
-  });
 });
 
 partysViewModePlayerSelect?.addEventListener("change", () => {
