@@ -1466,32 +1466,8 @@ function renderPartySlots() {
   `).join("");
 }
 
-function renderPartysList() {
-  if (!partysGrid) return;
-
-  if (partysOwnSectionBlocked()) {
-    partysGrid.innerHTML = `
-      <div class="roster-empty">
-        <h4>Sin gremio asignado</h4>
-        <p>Un administrador todavía no te asignó a Imanity o Lorien. Cuando lo haga, vas a ver acá las partys de tu gremio.</p>
-      </div>
-    `;
-    return;
-  }
-
-  if (!partysCurrentParties.length) {
-    partysGrid.innerHTML = `
-      <div class="roster-empty">
-        <h4>No hay partys formadas</h4>
-        <p>Crea una party para este boss desde la pestaña "Crear party".</p>
-      </div>
-    `;
-    return;
-  }
-
-  const currentUserId = getCurrentUserId();
-
-  partysGrid.innerHTML = partysCurrentParties.map((party) => `
+function renderPartyCard(party, currentUserId) {
+  return `
     <article class="party-card">
       <header>
         <div>
@@ -1524,7 +1500,50 @@ function renderPartysList() {
   }).join("") || "<li>Sin miembros aún</li>"}
       </ul>
     </article>
-  `).join("");
+  `;
+}
+
+function renderPartysList() {
+  if (!partysGrid) return;
+
+  if (partysOwnSectionBlocked()) {
+    partysGrid.innerHTML = `
+      <div class="roster-empty">
+        <h4>Sin gremio asignado</h4>
+        <p>Un administrador todavía no te asignó a Imanity o Lorien. Cuando lo haga, vas a ver acá las partys de tu gremio.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const currentUserId = getCurrentUserId();
+
+  const partiesByBoss = new Map();
+  partysCurrentParties.forEach((party) => {
+    const bossId = party.bossId || partysCurrentBossId;
+    if (!partiesByBoss.has(bossId)) partiesByBoss.set(bossId, []);
+    partiesByBoss.get(bossId).push(party);
+  });
+
+  const bossesToRender = partysListBossFilter && partysListBossFilter !== "all"
+    ? PARTY_BOSS_OPTIONS.filter((boss) => boss.id === partysListBossFilter)
+    : PARTY_BOSS_OPTIONS;
+
+  partysGrid.innerHTML = bossesToRender.map((boss) => {
+    const parties = partiesByBoss.get(boss.id) || [];
+    return `
+      <div class="partys-board-column">
+        <div class="party-boss-card-slot">
+          <span>${boss.name}</span>
+        </div>
+        <div class="partys-board-column-parties">
+          ${parties.length
+        ? parties.map((party) => renderPartyCard(party, currentUserId)).join("")
+        : `<p class="partys-board-empty">Sin partys formadas</p>`}
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 function updatePartysSectionLabels() {
