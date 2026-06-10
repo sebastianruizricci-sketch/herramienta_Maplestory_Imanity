@@ -1499,36 +1499,43 @@ function renderPartySlots() {
 function renderPartyCard(party, currentUserId) {
   return `
     <article class="party-card">
-      <header>
+      <header class="party-card-header">
         <div>
           <h4>${party.label || "Party sin nombre"}</h4>
           <p class="party-card-subtitle">
             Boss: ${getPartyBossLabel(party.bossId || partysCurrentBossId)}
           </p>
-          ${(party.difficulty || party.runTime || party.timezone) ? `
-            <div class="party-card-runline">
-              ${party.difficulty ? `<span>Dificultad: ${party.difficulty}</span>` : ""}
-              ${party.runTime ? `<span>Run: ${party.runTime}</span>` : ""}
-              ${party.timezone ? `<span>${party.timezone}</span>` : ""}
-            </div>
-          ` : ""}
         </div>
-        ${party.ownerId === currentUserId ? `<button type="button" class="party-delete" data-party-id="${party.id}">Eliminar</button>` : ""}
+        <div class="party-card-header-actions">
+          ${party.ownerId === currentUserId ? `<button type="button" class="party-delete" data-party-id="${party.id}">Eliminar</button>` : ""}
+          <button type="button" class="party-card-toggle" aria-expanded="false" aria-label="Mostrar detalles de la party">
+            <span class="party-card-toggle-icon">&#9662;</span>
+          </button>
+        </div>
       </header>
-      <ul class="party-members-list">
-        ${(party.members || []).map((member) => {
+      <div class="party-card-body">
+        ${(party.difficulty || party.runTime || party.timezone) ? `
+          <div class="party-card-runline">
+            ${party.difficulty ? `<span>Dificultad: ${party.difficulty}</span>` : ""}
+            ${party.runTime ? `<span>Run: ${party.runTime}</span>` : ""}
+            ${party.timezone ? `<span>${party.timezone}</span>` : ""}
+          </div>
+        ` : ""}
+        <ul class="party-members-list">
+          ${(party.members || []).map((member) => {
     const character = findRosterCharacter(member.characterOwnerId, member.characterRegion, member.characterName);
     return `
-            <li>
-              <span class="party-member-slot">#${member.slotIndex + 1}</span>
-              <strong>${member.characterName}</strong>
-              <em>${character?.jobName || "Sin clase"} · Lv. ${character?.level ?? "-"}</em>
-              ${character?.owner?.guild ? `<span class="party-member-guild-badge">${guildLabel(character.owner.guild)}</span>` : ""}
-              ${character?.owner?.timezone ? `<span class="party-member-timezone-badge">${character.owner.timezone}</span>` : ""}
-            </li>
-          `;
+              <li>
+                <span class="party-member-slot">#${member.slotIndex + 1}</span>
+                <strong>${member.characterName}</strong>
+                <em>${character?.jobName || "Sin clase"} · Lv. ${character?.level ?? "-"}</em>
+                ${character?.owner?.guild ? `<span class="party-member-guild-badge">${guildLabel(character.owner.guild)}</span>` : ""}
+                ${character?.owner?.timezone ? `<span class="party-member-timezone-badge">${character.owner.timezone}</span>` : ""}
+              </li>
+            `;
   }).join("") || "<li>Sin miembros aún</li>"}
-      </ul>
+        </ul>
+      </div>
     </article>
   `;
 }
@@ -1836,15 +1843,24 @@ partysSaveBtn?.addEventListener("click", async () => {
 
 partysGrid?.addEventListener("click", async (event) => {
   const deleteBtn = event.target.closest(".party-delete");
-  if (!deleteBtn) return;
-  if (!confirm("¿Eliminar esta party?")) return;
+  if (deleteBtn) {
+    if (!confirm("¿Eliminar esta party?")) return;
 
-  try {
-    await fetchAuthedJson(`/api/parties/${deleteBtn.dataset.partyId}`, { method: "DELETE" });
-    await loadPartiesList();
-    renderPartysList();
-  } catch (error) {
-    setPartysStatus(error.message || "No se pudo eliminar la party.", "error");
+    try {
+      await fetchAuthedJson(`/api/parties/${deleteBtn.dataset.partyId}`, { method: "DELETE" });
+      await loadPartiesList();
+      renderPartysList();
+    } catch (error) {
+      setPartysStatus(error.message || "No se pudo eliminar la party.", "error");
+    }
+    return;
+  }
+
+  const header = event.target.closest(".party-card-header");
+  if (header) {
+    const card = header.closest(".party-card");
+    const expanded = card.classList.toggle("expanded");
+    header.querySelector(".party-card-toggle")?.setAttribute("aria-expanded", String(expanded));
   }
 });
 
