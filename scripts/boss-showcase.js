@@ -231,6 +231,21 @@ const PARTY_BOSS_CARD_IMAGES = {
   "guardian-angel-slime": "assets/party-boss-cards/guardian-angel-slime.png",
 };
 
+const PARTY_BOSS_ACCENT_COLORS = [
+  "#facc15", "#34d399", "#38bdf8", "#fb923c", "#f472b6",
+  "#a78bfa", "#f87171", "#2dd4bf", "#a3e635", "#60a5fa",
+];
+
+function getBossAccentColor(bossId) {
+  let hash = 0;
+  for (let i = 0; i < bossId.length; i += 1) {
+    hash = (hash * 31 + bossId.charCodeAt(i)) >>> 0;
+  }
+  return PARTY_BOSS_ACCENT_COLORS[hash % PARTY_BOSS_ACCENT_COLORS.length];
+}
+
+const PARTYS_PLAYER_COLUMN_MAX = 6;
+
 const DEFAULT_PARTY_DIFFICULTIES = ["Easy", "Normal", "Hard", "Chaos", "Extreme"];
 const PARTY_BOSS_DIFFICULTIES = {
   "baldrix": ["Normal", "Hard"],
@@ -1634,22 +1649,37 @@ function renderPartysListByPlayer(currentUserId) {
     return;
   }
 
-  partysGrid.innerHTML = Array.from(partiesByBoss.entries()).map(([bossId, parties]) => {
+  partysGrid.innerHTML = `
+    <div class="partys-player-board">
+      ${Array.from(partiesByBoss.entries()).map(([bossId, parties]) => {
     const boss = PARTY_BOSS_OPTIONS.find((option) => option.id === bossId);
     const cardImage = PARTY_BOSS_CARD_IMAGES[bossId];
+    const bossName = boss?.name || bossId;
+    const accentColor = getBossAccentColor(bossId);
+
+    const columns = [];
+    for (let i = 0; i < parties.length; i += PARTYS_PLAYER_COLUMN_MAX) {
+      columns.push(parties.slice(i, i + PARTYS_PLAYER_COLUMN_MAX));
+    }
+
     return `
-      <div class="partys-player-row">
-        <div class="partys-player-row-card">
+        <div class="partys-player-boss-column" style="--boss-accent: ${accentColor}">
           ${cardImage
-        ? `<img src="${cardImage}" alt="${boss?.name || bossId}" />`
-        : `<span>${boss?.name || bossId}</span>`}
+        ? `<div class="partys-player-boss-card"><img src="${cardImage}" alt="${bossName}" /></div>
+             <h4 class="partys-player-boss-name">${bossName}</h4>`
+        : `<div class="partys-player-boss-card"><span>${bossName}</span></div>`}
+          <div class="partys-player-boss-parties">
+            ${columns.map((columnParties) => `
+              <div class="partys-player-boss-subcolumn">
+                ${columnParties.map((party) => renderPartyCard(party, currentUserId)).join("")}
+              </div>
+            `).join("")}
+          </div>
         </div>
-        <div class="partys-player-row-grid">
-          ${parties.map((party) => renderPartyCard(party, currentUserId)).join("")}
-        </div>
-      </div>
-    `;
-  }).join("");
+      `;
+  }).join("")}
+    </div>
+  `;
 }
 
 function renderPartysList() {
