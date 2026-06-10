@@ -1,0 +1,155 @@
+mutation CreateTradePost(
+  $title: String!
+  $tradeType: String
+  $bossId: String
+  $bossIds: String
+  $category: String
+  $weeklyRuns: Int
+  $preferredDay: String
+  $preferredTime: String
+  $timezone: String
+  $itemsOffered: String
+  $minCombatPower: Int
+  $minSacredPower: Int
+  $notes: String
+  $status: String
+) @auth(level: USER) {
+  tradePost_insert(data: {
+    title: $title
+    tradeType: $tradeType
+    bossId: $bossId
+    bossIds: $bossIds
+    category: $category
+    weeklyRuns: $weeklyRuns
+    preferredDay: $preferredDay
+    preferredTime: $preferredTime
+    timezone: $timezone
+    itemsOffered: $itemsOffered
+    minCombatPower: $minCombatPower
+    minSacredPower: $minSacredPower
+    notes: $notes
+    status: $status
+    ownerId_expr: "auth.uid"
+  })
+}
+
+mutation UpdateTradePost(
+  $id: UUID!
+  $title: String!
+  $tradeType: String
+  $bossId: String
+  $bossIds: String
+  $category: String
+  $weeklyRuns: Int
+  $preferredDay: String
+  $preferredTime: String
+  $timezone: String
+  $itemsOffered: String
+  $minCombatPower: Int
+  $minSacredPower: Int
+  $notes: String
+  $status: String
+) @auth(level: USER) {
+  tradePost_update(key: { id: $id }, data: {
+    title: $title
+    tradeType: $tradeType
+    bossId: $bossId
+    bossIds: $bossIds
+    category: $category
+    weeklyRuns: $weeklyRuns
+    preferredDay: $preferredDay
+    preferredTime: $preferredTime
+    timezone: $timezone
+    itemsOffered: $itemsOffered
+    minCombatPower: $minCombatPower
+    minSacredPower: $minSacredPower
+    notes: $notes
+    status: $status
+    updatedAt_expr: "request.time"
+  })
+}
+
+mutation DeleteTradePost($id: UUID!) @auth(level: USER) {
+  tradePost_delete(key: { id: $id })
+}
+
+mutation ArchiveTradePost($id: UUID!) @auth(level: USER) {
+  tradePost_update(key: { id: $id }, data: {
+    status: "archived"
+    updatedAt_expr: "request.time"
+  })
+}
+
+mutation ApplyToTrade(
+  $tradeId: UUID!
+  $characterOwnerId: String!
+  $characterRegion: String!
+  $characterName: String!
+  $message: String
+) @auth(level: USER) {
+  tradeApplication_insert(data: {
+    tradeId: $tradeId
+    applicantId_expr: "auth.uid"
+    characterOwnerId: $characterOwnerId
+    characterRegion: $characterRegion
+    characterName: $characterName
+    message: $message
+    status: "pending"
+  })
+}
+
+mutation UpdateTradeApplicationStatus($id: UUID!, $status: String!) @auth(level: USER) {
+  tradeApplication_update(key: { id: $id }, data: {
+    status: $status
+    updatedAt_expr: "request.time"
+  })
+}
+
+mutation DeleteTradeApplication($id: UUID!) @auth(level: USER) {
+  tradeApplication_delete(key: { id: $id })
+}
+
+query ListTradePosts($category: String) @auth(level: USER) {
+  tradePosts(
+    where: { category: { eq: $category } }
+    orderBy: [{ createdAt: DESC }]
+  ) {
+    id
+    title
+    tradeType
+    bossId
+    bossIds
+    category
+    weeklyRuns
+    preferredDay
+    preferredTime
+    timezone
+    itemsOffered
+    minCombatPower
+    minSacredPower
+    notes
+    status
+    ownerId
+    createdAt
+    owner {
+      username
+      guild
+      timezone
+    }
+    applications: tradeApplications_on_trade(orderBy: [{ createdAt: DESC }]) {
+      id
+      applicantId
+      characterOwnerId
+      characterRegion
+      characterName
+      message
+      status
+      createdAt
+      applicant {
+        username
+        guild
+        timezone
+      }
+    }
+  }
+}

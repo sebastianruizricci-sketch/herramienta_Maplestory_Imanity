@@ -112,3 +112,58 @@ function listPartiesByCategory(dcOrVarsOrOptions, varsOrOptions, options) {
 }
 exports.listPartiesByCategory = listPartiesByCategory;
 
+function createTradePost(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('CreateTradePost', inputVars, inputOpts);
+}
+exports.createTradePost = createTradePost;
+
+function updateTradePost(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('UpdateTradePost', inputVars, inputOpts);
+}
+exports.updateTradePost = updateTradePost;
+
+function deleteTradePost(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('DeleteTradePost', inputVars, inputOpts);
+}
+exports.deleteTradePost = deleteTradePost;
+
+function archiveTradePost(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('ArchiveTradePost', inputVars, inputOpts);
+}
+exports.archiveTradePost = archiveTradePost;
+
+function applyToTrade(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('ApplyToTrade', inputVars, inputOpts);
+}
+exports.applyToTrade = applyToTrade;
+
+function updateTradeApplicationStatus(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('UpdateTradeApplicationStatus', inputVars, inputOpts);
+}
+exports.updateTradeApplicationStatus = updateTradeApplicationStatus;
+
+function deleteTradeApplication(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('DeleteTradeApplication', inputVars, inputOpts);
+}
+exports.deleteTradeApplication = deleteTradeApplication;
+
+function listTradePosts(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, false);
+  dcInstance.useGen(true);
+  return dcInstance.executeQuery('ListTradePosts', inputVars, inputOpts);
+}
+exports.listTradePosts = listTradePosts;
