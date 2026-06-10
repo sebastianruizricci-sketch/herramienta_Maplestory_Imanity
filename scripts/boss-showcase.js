@@ -589,6 +589,14 @@ function initializeAuthenticatedApp() {
     showPartysPage();
   } else if (document.body?.dataset.initialPage === "challenger") {
     showChallengerPage();
+  } else if (document.body?.dataset.initialPage === "character") {
+    showCharacterPage();
+  } else if (document.body?.dataset.initialPage === "fragments") {
+    showFragmentsPage();
+  } else if (document.body?.dataset.initialPage === "chatbot") {
+    showChatBotPage();
+  } else if (document.body?.dataset.initialPage === "admin") {
+    showAdminPage();
   } else {
     showDashboardPage();
   }
