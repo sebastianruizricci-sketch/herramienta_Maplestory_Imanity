@@ -361,6 +361,16 @@
           <div class="partys-boss-select-row">
             <label for="partysBossSelect">Boss</label>
             <select id="partysBossSelect" aria-label="Seleccionar boss"></select>
+            <div class="partys-boss-filter" id="partysBossFilter">
+              <button type="button" id="partysBossFilterToggle" aria-haspopup="true" aria-expanded="false">Filtrar bosses</button>
+              <div class="partys-boss-filter-panel hidden" id="partysBossFilterPanel">
+                <div class="partys-boss-filter-actions">
+                  <button type="button" id="partysBossFilterAll">Seleccionar todos</button>
+                  <button type="button" id="partysBossFilterNone">Ninguno</button>
+                </div>
+                <div class="partys-boss-filter-list" id="partysBossFilterList"></div>
+              </div>
+            </div>
           </div>
         </div>
 

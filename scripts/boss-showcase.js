@@ -226,6 +226,11 @@ const PARTY_BOSS_OPTIONS = [
   name,
 }));
 
+const PARTY_BOSS_CARD_IMAGES = {
+  "lucid": "assets/party-boss-cards/lucid.png",
+  "guardian-angel-slime": "assets/party-boss-cards/guardian-angel-slime.png",
+};
+
 const DEFAULT_PARTY_DIFFICULTIES = ["Easy", "Normal", "Hard", "Chaos", "Extreme"];
 const PARTY_BOSS_DIFFICULTIES = {
   "baldrix": ["Normal", "Hard"],
@@ -285,6 +290,12 @@ const partysAllianceSectionTab = document.getElementById("partysAllianceSectionT
 const partysCreateTab = document.getElementById("partysCreateTab");
 const partysListTab = document.getElementById("partysListTab");
 const partysBossSelect = document.getElementById("partysBossSelect");
+const partysBossFilter = document.getElementById("partysBossFilter");
+const partysBossFilterToggle = document.getElementById("partysBossFilterToggle");
+const partysBossFilterPanel = document.getElementById("partysBossFilterPanel");
+const partysBossFilterList = document.getElementById("partysBossFilterList");
+const partysBossFilterAll = document.getElementById("partysBossFilterAll");
+const partysBossFilterNone = document.getElementById("partysBossFilterNone");
 const partysCreateBossSelect = document.getElementById("partysCreateBossSelect");
 const partysCreateView = document.getElementById("partysCreateView");
 const partysListView = document.getElementById("partysListView");
@@ -1097,6 +1108,7 @@ const PARTY_SLOT_COUNT = 6;
 let partysGuildRoster = [];
 let partysCurrentBossId = null;
 let partysListBossFilter = "all";
+let partysVisibleBossIds = new Set(PARTY_BOSS_OPTIONS.map((boss) => boss.id));
 let partysCurrentParties = [];
 let partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
 let partysInitialized = false;
@@ -1334,12 +1346,30 @@ function populatePartysBossSelect() {
   if (partysCreateBossSelect && !partysCreateBossSelect.options.length) {
     partysCreateBossSelect.innerHTML = optionsMarkup;
   }
+  if (partysBossFilterList && !partysBossFilterList.children.length) {
+    partysBossFilterList.innerHTML = PARTY_BOSS_OPTIONS.map((boss) => `
+      <label>
+        <input type="checkbox" data-boss-filter-id="${boss.id}" checked />
+        ${boss.name}
+      </label>
+    `).join("");
+  }
+}
+
+function updatePartysBossFilterVisibility() {
+  if (!partysBossFilter) return;
+  partysBossFilter.classList.toggle("hidden", partysListBossFilter !== "all");
+  if (partysListBossFilter !== "all") {
+    partysBossFilterPanel?.classList.add("hidden");
+    partysBossFilterToggle?.setAttribute("aria-expanded", "false");
+  }
 }
 
 function syncPartysBossSelects() {
   if (partysBossSelect) partysBossSelect.value = partysListBossFilter || "all";
   if (partysCreateBossSelect) partysCreateBossSelect.value = partysCurrentBossId || "";
   populatePartysDifficultySelect();
+  updatePartysBossFilterVisibility();
 }
 
 function findRosterCharacter(ownerId, region, name) {
@@ -1527,14 +1557,27 @@ function renderPartysList() {
 
   const bossesToRender = partysListBossFilter && partysListBossFilter !== "all"
     ? PARTY_BOSS_OPTIONS.filter((boss) => boss.id === partysListBossFilter)
-    : PARTY_BOSS_OPTIONS;
+    : PARTY_BOSS_OPTIONS.filter((boss) => partysVisibleBossIds.has(boss.id));
+
+  if (!bossesToRender.length) {
+    partysGrid.innerHTML = `
+      <div class="roster-empty">
+        <h4>Sin bosses seleccionados</h4>
+        <p>Elegí al menos un boss en "Filtrar bosses" para ver sus partys.</p>
+      </div>
+    `;
+    return;
+  }
 
   partysGrid.innerHTML = bossesToRender.map((boss) => {
     const parties = partiesByBoss.get(boss.id) || [];
+    const cardImage = PARTY_BOSS_CARD_IMAGES[boss.id];
     return `
       <div class="partys-board-column">
         <div class="party-boss-card-slot">
-          <span>${boss.name}</span>
+          ${cardImage
+        ? `<img src="${cardImage}" alt="${boss.name}" />`
+        : `<span>${boss.name}</span>`}
         </div>
         <div class="partys-board-column-parties">
           ${parties.length
@@ -1604,12 +1647,54 @@ async function changeCreatePartyBoss(bossId) {
 async function changePartysListFilter(bossId) {
   partysListBossFilter = bossId || "all";
   if (partysBossSelect) partysBossSelect.value = partysListBossFilter;
+  updatePartysBossFilterVisibility();
   await loadPartiesList();
   renderPartysList();
 }
 
 partysBossSelect?.addEventListener("change", () => {
   changePartysListFilter(partysBossSelect.value);
+});
+
+partysBossFilterToggle?.addEventListener("click", () => {
+  const expanded = partysBossFilterPanel?.classList.toggle("hidden") === false;
+  partysBossFilterToggle.setAttribute("aria-expanded", String(expanded));
+});
+
+document.addEventListener("click", (event) => {
+  if (!partysBossFilter || partysBossFilterPanel?.classList.contains("hidden")) return;
+  if (!partysBossFilter.contains(event.target)) {
+    partysBossFilterPanel.classList.add("hidden");
+    partysBossFilterToggle?.setAttribute("aria-expanded", "false");
+  }
+});
+
+partysBossFilterList?.addEventListener("change", (event) => {
+  const checkbox = event.target.closest("input[data-boss-filter-id]");
+  if (!checkbox) return;
+  const bossId = checkbox.dataset.bossFilterId;
+  if (checkbox.checked) {
+    partysVisibleBossIds.add(bossId);
+  } else {
+    partysVisibleBossIds.delete(bossId);
+  }
+  renderPartysList();
+});
+
+partysBossFilterAll?.addEventListener("click", () => {
+  partysVisibleBossIds = new Set(PARTY_BOSS_OPTIONS.map((boss) => boss.id));
+  partysBossFilterList?.querySelectorAll("input[data-boss-filter-id]").forEach((input) => {
+    input.checked = true;
+  });
+  renderPartysList();
+});
+
+partysBossFilterNone?.addEventListener("click", () => {
+  partysVisibleBossIds.clear();
+  partysBossFilterList?.querySelectorAll("input[data-boss-filter-id]").forEach((input) => {
+    input.checked = false;
+  });
+  renderPartysList();
 });
 
 partysCreateBossSelect?.addEventListener("change", () => {
