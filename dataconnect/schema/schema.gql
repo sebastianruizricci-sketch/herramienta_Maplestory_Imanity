@@ -53,6 +53,7 @@ type TradePost @table(name: "trade_post", key: "id") {
   bossId: String @col(dataType: "varchar(40)")
   bossIds: String @col(dataType: "varchar(600)")
   category: String @col(dataType: "varchar(20)")
+  desiredTrades: Int
   weeklyRuns: Int
   preferredDay: String @col(dataType: "varchar(32)")
   preferredTime: String @col(dataType: "varchar(64)")

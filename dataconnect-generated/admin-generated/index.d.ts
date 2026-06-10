@@ -65,6 +65,7 @@ export interface CreateTradePostVariables {
   bossId?: string | null;
   bossIds?: string | null;
   category?: string | null;
+  desiredTrades?: number | null;
   weeklyRuns?: number | null;
   preferredDay?: string | null;
   preferredTime?: string | null;
@@ -273,6 +274,7 @@ export interface ListTradePostsData {
     bossId?: string | null;
     bossIds?: string | null;
     category?: string | null;
+    desiredTrades?: number | null;
     weeklyRuns?: number | null;
     preferredDay?: string | null;
     preferredTime?: string | null;

@@ -1220,6 +1220,7 @@ const TRADE_BOSS_LABELS = {
   "hard-damien": "Hard Damien",
   "chaos-slime": "Chaos Slime",
   "hard-seren": "Hard Seren",
+  "extreme-seren": "Extreme Seren",
   "black-mage-hard": "Black Mage Hard",
   "black-mage-xtreme": "Black Mage Xtreme",
   "kaling": "Kaling",
@@ -1237,6 +1238,7 @@ const TRADE_BOSS_IMAGES = {
   "hard-damien": "assets/bossespixelart/Damienpixelart.png",
   "chaos-slime": "assets/bossespixelart/Slimepixelart.png",
   "hard-seren": "assets/bossespixelart/Serenpixelart.png",
+  "extreme-seren": "assets/bossespixelart/Serenpixelart.png",
   "black-mage-hard": "assets/bossespixelart/blackmagepixelart.png",
   "black-mage-xtreme": "assets/bossespixelart/blackmagepixelart.png",
   "kaling": "assets/bossespixelart/Kalingpixelart.png",
@@ -1251,42 +1253,49 @@ const TRADE_TYPE_OPTIONS = {
     bosses: ["gollux"],
     defaultBosses: ["gollux"],
     multi: false,
+    maxTrades: 5,
   },
   "chaos-tenebris": {
     label: "Chaos tenebris",
     bosses: ["chaos-gloom", "verus-hilla", "hard-darknell"],
     defaultBosses: ["chaos-gloom", "verus-hilla", "hard-darknell"],
     multi: true,
+    maxTrades: 5,
   },
   "chaos-tenebris-luwill": {
     label: "Chaos tenebris + Luwill",
     bosses: ["chaos-gloom", "verus-hilla", "hard-darknell", "hard-lotus", "hard-damien"],
     defaultBosses: ["chaos-gloom", "verus-hilla", "hard-darknell", "hard-lotus", "hard-damien"],
     multi: true,
+    maxTrades: 5,
   },
   "chaos-tenebris-luwill-slime": {
     label: "Chaos tenebris + Luwill + Slime",
     bosses: ["chaos-gloom", "verus-hilla", "hard-darknell", "hard-lotus", "hard-damien", "chaos-slime"],
     defaultBosses: ["chaos-gloom", "verus-hilla", "hard-darknell", "hard-lotus", "hard-damien", "chaos-slime"],
     multi: true,
+    maxTrades: 5,
   },
   emblem: {
     label: "Emblema trade",
-    bosses: ["hard-seren"],
+    bosses: ["hard-seren", "extreme-seren"],
     defaultBosses: ["hard-seren"],
     multi: false,
+    maxTrades: 5,
   },
   badge: {
     label: "Badge trade",
     bosses: ["black-mage-hard", "black-mage-xtreme"],
     defaultBosses: ["black-mage-hard"],
     multi: false,
+    maxTrades: 5,
   },
   cookies: {
     label: "Cookies runs",
     bosses: ["kaling", "adversary", "kalos", "limbo", "baldrix"],
     defaultBosses: ["kaling", "adversary", "kalos", "limbo", "baldrix"],
     multi: true,
+    maxTrades: 2,
   },
 };
 
@@ -1323,6 +1332,24 @@ function getTradeTypeConfig(type = tradesTypeSelect?.value || "daily") {
   return TRADE_TYPE_OPTIONS[type] || TRADE_TYPE_OPTIONS.daily;
 }
 
+function getTradeMaxTrades(type = tradesTypeSelect?.value || "daily") {
+  return getTradeTypeConfig(type).maxTrades || 5;
+}
+
+function clampTradeCount(value, type = tradesTypeSelect?.value || "daily") {
+  const maxTrades = getTradeMaxTrades(type);
+  const count = Number.parseInt(value, 10);
+  if (!Number.isFinite(count)) return 1;
+  return Math.min(Math.max(count, 1), maxTrades);
+}
+
+function syncDesiredTradeLimit() {
+  if (!tradesWeeklyRunsInput) return;
+  const maxTrades = getTradeMaxTrades();
+  tradesWeeklyRunsInput.max = String(maxTrades);
+  tradesWeeklyRunsInput.value = String(clampTradeCount(tradesWeeklyRunsInput.value || 1));
+}
+
 function getTradeBossIds(trade = null) {
   const source = trade?.bossIds || trade?.bossId || "";
   return String(source)
@@ -1350,6 +1377,7 @@ function renderTradeBossChoices(selectedBossIds = null) {
   if (tradesTitleInput && !tradesTitleInput.value.trim()) {
     tradesTitleInput.placeholder = config.label;
   }
+  syncDesiredTradeLimit();
   const selected = selectedBossIds?.length ? selectedBossIds : config.defaultBosses;
   tradesBossChoices.innerHTML = config.bosses.map((bossId) => {
     const checked = selected.includes(bossId);
@@ -1443,13 +1471,12 @@ function showTradesCreateView(trade = null) {
   if (tradesTitleInput) tradesTitleInput.value = trade?.title || "";
   if (tradesTypeSelect) tradesTypeSelect.value = trade?.tradeType || "daily";
   renderTradeBossChoices(getTradeBossIds(trade));
-  if (tradesWeeklyRunsInput) tradesWeeklyRunsInput.value = trade?.weeklyRuns || 1;
+  if (tradesWeeklyRunsInput) tradesWeeklyRunsInput.value = clampTradeCount(trade?.desiredTrades || trade?.weeklyRuns || 1, trade?.tradeType || "daily");
+  syncDesiredTradeLimit();
   if (tradesDaySelect) tradesDaySelect.value = trade?.preferredDay || "";
   if (tradesTimezoneSelect) tradesTimezoneSelect.value = trade?.timezone || currentUserTimezone || "";
   syncTradeRunTimeOptions(trade?.preferredTime || "");
   if (tradesRunTimeSelect) tradesRunTimeSelect.value = trade?.preferredTime || "";
-  if (tradesMinCpInput) tradesMinCpInput.value = trade?.minCombatPower || "";
-  if (tradesMinSacredInput) tradesMinSacredInput.value = trade?.minSacredPower || "";
   if (tradesStatusSelect) tradesStatusSelect.value = trade?.status || "open";
   updateTradesDestinationOptions(trade?.category || tradesCurrentCategory() || "imanity");
   if (tradesItemsInput) tradesItemsInput.value = trade?.itemsOffered || "";
@@ -1465,12 +1492,13 @@ function getTradePayload() {
     bossId: bossIds[0] || "",
     bossIds: bossIds.join(","),
     category: tradesDestinationSelect?.value || tradesCurrentCategory(),
-    weeklyRuns: tradesWeeklyRunsInput?.value || "",
+    desiredTrades: clampTradeCount(tradesWeeklyRunsInput?.value || 1, tradesTypeSelect?.value || "daily"),
+    weeklyRuns: "",
     preferredDay: tradesDaySelect?.value || "",
     preferredTime: tradesRunTimeSelect?.value || "",
     timezone: tradesTimezoneSelect?.value || "",
-    minCombatPower: tradesMinCpInput?.value || "",
-    minSacredPower: tradesMinSacredInput?.value || "",
+    minCombatPower: "",
+    minSacredPower: "",
     status: tradesStatusSelect?.value || "open",
     itemsOffered: tradesItemsInput?.value.trim() || "",
     notes: tradesNotesInput?.value.trim() || "",
@@ -1547,6 +1575,18 @@ function getTradeCreatorLabel(trade) {
   return "Anonimo";
 }
 
+function getTradeDesiredTrades(trade) {
+  return clampTradeCount(trade?.desiredTrades || trade?.weeklyRuns || 1, trade?.tradeType || "daily");
+}
+
+function getAcceptedTradeApplications(trade) {
+  return (trade.applications || []).filter((application) => application.status === "accepted").length;
+}
+
+function isTradeFull(trade) {
+  return getAcceptedTradeApplications(trade) >= getTradeDesiredTrades(trade);
+}
+
 function getTradePageCount() {
   return Math.max(1, Math.ceil(tradesCurrentTrades.length / TRADES_PER_PAGE));
 }
@@ -1563,6 +1603,11 @@ function updateTradesPagination() {
 
 function renderApplySelect(trade) {
   const currentUserId = getCurrentUserId();
+  const isOwner = trade.ownerId === currentUserId;
+  if (isOwner) {
+    return `<p class="trade-apply-empty">Eres el creador de este trade.</p>`;
+  }
+
   const myCharacters = charactersCache.map((character) => ({
     ownerId: currentUserId,
     region: character.region,
@@ -1575,16 +1620,19 @@ function renderApplySelect(trade) {
   }
 
   const alreadyApplied = (trade.applications || []).some((application) => application.applicantId === currentUserId);
+  const full = isTradeFull(trade);
+  const disabled = alreadyApplied || full || trade.status !== "open";
+  const buttonLabel = alreadyApplied ? "Aplicado" : full ? "Slots llenos" : "Aplicar";
   return `
     <div class="trade-apply-row">
-      <select data-trade-apply-character="${escapeHtml(trade.id)}" ${alreadyApplied || trade.status !== "open" ? "disabled" : ""}>
+      <select data-trade-apply-character="${escapeHtml(trade.id)}" ${disabled ? "disabled" : ""}>
         ${myCharacters.map((character) => `
           <option value="${escapeHtml(`${character.ownerId}|${character.region}|${character.name}`)}">${escapeHtml(character.label)}</option>
         `).join("")}
       </select>
-      <input data-trade-apply-message="${escapeHtml(trade.id)}" type="text" maxlength="500" placeholder="Mensaje corto" ${alreadyApplied || trade.status !== "open" ? "disabled" : ""} />
-      <button type="button" class="trade-apply-btn" data-trade-id="${escapeHtml(trade.id)}" ${alreadyApplied || trade.status !== "open" ? "disabled" : ""}>
-        ${alreadyApplied ? "Aplicado" : "Aplicar"}
+      <input data-trade-apply-message="${escapeHtml(trade.id)}" type="text" maxlength="500" placeholder="Mensaje corto" ${disabled ? "disabled" : ""} />
+      <button type="button" class="trade-apply-btn" data-trade-id="${escapeHtml(trade.id)}" ${disabled ? "disabled" : ""}>
+        ${buttonLabel}
       </button>
     </div>
   `;
@@ -1608,8 +1656,8 @@ function renderTradeApplications(trade) {
           <div class="trade-application-actions">
             <span class="trade-status-pill ${escapeHtml(application.status || "pending")}">${escapeHtml(application.status || "pending")}</span>
             ${isOwner ? `
-              <button type="button" data-application-status="accepted" data-application-id="${escapeHtml(application.id)}">Aceptar</button>
-              <button type="button" data-application-status="rejected" data-application-id="${escapeHtml(application.id)}">Rechazar</button>
+              <button type="button" class="trade-application-accept" data-application-status="accepted" data-application-id="${escapeHtml(application.id)}">Aceptar</button>
+              <button type="button" class="trade-application-reject" data-application-status="rejected" data-application-id="${escapeHtml(application.id)}">Rechazar</button>
             ` : ""}
             ${(isOwner || application.applicantId === currentUserId) ? `
               <button type="button" class="trade-delete-application" data-application-id="${escapeHtml(application.id)}">Quitar</button>
@@ -1651,6 +1699,8 @@ function renderTradesList() {
     const isOwner = trade.ownerId === currentUserId;
     const tradeTypeLabel = getTradeTypeLabel(trade.tradeType);
     const bossLabel = getTradeBossSummary(trade);
+    const acceptedCount = getAcceptedTradeApplications(trade);
+    const desiredTrades = getTradeDesiredTrades(trade);
     return `
       <article class="trade-card trade-pin trade-pin-${index + 1}">
         <span class="trade-hook" aria-hidden="true"></span>
@@ -1672,10 +1722,9 @@ function renderTradesList() {
         </header>
         ${renderTradeBossStrip(trade)}
         <div class="trade-stats">
-          <span><b>${formatTradeNumber(trade.weeklyRuns)}</b> runs/semana</span>
+          <span><b>${formatTradeNumber(desiredTrades)}</b> trades buscados</span>
+          <span><b>${formatTradeNumber(acceptedCount)} / ${formatTradeNumber(desiredTrades)}</b> slots aceptados</span>
           <span><b>${escapeHtml(trade.preferredDay || "Flexible")}</b> dia</span>
-          <span><b>${formatTradeNumber(trade.minCombatPower)}</b> CP min</span>
-          <span><b>${formatTradeNumber(trade.minSacredPower)}</b> sacred</span>
         </div>
         ${(trade.preferredTime || trade.timezone) ? `
           <p class="trade-time">${escapeHtml([trade.preferredTime, trade.timezone].filter(Boolean).join(" - "))}</p>
@@ -2319,6 +2368,7 @@ tradesAllianceSectionTab?.addEventListener("click", () => switchTradesSection("a
 tradesTimezoneSelect?.addEventListener("change", () => syncTradeRunTimeOptions());
 tradesTypeSelect?.addEventListener("change", () => renderTradeBossChoices());
 tradesBossChoices?.addEventListener("change", syncHiddenTradeBossSelect);
+tradesWeeklyRunsInput?.addEventListener("change", syncDesiredTradeLimit);
 tradesListTab?.addEventListener("click", showTradesListView);
 tradesCreateTab?.addEventListener("click", () => showTradesCreateView());
 tradesPrevPageBtn?.addEventListener("click", () => {
@@ -2422,6 +2472,15 @@ tradesGrid?.addEventListener("click", async (event) => {
 
   const applicationStatusBtn = event.target.closest("[data-application-status]");
   if (applicationStatusBtn) {
+    if (applicationStatusBtn.dataset.applicationStatus === "accepted") {
+      const trade = tradesCurrentTrades.find((item) =>
+        (item.applications || []).some((application) => String(application.id) === String(applicationStatusBtn.dataset.applicationId))
+      );
+      if (trade && isTradeFull(trade)) {
+        setTradesStatus("Este trade ya tiene todos los slots aceptados.", "error");
+        return;
+      }
+    }
     try {
       await fetchAuthedJson(`/api/trade-applications/${encodeURIComponent(applicationStatusBtn.dataset.applicationId)}`, {
         method: "PATCH",

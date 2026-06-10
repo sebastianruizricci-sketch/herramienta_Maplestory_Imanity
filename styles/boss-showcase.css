@@ -4141,6 +4141,53 @@ body.auth-locked .showcase {
   opacity: .42;
 }
 
+.trade-status-pill {
+  border-radius: 999px;
+  border: 1px solid rgba(75, 42, 18, .12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+
+.trade-status-pill.open,
+.trade-status-pill.accepted {
+  background: rgba(31, 139, 76, .18);
+  color: #17683b;
+}
+
+.trade-status-pill.paused,
+.trade-status-pill.pending {
+  background: rgba(198, 139, 38, .20);
+  color: #7a4b05;
+}
+
+.trade-status-pill.closed,
+.trade-status-pill.archived,
+.trade-status-pill.rejected {
+  background: rgba(178, 64, 57, .18);
+  color: #852721;
+}
+
+.trade-application-actions button.trade-application-accept {
+  border-color: rgba(31, 139, 76, .25);
+  background: rgba(31, 139, 76, .16);
+  color: #17683b;
+}
+
+.trade-application-actions button.trade-application-reject,
+.trade-application-actions button.trade-delete-application,
+.trade-card-actions .trade-delete-btn {
+  border-color: rgba(178, 64, 57, .25);
+  background: rgba(178, 64, 57, .14);
+  color: #852721;
+}
+
+.trade-apply-empty {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(89, 46, 16, .08);
+  color: rgba(77, 40, 15, .72) !important;
+}
+
 @media (max-width: 760px) {
   .trades-board {
     padding: 12px;

@@ -577,6 +577,7 @@ const VALID_TRADE_BOSSES = [
   "hard-damien",
   "chaos-slime",
   "hard-seren",
+  "extreme-seren",
   "black-mage-hard",
   "black-mage-xtreme",
   "kaling",
@@ -641,6 +642,10 @@ function normalizeTradeBossIds(value) {
     .map((bossId) => String(bossId || "").trim().toLowerCase())
     .filter((bossId, index, values) => VALID_TRADE_BOSSES.includes(bossId) && values.indexOf(bossId) === index);
   return bossIds.join(",");
+}
+
+function getTradeMaxDesiredTrades(tradeType) {
+  return tradeType === "cookies" ? 2 : 5;
 }
 
 function canAccessCategory(role, userGuild, category) {
@@ -1161,13 +1166,14 @@ function normalizeTradePayload(body, fallbackCategory) {
     bossId: normalizeOptionalText(body.bossId, 40),
     bossIds: normalizeTradeBossIds(body.bossIds ?? body.bossId),
     category: normalizePartyCategory(body.category, fallbackCategory),
-    weeklyRuns: normalizeOptionalInt(body.weeklyRuns, 1, 7),
+    desiredTrades: normalizeOptionalInt(body.desiredTrades ?? body.weeklyRuns, 1, getTradeMaxDesiredTrades(normalizeTradeType(body.tradeType))) || 1,
+    weeklyRuns: null,
     preferredDay: normalizeOptionalText(body.preferredDay, 32),
     preferredTime: normalizeRunTime(body.preferredTime),
     timezone: normalizeTimezone(body.timezone),
     itemsOffered: normalizeOptionalText(body.itemsOffered, 600),
-    minCombatPower: normalizeOptionalInt(body.minCombatPower, 0),
-    minSacredPower: normalizeOptionalInt(body.minSacredPower, 0),
+    minCombatPower: null,
+    minSacredPower: null,
     notes: normalizeOptionalText(body.notes, 800),
     status: normalizeTradeStatus(body.status),
   };
@@ -1291,6 +1297,10 @@ async function handleApplyToTrade(req, res, tradeId) {
       sendJson(res, 404, { error: "Trade no encontrado." });
       return;
     }
+    if (existing.ownerId === (authClaims.uid || authClaims.sub)) {
+      sendJson(res, 400, { error: "No puedes aplicar a tu propio trade." });
+      return;
+    }
 
     const me = await getCurrentUser(getImpersonationOptions(authClaims));
     const role = normalizeRole(me.data.appUser?.role);
@@ -1302,6 +1312,12 @@ async function handleApplyToTrade(req, res, tradeId) {
 
     if (existing.status && existing.status !== "open") {
       sendJson(res, 400, { error: "Este trade no esta abierto a aplicaciones." });
+      return;
+    }
+    const desiredTrades = existing.desiredTrades || existing.weeklyRuns || 1;
+    const acceptedCount = (existing.applications || []).filter((application) => application.status === "accepted").length;
+    if (acceptedCount >= desiredTrades) {
+      sendJson(res, 400, { error: "Este trade ya tiene todos los slots aceptados." });
       return;
     }
 
@@ -1340,17 +1356,29 @@ async function handleUpdateTradeApplication(req, res, applicationId) {
     const status = normalizeTradeApplicationStatus(body.status);
     const categories = VALID_PARTY_CATEGORIES;
     let ownerMatch = false;
+    let matchedTrade = null;
     for (const category of categories) {
       const result = await listTradePosts({ category }, getImpersonationOptions(authClaims));
-      ownerMatch = (result.data.tradePosts || []).some((trade) =>
+      matchedTrade = (result.data.tradePosts || []).find((trade) =>
         trade.ownerId === currentUserId
         && (trade.applications || []).some((application) => String(application.id) === String(applicationId))
-      );
+      ) || null;
+      ownerMatch = Boolean(matchedTrade);
       if (ownerMatch) break;
     }
     if (!ownerMatch) {
       sendJson(res, 403, { error: "Solo el creador del trade puede actualizar esa aplicacion." });
       return;
+    }
+    if (status === "accepted" && matchedTrade) {
+      const desiredTrades = matchedTrade.desiredTrades || matchedTrade.weeklyRuns || 1;
+      const acceptedCount = (matchedTrade.applications || []).filter((application) =>
+        application.status === "accepted" && String(application.id) !== String(applicationId)
+      ).length;
+      if (acceptedCount >= desiredTrades) {
+        sendJson(res, 400, { error: "Este trade ya tiene todos los slots aceptados." });
+        return;
+      }
     }
 
     await updateTradeApplicationStatus({ id: applicationId, status }, getImpersonationOptions(authClaims));
