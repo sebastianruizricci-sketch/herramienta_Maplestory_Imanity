@@ -288,7 +288,7 @@ const partysOwnSectionTab = document.getElementById("partysOwnSectionTab");
 const partysAllianceSectionTab = document.getElementById("partysAllianceSectionTab");
 const partysCreateTab = document.getElementById("partysCreateTab");
 const partysListTab = document.getElementById("partysListTab");
-const partysBossSelect = document.getElementById("partysBossSelect");
+const partysBossSelectRow = document.getElementById("partysBossSelectRow");
 const partysBossFilter = document.getElementById("partysBossFilter");
 const partysBossFilterToggle = document.getElementById("partysBossFilterToggle");
 const partysBossFilterPanel = document.getElementById("partysBossFilterPanel");
@@ -1106,7 +1106,6 @@ function renderRoster(characters = loadCharacters(), activeCharacterId = getActi
 const PARTY_SLOT_COUNT = 6;
 let partysGuildRoster = [];
 let partysCurrentBossId = null;
-let partysListBossFilter = "all";
 let partysVisibleBossIds = new Set(PARTY_BOSS_OPTIONS.map((boss) => boss.id));
 let partysCurrentParties = [];
 let partySlotAssignments = new Array(PARTY_SLOT_COUNT).fill(null);
@@ -1344,9 +1343,6 @@ function populatePartysDifficultySelect(preferredValue = partysDifficultySelect?
 
 function populatePartysBossSelect() {
   const optionsMarkup = PARTY_BOSS_OPTIONS.map((boss) => `<option value="${boss.id}">${boss.name}</option>`).join("");
-  if (partysBossSelect && !partysBossSelect.options.length) {
-    partysBossSelect.innerHTML = `<option value="all">Todos los bosses</option>${optionsMarkup}`;
-  }
   if (partysCreateBossSelect && !partysCreateBossSelect.options.length) {
     partysCreateBossSelect.innerHTML = optionsMarkup;
   }
@@ -1360,20 +1356,9 @@ function populatePartysBossSelect() {
   }
 }
 
-function updatePartysBossFilterVisibility() {
-  if (!partysBossFilter) return;
-  partysBossFilter.classList.toggle("hidden", partysListBossFilter !== "all");
-  if (partysListBossFilter !== "all") {
-    partysBossFilterPanel?.classList.add("hidden");
-    partysBossFilterToggle?.setAttribute("aria-expanded", "false");
-  }
-}
-
 function syncPartysBossSelects() {
-  if (partysBossSelect) partysBossSelect.value = partysListBossFilter || "all";
   if (partysCreateBossSelect) partysCreateBossSelect.value = partysCurrentBossId || "";
   populatePartysDifficultySelect();
-  updatePartysBossFilterVisibility();
 }
 
 function findRosterCharacter(ownerId, region, name) {
@@ -1404,9 +1389,6 @@ async function loadPartiesList() {
   }
   try {
     const params = new URLSearchParams({ category });
-    if (partysListBossFilter && partysListBossFilter !== "all") {
-      params.set("bossId", partysListBossFilter);
-    }
     const data = await fetchAuthedJson(`/api/parties?${params.toString()}`);
     partysCurrentParties = data.parties || [];
   } catch (error) {
@@ -1569,9 +1551,7 @@ function renderPartysList() {
     partiesByBoss.get(bossId).push(party);
   });
 
-  const bossesToRender = partysListBossFilter && partysListBossFilter !== "all"
-    ? PARTY_BOSS_OPTIONS.filter((boss) => boss.id === partysListBossFilter)
-    : PARTY_BOSS_OPTIONS.filter((boss) => partysVisibleBossIds.has(boss.id));
+  const bossesToRender = PARTY_BOSS_OPTIONS.filter((boss) => partysVisibleBossIds.has(boss.id));
 
   if (!bossesToRender.length) {
     partysGrid.innerHTML = `
@@ -1653,18 +1633,6 @@ async function changeCreatePartyBoss(bossId) {
   renderPartysRoster();
 }
 
-async function changePartysListFilter(bossId) {
-  partysListBossFilter = bossId || "all";
-  if (partysBossSelect) partysBossSelect.value = partysListBossFilter;
-  updatePartysBossFilterVisibility();
-  await loadPartiesList();
-  renderPartysList();
-}
-
-partysBossSelect?.addEventListener("change", () => {
-  changePartysListFilter(partysBossSelect.value);
-});
-
 partysBossFilterToggle?.addEventListener("click", () => {
   const expanded = partysBossFilterPanel?.classList.toggle("hidden") === false;
   partysBossFilterToggle.setAttribute("aria-expanded", String(expanded));
@@ -1735,6 +1703,7 @@ partysCreateTab?.addEventListener("click", () => {
   partysListTab?.classList.remove("active");
   partysCreateView?.classList.remove("hidden");
   partysListView?.classList.add("hidden");
+  partysBossSelectRow?.classList.add("hidden");
 });
 
 partysListTab?.addEventListener("click", () => {
@@ -1742,6 +1711,7 @@ partysListTab?.addEventListener("click", () => {
   partysCreateTab?.classList.remove("active");
   partysListView?.classList.remove("hidden");
   partysCreateView?.classList.add("hidden");
+  partysBossSelectRow?.classList.remove("hidden");
 });
 
 partysRoster?.addEventListener("click", (event) => {
